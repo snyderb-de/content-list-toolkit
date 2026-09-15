@@ -11,8 +11,8 @@ from typing import List, NamedTuple
 
 
 EXPECTED = {
-    "customtkinter": "5.2.2",
-    "blake3": "1.0.8",
+    "customtkinter": "6.0.0",
+    "blake3": "1.0.9",
 }
 
 
