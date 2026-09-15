@@ -1,7 +1,7 @@
 @echo off
 
 REM ---------------------------------------------------------------------------
-REM  Content List Generator - GUI Launcher
+REM  Content List Toolkit - GUI Launcher
 REM  Requires: Python 3.x, tkinter, customtkinter
 REM  Install deps (run once): pip install -r requirements.txt
 REM

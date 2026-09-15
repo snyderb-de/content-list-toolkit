@@ -92,7 +92,7 @@ export default function Sidebar({ active, onNav, theme, onCycleTheme }: SidebarP
     <aside className="sidebar">
       <div className="sidebar-header">
         <div className="sidebar-logo">
-          Content List Generator
+          Content List Toolkit
           <span>Folder scan &amp; compare tool</span>
         </div>
       </div>

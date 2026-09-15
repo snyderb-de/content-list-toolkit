@@ -38,12 +38,12 @@ if [ -d "$APP_SRC" ]; then
     cd "$MACOS_DIR" && zip -qr "content-list-generator-gui-darwin-universal.zip" "content-list-generator.app"
     echo "  → $MACOS_DIR/content-list-generator-gui-darwin-universal.zip"
 else
-    # wails may use the name from wails.json ("Content List Generator")
-    APP_SRC2="$ROOT_DIR/build/bin/Content List Generator.app"
+    # wails may use the name from wails.json ("Content List Toolkit")
+    APP_SRC2="$ROOT_DIR/build/bin/Content List Toolkit.app"
     if [ -d "$APP_SRC2" ]; then
-        rm -rf "$MACOS_DIR/Content List Generator.app"
-        cp -r "$APP_SRC2" "$MACOS_DIR/Content List Generator.app"
-        cd "$MACOS_DIR" && zip -qr "content-list-generator-gui-darwin-universal.zip" "Content List Generator.app"
+        rm -rf "$MACOS_DIR/Content List Toolkit.app"
+        cp -r "$APP_SRC2" "$MACOS_DIR/Content List Toolkit.app"
+        cd "$MACOS_DIR" && zip -qr "content-list-generator-gui-darwin-universal.zip" "Content List Toolkit.app"
         echo "  → $MACOS_DIR/content-list-generator-gui-darwin-universal.zip"
     fi
 fi

@@ -184,7 +184,7 @@ func prepareExecutableUpdate(currentExe, releaseFolder, currentVersion string, r
 	}
 	status.LatestVersion = latestVersion
 	if compareAppVersions(latestVersion, currentVersion) <= 0 {
-		status.Message = fmt.Sprintf("Content List Generator %s is current.", currentVersion)
+		status.Message = fmt.Sprintf("Content List Toolkit %s is current.", currentVersion)
 		return nil, status, nil
 	}
 
@@ -224,7 +224,7 @@ func prepareExecutableUpdate(currentExe, releaseFolder, currentVersion string, r
 	status.UpdateAvailable = true
 	status.ReadyToRestart = true
 	status.SHA256 = stagedHash
-	status.Message = fmt.Sprintf("Content List Generator %s is ready to install.", latestVersion)
+	status.Message = fmt.Sprintf("Content List Toolkit %s is ready to install.", latestVersion)
 	return prepared, status, nil
 }
 

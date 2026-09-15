@@ -16,7 +16,7 @@ var assets embed.FS
 func launchGUI(startDir string) error {
 	app := newApp(startDir)
 	return wails.Run(&options.App{
-		Title:            "Content List Generator",
+		Title:            "Content List Toolkit",
 		Width:            1100,
 		Height:           720,
 		MinWidth:         800,

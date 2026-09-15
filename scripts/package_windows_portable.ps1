@@ -74,14 +74,14 @@ set "DATA_DIR=%~dp0data"
 if not exist "%DATA_DIR%" mkdir "%DATA_DIR%"
 set "CONTENT_LIST_GENERATOR_SETTINGS=%DATA_DIR%\content-list-generator-settings.json"
 start "" "%APP_DIR%\content-list-generator.exe" %*
-"@ | Set-Content -Path (Join-Path $PortableRoot "Start Content List Generator.cmd") -Encoding ASCII
+"@ | Set-Content -Path (Join-Path $PortableRoot "Start Content List Toolkit.cmd") -Encoding ASCII
 
     @"
-Content List Generator - Portable Windows Release
+Content List Toolkit - Portable Windows Release
 
 How to use:
 1. Copy this whole folder to a USB drive or any Windows folder.
-2. Double-click "Start Content List Generator.cmd".
+2. Double-click "Start Content List Toolkit.cmd".
 3. The app stores portable settings in the local data folder.
 
 Notes:

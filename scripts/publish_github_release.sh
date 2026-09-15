@@ -11,7 +11,7 @@ Usage:
 
 Examples:
   scripts/publish_github_release.sh v0.1.0 --target main --draft
-  scripts/publish_github_release.sh v0.1.0 --title "Content List Generator" --notes-file release-notes.md
+  scripts/publish_github_release.sh v0.1.0 --title "Content List Toolkit" --notes-file release-notes.md
 
 Uploads release artifacts under releases/, excluding .gitkeep.
 The Windows Python source bundle publishes only content-list-generator-windows-python.zip,
@@ -34,7 +34,7 @@ TAG="$1"
 shift
 
 TARGET="main"
-TITLE="Content List Generator"
+TITLE="Content List Toolkit"
 NOTES=""
 NOTES_FILE=""
 DRAFT=0

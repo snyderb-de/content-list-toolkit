@@ -1,8 +1,8 @@
-# Content List Generator
+# Content List Toolkit
 
 Written by Bryan Snyder
 
-Content List Generator is maintained as two live desktop runtimes that stay in feature parity as closely as practical:
+Content List Toolkit is maintained as two live desktop runtimes that stay in feature parity as closely as practical:
 
 - Go app for macOS and Linux, with optional Windows `.exe` build outputs
 - Python app for Windows portable deployment
@@ -82,7 +82,7 @@ Two distinct release tracks with different update policies:
 macOS and Linux:
 
 - use the Go app (Wails GUI or Bubble Tea TUI)
-- GUI: double-click `releases/macos/Content List Generator.app` or run `./run-go-gui.sh` in dev mode
+- GUI: double-click `releases/macos/Content List Toolkit.app` or run `./run-go-gui.sh` in dev mode
 - TUI: run the CLI binary directly (no `--gui` flag, no `.app` bundle)
 - local binaries are built into `build/`
 - local release packages are produced by `./scripts/build_releases.sh`
@@ -100,7 +100,7 @@ Windows portable no-install ZIP:
 
 - build on a Windows host with `powershell -ExecutionPolicy Bypass -File .\scripts\package_windows_portable.ps1`
 - the script creates `releases/windows-portable/content-list-generator-windows-portable.zip`
-- unzip the package to a USB drive or local folder, then run `Start Content List Generator.cmd`
+- unzip the package to a USB drive or local folder, then run `Start Content List Toolkit.cmd`
 - portable settings are stored beside the app in `data/content-list-generator-settings.json`
 
 Windows Wails GUI path:

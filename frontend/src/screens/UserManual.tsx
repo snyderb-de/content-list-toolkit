@@ -29,7 +29,7 @@ export default function UserManual() {
     <div className="manual-page">
       <div className="screen-header">
         <h2 className="screen-title">User Manual</h2>
-        <p className="screen-subtitle">Step-by-step help for staff using Content List Generator.</p>
+        <p className="screen-subtitle">Step-by-step help for staff using Content List Toolkit.</p>
       </div>
 
       <div className="manual-layout">
@@ -44,7 +44,7 @@ export default function UserManual() {
           <a href="#manual-troubleshooting">Troubleshooting</a>
         </nav>
 
-        <article className="manual-document" aria-label="Content List Generator user manual">
+        <article className="manual-document" aria-label="Content List Toolkit user manual">
           <section id="manual-quick-start" className="manual-section">
             <p className="manual-kicker">Getting Started</p>
             <h3>Quick start</h3>

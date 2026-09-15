@@ -130,7 +130,7 @@ Copy-Item "build\bin\content-list-generator.exe" "releases\windows-go\content-li
 
 ### [ ] 3. Smoke test
 - Double-click `releases\windows-go\content-list-generator.exe`
-- Window opens, title reads "Content List Generator"
+- Window opens, title reads "Content List Toolkit"
 - Click "Generate" → browse a small folder → confirm CSV writes
 
 ### [ ] 4. Expected SmartScreen warning
@@ -156,7 +156,7 @@ ls releases\windows-portable\
 
 ### [ ] 3. Smoke test the portable bundle
 - Unzip the .zip to a temp folder
-- Double-click `Start Content List Generator.cmd`
+- Double-click `Start Content List Toolkit.cmd`
 - Window opens, no Python install required on the host
 
 ---

@@ -472,7 +472,7 @@ class FolderPickerDialog:
             self.current_path = Path.home()
 
         self.window = tk.Toplevel(parent)
-        self.window.title("Content List Generator")
+        self.window.title("Content List Toolkit")
         self.window.geometry("1180x840")
         self.window.minsize(980, 720)
         self.window.configure(bg=self.colors["app_bg"])
@@ -497,7 +497,7 @@ class FolderPickerDialog:
         shell.columnconfigure(1, weight=1)
         shell.rowconfigure(2, weight=1)
 
-        ttk.Label(shell, text="Content List Generator", style="Title.TLabel").grid(row=0, column=0, columnspan=2, sticky="w")
+        ttk.Label(shell, text="Content List Toolkit", style="Title.TLabel").grid(row=0, column=0, columnspan=2, sticky="w")
 
         top_bar = ttk.Frame(shell, style="Card.TFrame", padding=18)
         top_bar.grid(row=1, column=0, columnspan=2, sticky="ew", pady=(18, 0))
@@ -1198,7 +1198,7 @@ class ContentListApp:
         ctk.set_default_color_theme("blue")
         ctk.set_appearance_mode(theme_mode_label(current_mode))
         self.root = ctk.CTk()
-        self.root.title("Content List Generator")
+        self.root.title("Content List Toolkit")
         self.root.geometry("1360x860")
         self.root.minsize(1160, 760)
         self.theme_mode_var = tk.StringVar(value=theme_mode_label(current_mode))
@@ -1481,7 +1481,7 @@ class ContentListApp:
         brand.pack(fill="x", padx=18, pady=(24, 20))
         ctk.CTkLabel(
             brand,
-            text="Content List Generator",
+            text="Content List Toolkit",
             font=ctk.CTkFont(size=20, weight="bold"),
             text_color=themed_color("title_fg"),
             wraplength=230,
@@ -1548,7 +1548,7 @@ class ContentListApp:
         hero.grid_columnconfigure(0, weight=1)
         ctk.CTkLabel(
             hero,
-            text="Content List Generator",
+            text="Content List Toolkit",
             font=ctk.CTkFont(size=36, weight="bold"),
             text_color=themed_color("hero_fg"),
         ).grid(row=0, column=0, sticky="w", padx=28, pady=(24, 0))
@@ -1753,11 +1753,11 @@ class ContentListApp:
 
         card = ctk.CTkFrame(page, fg_color=themed_color("card_bg"), corner_radius=24)
         card.grid(row=0, column=0, sticky="ew", padx=28, pady=28)
-        ctk.CTkLabel(card, text="About Content List Generator", font=ctk.CTkFont(size=32, weight="bold"), text_color=themed_color("title_fg")).pack(anchor="w", padx=28, pady=(26, 0))
+        ctk.CTkLabel(card, text="About Content List Toolkit", font=ctk.CTkFont(size=32, weight="bold"), text_color=themed_color("title_fg")).pack(anchor="w", padx=28, pady=(26, 0))
         ctk.CTkLabel(
             card,
             text=(
-                "Content List Generator helps you create a simple file list from a folder and "
+                "Content List Toolkit helps you create a simple file list from a folder and "
                 "copy supported email files into a new location."
             ),
             font=ctk.CTkFont(size=14),

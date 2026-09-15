@@ -1127,14 +1127,14 @@ def convert_csv_to_xlsx(csv_path: Path, xlsx_path: Path, preserve_zeros: bool) -
             "docProps/core.xml",
             """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:dcmitype="http://purl.org/dc/dcmitype/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <dc:title>Content List Generator</dc:title>
+  <dc:title>Content List Toolkit</dc:title>
 </cp:coreProperties>""",
         )
         archive.writestr(
             "docProps/app.xml",
             """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties" xmlns:vt="http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes">
-  <Application>Content List Generator</Application>
+  <Application>Content List Toolkit</Application>
 </Properties>""",
         )
         archive.writestr(

@@ -59,7 +59,7 @@ const (
 	flowEmailCopy
 )
 
-const introMarkdown = `# Content List Generator
+const introMarkdown = `# Content List Toolkit
 
 Fast recursive folder tools for very large collections.
 
