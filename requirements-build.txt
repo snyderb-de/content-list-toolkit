@@ -1,0 +1,8 @@
+# Build-only dependencies. NOT installed on user machines.
+# Used by scripts/package_windows_portable.ps1 to freeze the Windows portable bundle.
+# Pinned for the same reproducibility reason as requirements.txt: an unpinned
+# PyInstaller means every build day can produce a different bootloader.
+# PyInstaller 6.22.3 supports Python 3.8-3.15 (CI builds on PYTHON_VERSION in
+# .github/workflows/release.yml).
+
+pyinstaller==6.22.3

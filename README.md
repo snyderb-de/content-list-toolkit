@@ -73,7 +73,8 @@ Two distinct release tracks with different update policies:
 - Deps pinned to EXACT versions in `requirements.txt`
 - Admin installs Python + deps on user machines via `pip install -r requirements.txt`
 - App shows a non-blocking orange banner at the top of the window if installed deps drift from the pinned versions (see `python/deps_check.py`)
-- Bumping a dep is a deliberate event: update `requirements.txt`, bump matching entry in `deps_check.py`, re-deploy scripts via the deploy bundle, admin re-runs `pip install` on user machines
+- Bumping a dep is a deliberate event: update `requirements.txt`, bump matching entry in BOTH `python/deps_check.py` and its deploy copy `deploy/windows/scripts/content-list-gen/deps_check.py`, re-deploy scripts via the deploy bundle, admin re-runs `pip install` on user machines
+- Build-only deps (PyInstaller) are pinned separately in `requirements-build.txt` — installed by `scripts/package_windows_portable.ps1`, never on user machines
 - Dependabot ignores major bumps for npm + gomod, but still surfaces security advisories
 
 ## Platform Notes

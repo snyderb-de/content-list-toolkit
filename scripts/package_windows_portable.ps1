@@ -38,7 +38,7 @@ if (-not (Test-Path $Python)) {
 Push-Location $RootDir
 try {
     & $Python -m pip install --upgrade pip
-    & $Python -m pip install -r (Join-Path $RootDir "requirements.txt") pyinstaller
+    & $Python -m pip install -r (Join-Path $RootDir "requirements.txt") -r (Join-Path $RootDir "requirements-build.txt")
 
     & $Python -m unittest discover -s ".\python\tests" -p "test_*.py"
     & $Python -m py_compile ".\python\content_list_core.py" ".\python\content_list_generator.py" ".\python\deps_check.py"
