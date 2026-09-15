@@ -10,9 +10,9 @@ on:
 
 env:
   GO_VERSION_FILE: go.mod
-  WAILS_VERSION: v2.12.0
+  WAILS_VERSION: v2.16.0
   NODE_VERSION: '24'
-  PYTHON_VERSION: '3.12'
+  PYTHON_VERSION: '3.14'
 
 jobs:
   unix-bundle:

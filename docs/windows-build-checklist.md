@@ -27,8 +27,8 @@ Open PowerShell as your normal user (NOT admin, unless noted).
   # expect: go version go1.26.0 windows/amd64
   ```
 
-### [ ] 3. Install Node.js 20 LTS
-- Download Node 20.x LTS installer from https://nodejs.org/
+### [ ] 3. Install Node.js 24 LTS
+- Download Node 24.x LTS installer from https://nodejs.org/
 - Run the installer with defaults
 - Open a NEW PowerShell window and verify:
   ```powershell
@@ -36,7 +36,7 @@ Open PowerShell as your normal user (NOT admin, unless noted).
   npm --version
   ```
 
-### [ ] 4. Install Python 3.12
+### [ ] 4. Install Python 3.14
 - Download from https://www.python.org/downloads/windows/
 - During install, CHECK the box "Add python.exe to PATH"
 - Open a NEW PowerShell window and verify:
@@ -56,7 +56,7 @@ Open PowerShell as your normal user (NOT admin, unless noted).
 
 ### [ ] 6. Install Wails CLI
 ```powershell
-go install github.com/wailsapp/wails/v2/cmd/wails@v2.12.0
+go install github.com/wailsapp/wails/v2/cmd/wails@v2.16.0
 ```
 
 ### [ ] 7. Add Go bin directory to PATH
@@ -71,7 +71,7 @@ go install github.com/wailsapp/wails/v2/cmd/wails@v2.12.0
 - Open a NEW PowerShell window and verify:
   ```powershell
   wails version
-  # expect: v2.12.0
+  # expect: v2.16.0
   ```
 
 ### [ ] 8. Install GitHub CLI (optional, for publishing)
