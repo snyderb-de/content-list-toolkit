@@ -101,7 +101,7 @@ cd code
 
 ### [ ] 2. Clone
 ```powershell
-git clone https://github.com/snyderb-de/content-list-generator.git
+git clone https://github.com/snyderb-de/content-list-toolkit.git
 cd content-list-generator
 ```
 
@@ -179,7 +179,7 @@ Open Git Bash:
 This uploads everything under `releases/` to the GitHub Release matching the tag.
 
 ### [ ] 3. Or upload manually
-- Go to https://github.com/snyderb-de/content-list-generator/releases
+- Go to https://github.com/snyderb-de/content-list-toolkit/releases
 - Click "Draft a new release"
 - Choose tag `v0.1.0`
 - Drag and drop the `.exe` files from `releases\windows-go\` and the `.zip` from `releases\windows-portable\`

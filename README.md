@@ -7,7 +7,7 @@ Content List Toolkit is maintained as two live desktop runtimes that stay in fea
 - Go app for macOS and Linux, with optional Windows `.exe` build outputs
 - Python app for Windows portable deployment
 
-End-user docs: [User Manual](project-dashboard/user-manual.html) · [Project Dashboard](https://snyderb-de.github.io/content-list-generator/)
+End-user docs: [User Manual](project-dashboard/user-manual.html) · [Project Dashboard](https://snyderb-de.github.io/content-list-toolkit/)
 
 Both runtimes support:
 

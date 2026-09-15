@@ -28,7 +28,7 @@
 - ✅ GitHub Actions JavaScript actions updated to Node 24-compatible major versions
 
 ### v0.2.3 (2026-05-20)
-- ✅ GitHub Pages dashboard deploy workflow shipped and Pages is live at `https://snyderb-de.github.io/content-list-generator/`
+- ✅ GitHub Pages dashboard deploy workflow shipped and Pages is live at `https://snyderb-de.github.io/content-list-toolkit/`
 - ✅ User manual redesigned in the dashboard style and linked from `README.md`
 - ✅ Scan progress overlay now persists while navigating between GUI screens
 - ✅ Sponsor button support merged via `.github/FUNDING.yml` after v0.2.3
@@ -78,7 +78,7 @@
 - Suggested resolution: 1600×1000 PNG, light-mode default
 
 ### ~~P0 — enable GitHub Pages for the dashboard~~ ✅ (2026-05-20)
-- ✅ Dashboard URL: `https://snyderb-de.github.io/content-list-generator/`
+- ✅ Dashboard URL: `https://snyderb-de.github.io/content-list-toolkit/`
 - Followup (P2): add the URL to README hero + repo About sidebar if desired
 
 ### ~~P1 — finish dependabot / Actions runtime sweep~~ ✅ (2026-06-12)

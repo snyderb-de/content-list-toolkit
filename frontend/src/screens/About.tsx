@@ -72,9 +72,9 @@ export default function About() {
             <button
               className="btn btn-ghost"
               style={{ padding: 0, color: 'var(--accent)', fontWeight: 500, fontSize: 13 }}
-              onClick={() => BrowserOpenURL('https://github.com/snyderb-de/content-list-generator')}
+              onClick={() => BrowserOpenURL('https://github.com/snyderb-de/content-list-toolkit')}
             >
-              github.com/snyderb-de/content-list-generator
+              github.com/snyderb-de/content-list-toolkit
             </button>
           </span>
         </div>
