@@ -63,7 +63,7 @@ from content_list_core import (
 from deps_check import check_deps, format_banner_text
 
 
-PLACEHOLDER_GITHUB_URL = "https://github.com/placeholder/content-list-generator"
+GITHUB_URL = "https://github.com/snyderb-de/content-list-toolkit"
 SETTINGS_FILE_NAME = "content-list-generator-settings.json"
 SETTINGS_ENV_VAR = "CONTENT_LIST_GENERATOR_SETTINGS"
 LEGACY_SETTINGS_PATH = Path.home() / ".content-list-generator-settings.json"
@@ -1768,8 +1768,8 @@ class ContentListApp:
         details = ctk.CTkFrame(card, fg_color=themed_color("card_alt_bg"), corner_radius=18)
         details.pack(fill="x", padx=28, pady=(0, 18))
         ctk.CTkLabel(details, text="Written by Bryan Snyder", font=ctk.CTkFont(size=16, weight="bold"), text_color=themed_color("body_fg")).pack(anchor="w", padx=20, pady=(18, 6))
-        ctk.CTkLabel(details, text=f"GitHub: {PLACEHOLDER_GITHUB_URL}", text_color=themed_color("body_fg"), wraplength=860, justify="left").pack(anchor="w", padx=20)
-        self.make_secondary_button(details, "Open GitHub Link", lambda: webbrowser.open_new_tab(PLACEHOLDER_GITHUB_URL)).pack(anchor="w", padx=20, pady=(12, 18))
+        ctk.CTkLabel(details, text=f"GitHub: {GITHUB_URL}", text_color=themed_color("body_fg"), wraplength=860, justify="left").pack(anchor="w", padx=20)
+        self.make_secondary_button(details, "Open GitHub Link", lambda: webbrowser.open_new_tab(GITHUB_URL)).pack(anchor="w", padx=20, pady=(12, 18))
 
         open_source = ctk.CTkFrame(card, fg_color=themed_color("card_alt_bg"), corner_radius=18)
         open_source.pack(fill="x", padx=28, pady=(0, 28))
