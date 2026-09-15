@@ -171,7 +171,14 @@ const (
 	tagIssueEmptyTag        tagIssueKind = "empty-tag"
 	tagIssueDuplicateTag    tagIssueKind = "duplicate-tag"
 	tagIssueDamagedText     tagIssueKind = "damaged-text"
+	tagIssueFieldLimit      tagIssueKind = "field-limit"
 )
+
+// accessTagsFieldLimit is the width of [Tags] in the CONTENTdm Access
+// template: Text(255). Access truncates silently at entry, and it truncates by
+// character count rather than at a separator, so an over-long cell arrives with
+// its final term cut mid-word.
+const accessTagsFieldLimit = 255
 
 // tagIssueSeverity separates the two questions this module answers. A blocking
 // issue is one that stops the tab-delimited file from loading into CONTENTdm
@@ -294,6 +301,9 @@ func checkTagCell(s string) TagCheckResult {
 		result.Issues = append(result.Issues, newTagIssue(tagIssueDuplicateTag,
 			fmt.Sprintf("repeated: %s", strings.Join(duplicates, ", "))))
 	}
+	if detail := describeFieldLimit(s, tags); detail != "" {
+		result.Issues = append(result.Issues, newTagIssue(tagIssueFieldLimit, detail))
+	}
 	if n := len(tags); n < minTagsPerRow || n > maxTagsPerRow {
 		result.Issues = append(result.Issues, newTagIssue(tagIssueTagCount,
 			fmt.Sprintf("%s, expected %d to %d",
@@ -404,4 +414,31 @@ func (r TagCheckResult) NeedsReview() bool {
 		}
 	}
 	return false
+}
+
+// describeFieldLimit reports cells at or beyond the Access field width.
+//
+// A cell measuring exactly the limit is the interesting case: Access cut it at
+// entry, so the text on screen looks complete while the last term is missing
+// characters. Counting runes rather than bytes matters here, because Access
+// counts characters and a diacritic in a German or French term would otherwise
+// shift the count.
+func describeFieldLimit(original string, tags []string) string {
+	length := len([]rune(original))
+	switch {
+	case length > accessTagsFieldLimit:
+		return fmt.Sprintf("%d characters, longer than the %d the Access Tags field holds",
+			length, accessTagsFieldLimit)
+	case length == accessTagsFieldLimit:
+		detail := fmt.Sprintf("exactly %d characters, the Access Tags field width, so it was probably truncated at entry",
+			accessTagsFieldLimit)
+		if len(tags) > 0 {
+			if last := tags[len(tags)-1]; last != "" {
+				detail += fmt.Sprintf("; check the final term %q", last)
+			}
+		}
+		return detail
+	default:
+		return ""
+	}
 }

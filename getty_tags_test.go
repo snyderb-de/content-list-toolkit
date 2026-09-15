@@ -378,3 +378,57 @@ func TestRepairedIssuesAreResolvedInTheCleanedCell(t *testing.T) {
 		}
 	}
 }
+
+// [Tags] is Text(255) in the CONTENTdm Access template. Access truncates at
+// entry by character count, not at a separator, so the final term arrives cut.
+func TestCheckTagCellFlagsTheAccessFieldWidth(t *testing.T) {
+	// Build a cell that lands exactly on the limit.
+	filler := strings.Repeat("a", accessTagsFieldLimit-len("aerial photographs; landscapes; "))
+	atLimit := "aerial photographs; landscapes; " + filler
+	if got := len([]rune(atLimit)); got != accessTagsFieldLimit {
+		t.Fatalf("test fixture is %d characters, want %d", got, accessTagsFieldLimit)
+	}
+
+	result := checkTagCell(atLimit)
+	if !hasIssue(result, tagIssueFieldLimit) {
+		t.Fatalf("expected a field-limit issue, got %+v", result.Issues)
+	}
+	for _, issue := range result.Issues {
+		if issue.Kind != tagIssueFieldLimit {
+			continue
+		}
+		if issue.Severity != severityReview {
+			t.Fatalf("a truncated cell uploads fine and is a question for a person, got %q", issue.Severity)
+		}
+		if issue.Repaired {
+			t.Fatal("cleaning cannot recover characters Access already discarded")
+		}
+		if !strings.Contains(issue.Detail, "truncated") {
+			t.Fatalf("detail should explain the truncation, got %q", issue.Detail)
+		}
+	}
+}
+
+func TestCheckTagCellFlagsCellsOverTheFieldWidth(t *testing.T) {
+	long := "aerial photographs; " + strings.Repeat("b", accessTagsFieldLimit)
+	result := checkTagCell(long)
+	if !hasIssue(result, tagIssueFieldLimit) {
+		t.Fatalf("expected a field-limit issue, got %+v", result.Issues)
+	}
+}
+
+// Characters, not bytes: a German or French AAT term must not be miscounted.
+func TestFieldLimitCountsCharactersNotBytes(t *testing.T) {
+	// 200 two-byte runes is 400 bytes but well inside the character limit.
+	input := strings.Repeat("ü", 200)
+	if detail := describeFieldLimit(input, []string{input}); detail != "" {
+		t.Fatalf("200 characters should be within the limit, got %q", detail)
+	}
+}
+
+func TestOrdinaryCellsHaveNoFieldLimitIssue(t *testing.T) {
+	result := checkTagCell("aerial photographs; landscapes; city plans")
+	if hasIssue(result, tagIssueFieldLimit) {
+		t.Fatalf("a short cell should not be flagged, got %+v", result.Issues)
+	}
+}
