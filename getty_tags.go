@@ -173,9 +173,52 @@ const (
 	tagIssueDamagedText     tagIssueKind = "damaged-text"
 )
 
+// tagIssueSeverity separates the two questions this module answers. A blocking
+// issue is one that stops the tab-delimited file from loading into CONTENTdm
+// at all. A review issue uploads perfectly well but is worth a human look.
+//
+// Severity describes the cell as it arrived. Whether the cleaned output still
+// carries the problem is a separate axis, reported by Repaired, because most
+// blocking issues are exactly the ones this module fixes automatically.
+type tagIssueSeverity string
+
+const (
+	severityBlocking tagIssueSeverity = "blocks-upload"
+	severityReview   tagIssueSeverity = "review"
+)
+
+// issueSeverity classifies a problem by whether it breaks the upload.
+//
+// Ghost characters are blocking: a literal tab splits a column, a newline
+// splits a row, and the invisible spaces are what currently force a hand check
+// of every line. Everything else loads fine and is a metadata question.
+func issueSeverity(kind tagIssueKind) tagIssueSeverity {
+	switch kind {
+	case tagIssueGhostCharacters:
+		return severityBlocking
+	default:
+		return severityReview
+	}
+}
+
+// repairedByCleaning reports whether writing the cleaned cell resolves the
+// problem. A count that is out of range, a duplicate term, or text already
+// damaged by a bad encoding round trip all need a person.
+func repairedByCleaning(kind tagIssueKind) bool {
+	switch kind {
+	case tagIssueGhostCharacters, tagIssueSeparator, tagIssueEmptyTag:
+		return true
+	default:
+		return false
+	}
+}
+
 type TagIssue struct {
-	Kind   tagIssueKind `json:"kind"`
-	Detail string       `json:"detail"`
+	Kind     tagIssueKind     `json:"kind"`
+	Severity tagIssueSeverity `json:"severity"`
+	// Repaired is true when the cleaned cell no longer has this problem.
+	Repaired bool   `json:"repaired"`
+	Detail   string `json:"detail"`
 }
 
 // TagCheckResult is the outcome for a single Tags cell.
@@ -202,28 +245,32 @@ func (r TagCheckResult) OK() bool {
 //
 // This checks structure only. Whether each term actually exists in the Getty
 // AAT is a separate question, answered against the vocabulary itself.
+func newTagIssue(kind tagIssueKind, detail string) TagIssue {
+	return TagIssue{
+		Kind:     kind,
+		Severity: issueSeverity(kind),
+		Repaired: repairedByCleaning(kind),
+		Detail:   detail,
+	}
+}
+
 func checkTagCell(s string) TagCheckResult {
 	normalized := normalizeTagText(s)
 	result := TagCheckResult{Original: s}
 
 	if normalized.Changed() {
-		result.Issues = append(result.Issues, TagIssue{
-			Kind:   tagIssueGhostCharacters,
-			Detail: normalized.ChangeSummary(),
-		})
+		result.Issues = append(result.Issues, newTagIssue(tagIssueGhostCharacters, normalized.ChangeSummary()))
 	}
 	if strings.ContainsRune(normalized.Cleaned, replacementChar) {
-		result.Issues = append(result.Issues, TagIssue{
-			Kind:   tagIssueDamagedText,
-			Detail: "contains U+FFFD replacement character from an earlier encoding error; the original character cannot be recovered automatically",
-		})
+		result.Issues = append(result.Issues, newTagIssue(tagIssueDamagedText,
+			"contains U+FFFD replacement character from an earlier encoding error; the original character cannot be recovered automatically"))
 	}
 
 	// The separator check runs against the text as it arrived, because
 	// splitting and rejoining below repairs the spacing either way and would
 	// hide the fact that it was ever wrong.
 	if detail := describeSeparatorProblems(normalized.Cleaned); detail != "" {
-		result.Issues = append(result.Issues, TagIssue{Kind: tagIssueSeparator, Detail: detail})
+		result.Issues = append(result.Issues, newTagIssue(tagIssueSeparator, detail))
 	}
 
 	var tags []string
@@ -240,23 +287,17 @@ func checkTagCell(s string) TagCheckResult {
 	result.Cleaned = strings.Join(tags, tagSeparator)
 
 	if emptyTags > 0 {
-		result.Issues = append(result.Issues, TagIssue{
-			Kind:   tagIssueEmptyTag,
-			Detail: fmt.Sprintf("%s dropped", pluralize(emptyTags, "empty tag", "empty tags")),
-		})
+		result.Issues = append(result.Issues, newTagIssue(tagIssueEmptyTag,
+			fmt.Sprintf("%s dropped", pluralize(emptyTags, "empty tag", "empty tags"))))
 	}
 	if duplicates := duplicateTags(tags); len(duplicates) > 0 {
-		result.Issues = append(result.Issues, TagIssue{
-			Kind:   tagIssueDuplicateTag,
-			Detail: fmt.Sprintf("repeated: %s", strings.Join(duplicates, ", ")),
-		})
+		result.Issues = append(result.Issues, newTagIssue(tagIssueDuplicateTag,
+			fmt.Sprintf("repeated: %s", strings.Join(duplicates, ", "))))
 	}
 	if n := len(tags); n < minTagsPerRow || n > maxTagsPerRow {
-		result.Issues = append(result.Issues, TagIssue{
-			Kind: tagIssueTagCount,
-			Detail: fmt.Sprintf("%s, expected %d to %d",
-				pluralize(n, "tag", "tags"), minTagsPerRow, maxTagsPerRow),
-		})
+		result.Issues = append(result.Issues, newTagIssue(tagIssueTagCount,
+			fmt.Sprintf("%s, expected %d to %d",
+				pluralize(n, "tag", "tags"), minTagsPerRow, maxTagsPerRow)))
 	}
 
 	return result
@@ -313,4 +354,54 @@ func pluralize(n int, singular, plural string) string {
 		return fmt.Sprintf("%d %s", n, singular)
 	}
 	return fmt.Sprintf("%d %s", n, plural)
+}
+
+// uploadUnsafeRunes returns the characters in s that would break a
+// tab-delimited export: a tab splits a column, CR or LF splits a row, and any
+// other control character is a parser's choice rather than a defined outcome.
+//
+// This is the post-condition on cleaning. Everything checkTagCell produces is
+// expected to come back empty here, and a test enforces that over the whole
+// ghost-character table.
+func uploadUnsafeRunes(s string) []rune {
+	var unsafe []rune
+	seen := map[rune]bool{}
+	for _, r := range s {
+		if r != '\t' && r != '\r' && r != '\n' && r >= 0x20 && r != 0x7F {
+			continue
+		}
+		if !seen[r] {
+			seen[r] = true
+			unsafe = append(unsafe, r)
+		}
+	}
+	return unsafe
+}
+
+// CleanedUploadSafe reports whether the cleaned cell can be written into a
+// tab-delimited file without breaking its structure.
+func (r TagCheckResult) CleanedUploadSafe() bool {
+	return len(uploadUnsafeRunes(r.Cleaned)) == 0
+}
+
+// OriginalBlocksUpload reports whether the cell as it arrived would have
+// broken the tab-delimited load. This is what the module exists to catch.
+func (r TagCheckResult) OriginalBlocksUpload() bool {
+	for _, issue := range r.Issues {
+		if issue.Severity == severityBlocking {
+			return true
+		}
+	}
+	return false
+}
+
+// NeedsReview reports whether anything survives the cleaning and still wants a
+// person to look at it.
+func (r TagCheckResult) NeedsReview() bool {
+	for _, issue := range r.Issues {
+		if !issue.Repaired {
+			return true
+		}
+	}
+	return false
 }

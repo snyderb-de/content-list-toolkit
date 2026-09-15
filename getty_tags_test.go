@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 )
@@ -284,6 +285,96 @@ func TestGhostRuneTableTracksTheFormula(t *testing.T) {
 		}
 		if actual != replacement {
 			t.Fatalf("U+%04X: formula replaces with %q, table uses %q", r, replacement, actual)
+		}
+	}
+}
+
+// The guarantee the module rests on: whatever comes in, the cleaned cell is
+// safe to write into a tab-delimited file. Checked against every character in
+// the ghost table rather than a handful of examples.
+func TestCleanedOutputIsAlwaysUploadSafe(t *testing.T) {
+	for _, g := range ghostRunes {
+		for _, shape := range []string{
+			"aerial%[1]cphotographs; landscapes; city plans",
+			"%[1]caerial photographs; landscapes; city plans",
+			"aerial photographs; landscapes; city plans%[1]c",
+			"aerial photographs;%[1]clandscapes; city plans",
+		} {
+			input := fmt.Sprintf(shape, g.value)
+			result := checkTagCell(input)
+			if unsafe := uploadUnsafeRunes(result.Cleaned); len(unsafe) > 0 {
+				t.Fatalf("U+%04X (%s) in %q left unsafe characters %U in %q",
+					g.value, g.name, shape, unsafe, result.Cleaned)
+			}
+		}
+	}
+}
+
+func TestUploadUnsafeRunesFindsStructureBreakers(t *testing.T) {
+	for _, tc := range []struct {
+		name  string
+		input string
+		want  bool
+	}{
+		{name: "tab splits a column", input: "aerial\tphotographs", want: true},
+		{name: "newline splits a row", input: "aerial\nphotographs", want: true},
+		{name: "carriage return splits a row", input: "aerial\rphotographs", want: true},
+		{name: "control character", input: "aerial\u0007photographs", want: true},
+		{name: "delete character", input: "aerial\u007Fphotographs", want: true},
+		{name: "ordinary text is fine", input: "aerial photographs; landscapes", want: false},
+		{name: "diacritics are fine", input: "Bauzeichnungen (Br\u00FCssel)", want: false},
+		{name: "a no-break space does not break the parse", input: "aerial\u00A0photographs", want: false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			got := len(uploadUnsafeRunes(tc.input)) > 0
+			if got != tc.want {
+				t.Fatalf("uploadUnsafeRunes(%q) unsafe = %v, want %v", tc.input, got, tc.want)
+			}
+		})
+	}
+}
+
+func TestIssueSeveritySeparatesUploadFailuresFromMetadataQuestions(t *testing.T) {
+	// Invisible characters are what actually stops the load.
+	blocking := checkTagCell("aerial\u00A0photographs; landscapes; city plans")
+	if !blocking.OriginalBlocksUpload() {
+		t.Fatalf("ghost characters should block the upload, got %+v", blocking.Issues)
+	}
+	if blocking.NeedsReview() {
+		t.Fatalf("cleaning resolves ghost characters, so nothing should need review: %+v", blocking.Issues)
+	}
+
+	// A wrong tag count uploads perfectly well and is a question for a person.
+	review := checkTagCell("aerial photographs; landscapes")
+	if review.OriginalBlocksUpload() {
+		t.Fatalf("a short tag count does not break the upload, got %+v", review.Issues)
+	}
+	if !review.NeedsReview() {
+		t.Fatalf("a short tag count needs a person, got %+v", review.Issues)
+	}
+}
+
+func TestRepairedIssuesAreResolvedInTheCleanedCell(t *testing.T) {
+	result := checkTagCell("\uFEFFaerial photographs;landscapes;; city plans")
+	for _, issue := range result.Issues {
+		if !issue.Repaired {
+			continue
+		}
+		switch issue.Kind {
+		case tagIssueGhostCharacters:
+			if normalizeTagText(result.Cleaned).Changed() {
+				t.Fatalf("cleaned cell still carries ghost characters: %q", result.Cleaned)
+			}
+		case tagIssueSeparator:
+			if describeSeparatorProblems(result.Cleaned) != "" {
+				t.Fatalf("cleaned cell still has separator problems: %q", result.Cleaned)
+			}
+		case tagIssueEmptyTag:
+			for _, tag := range result.Tags {
+				if strings.TrimSpace(tag) == "" {
+					t.Fatalf("cleaned cell still has an empty tag: %q", result.Tags)
+				}
+			}
 		}
 	}
 }
