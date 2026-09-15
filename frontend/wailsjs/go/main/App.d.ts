@@ -20,13 +20,13 @@ export function OpenPath(arg1:string):Promise<void>;
 
 export function PickFolder(arg1:string):Promise<string>;
 
-export function ResumeCloneWithDriveB(arg1:string):Promise<void>;
+export function RestartToApplyUpdate():Promise<void>;
 
-export function SaveSettings(arg1:main.ScanOptions):Promise<void>;
+export function ResumeCloneWithDriveB(arg1:string):Promise<void>;
 
 export function SaveReleaseFolder(arg1:string):Promise<void>;
 
-export function RestartToApplyUpdate():Promise<void>;
+export function SaveSettings(arg1:main.ScanOptions):Promise<void>;
 
 export function StartCloneCompare(arg1:main.CloneCompareOptions):Promise<void>;
 

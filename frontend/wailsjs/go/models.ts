@@ -1,5 +1,5 @@
 export namespace main {
-
+	
 	export class AgencyTemplateFields {
 	    rg: string;
 	    sg: string;
@@ -22,7 +22,7 @@ export namespace main {
 	    tdNum: string;
 	    locationId: string;
 	    recordLevel: string;
-
+	
 	    static createFrom(source: any = {}) {
 	        return new AgencyTemplateFields(source);
 	    }
@@ -88,7 +88,7 @@ export namespace main {
 	    agencyTemplate: boolean;
 	    agencyFields: AgencyTemplateFields;
 	    releaseFolder: string;
-
+	
 	    static createFrom(source: any = {}) {
 	        return new ScanOptions(source);
 	    }
@@ -108,9 +108,27 @@ export namespace main {
 	        this.foldersOnly = source["foldersOnly"];
 	        this.folderDepth = source["folderDepth"];
 	        this.agencyTemplate = source["agencyTemplate"];
-	        this.agencyFields = AgencyTemplateFields.createFrom(source["agencyFields"]);
+	        this.agencyFields = this.convertValues(source["agencyFields"], AgencyTemplateFields);
 	        this.releaseFolder = source["releaseFolder"];
 	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
 	}
 	export class UpdateStatus {
 	    supported: boolean;
@@ -122,11 +140,11 @@ export namespace main {
 	    releasePath: string;
 	    sha256: string;
 	    message: string;
-
+	
 	    static createFrom(source: any = {}) {
 	        return new UpdateStatus(source);
 	    }
-
+	
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.supported = source["supported"];
@@ -142,3 +160,4 @@ export namespace main {
 	}
 
 }
+

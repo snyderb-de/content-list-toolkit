@@ -38,20 +38,20 @@ export function PickFolder(arg1) {
   return window['go']['main']['App']['PickFolder'](arg1);
 }
 
-export function ResumeCloneWithDriveB(arg1) {
-  return window['go']['main']['App']['ResumeCloneWithDriveB'](arg1);
+export function RestartToApplyUpdate() {
+  return window['go']['main']['App']['RestartToApplyUpdate']();
 }
 
-export function SaveSettings(arg1) {
-  return window['go']['main']['App']['SaveSettings'](arg1);
+export function ResumeCloneWithDriveB(arg1) {
+  return window['go']['main']['App']['ResumeCloneWithDriveB'](arg1);
 }
 
 export function SaveReleaseFolder(arg1) {
   return window['go']['main']['App']['SaveReleaseFolder'](arg1);
 }
 
-export function RestartToApplyUpdate() {
-  return window['go']['main']['App']['RestartToApplyUpdate']();
+export function SaveSettings(arg1) {
+  return window['go']['main']['App']['SaveSettings'](arg1);
 }
 
 export function StartCloneCompare(arg1) {
