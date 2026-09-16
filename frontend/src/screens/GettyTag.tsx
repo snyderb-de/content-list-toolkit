@@ -278,20 +278,22 @@ export default function GettyTag() {
         <div className="card">
           <p className="card-title">Exported sheet</p>
           <div className="field">
-            <label className="field-label">Exported Sheet</label>
+            {/* The card title already says what this is; a visible label here
+                repeated it. The accessible name stays on the input. */}
             <div className="field-row">
               <input
                 className="text-input monospace"
+                aria-label="Exported sheet"
                 value={sheetPath}
                 onChange={(e) => setSheetPath(e.target.value)}
-                placeholder="Access Main table exported to .xlsx, .csv, or tab-delimited .txt"
               />
               <button className="btn btn-outline btn-sm" onClick={chooseSheet}>Browse</button>
             </div>
           </div>
           <div className="info-text" style={{ marginTop: 12 }}>
-            The check reads the <code>Tags</code> column. The original file is never modified —
-            a corrected copy is written beside it.
+            Accepts <code>.xlsx</code>, <code>.csv</code>, and tab-delimited <code>.txt</code>. The
+            check reads the <code>Tags</code> column. The original file is never modified — a
+            corrected copy is written beside it.
           </div>
         </div>
 
