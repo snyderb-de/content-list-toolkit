@@ -18,7 +18,7 @@ worse than one with gaps.
 ## Content List
 
 - [y] C1 Browse buttons open native folder dialog
-- [?] C2 Output filename auto-populates from source folder name. The `useEffect` on `sourceDir` in `ContentList.tsx` does populate it; suspected race with `GetScanDefaults()` resolving afterwards and overwriting with an empty value, which would make it intermittent. Re-test, and note whether it fails always or only sometimes.
+- [?] C2 Output filename auto-populates from source folder name. A race was found and fixed: `GetScanDefaults()` resolves asynchronously, sets `SourceDir` but never `OutputFile`, and was spread wholesale over current state — so choosing a folder before it resolved reset the source back to the startup directory and blanked the generated name. Re-test by picking a folder immediately on opening the screen, which is the timing that triggered it.
 - [y] C3 All toggles work (XLSX, preserve zeros, delete CSV — sub-options disable when XLSX off)
 - [y] C4 Hash selector has all 4 options
 - [y] C5 Start Scan → progress view shows (phase badge, bar, counters, current file)
