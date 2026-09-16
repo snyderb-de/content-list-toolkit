@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/csv"
 	"errors"
 	"fmt"
@@ -54,6 +55,12 @@ type TagSheetReport struct {
 
 	TotalRows  int `json:"totalRows"`
 	EmptyCells int `json:"emptyCells"`
+
+	// VocabularySource names where terms were verified, or is empty when the
+	// run checked structure only. A report has to say which, because a term
+	// absent from an exported list means something weaker than one Getty
+	// itself does not hold.
+	VocabularySource string `json:"vocabularySource,omitempty"`
 
 	// Rows carries only the rows with something to say. A clean sheet of ten
 	// thousand records produces an empty list rather than ten thousand
@@ -125,14 +132,24 @@ func detectSheetFormat(path string) (sheetFormat, error) {
 	}
 }
 
-// checkTagSheet reads an exported sheet and checks every Tags cell in it.
+// checkTagSheet reads an exported sheet and checks the structure of every Tags
+// cell in it, without consulting a vocabulary.
 func checkTagSheet(path string) (TagSheetReport, error) {
+	return checkTagSheetWithVocabulary(context.Background(), path, nil)
+}
+
+// checkTagSheetWithVocabulary additionally verifies every term against the
+// given vocabulary. A nil vocabulary checks structure only.
+func checkTagSheetWithVocabulary(ctx context.Context, path string, vocabulary gettyVocabulary) (TagSheetReport, error) {
 	format, err := detectSheetFormat(path)
 	if err != nil {
 		return TagSheetReport{}, err
 	}
 
 	report := TagSheetReport{Path: path, Format: format}
+	if vocabulary != nil {
+		report.VocabularySource = vocabulary.SourceName()
+	}
 
 	var rows [][]string
 	switch format {
@@ -174,7 +191,9 @@ func checkTagSheet(path string) (TagSheetReport, error) {
 			report.EmptyCells++
 			continue
 		}
-		if result := checkTagCell(value); !result.OK() {
+		result := checkTagCell(value)
+		verifyTags(ctx, vocabulary, &result)
+		if !result.OK() {
 			report.Rows = append(report.Rows, TagRow{Number: number, Result: result})
 		}
 	}

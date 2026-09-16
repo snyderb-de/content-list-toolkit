@@ -181,6 +181,9 @@ const (
 	tagIssueDamagedText     tagIssueKind = "damaged-text"
 	tagIssueFieldLimit      tagIssueKind = "field-limit"
 	tagIssueWhitespace      tagIssueKind = "whitespace"
+	tagIssueUnknownTerm     tagIssueKind = "unknown-term"
+	tagIssueTermCase        tagIssueKind = "term-case"
+	tagIssueNotChecked      tagIssueKind = "not-checked"
 )
 
 // accessTagsFieldLimit is the width of [Tags] in the CONTENTdm Access
@@ -243,6 +246,8 @@ type TagCheckResult struct {
 	Cleaned  string     `json:"cleaned"`
 	Tags     []string   `json:"tags"`
 	Issues   []TagIssue `json:"issues"`
+	// Terms is populated only when a vocabulary was consulted.
+	Terms []TagTermVerdict `json:"terms,omitempty"`
 }
 
 // Changed reports whether the cleaned cell differs from what was read.
