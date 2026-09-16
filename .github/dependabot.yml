@@ -9,14 +9,19 @@ updates:
       timezone: America/New_York
     open-pull-requests-limit: 5
     groups:
+      # Minor and patch updates arrive together; there is rarely a reason to
+      # look at them one at a time.
       go-minor-patch:
         update-types:
           - minor
           - patch
-    ignore:
-      - dependency-name: "*"
+      # Majors are grouped separately rather than ignored. Ignoring them is why
+      # this repository sat five Vite majors and three TypeScript majors behind
+      # while every dependency PR looked green. They need reading before
+      # merging, which is an argument for a separate pile, not for silence.
+      go-major:
         update-types:
-          - version-update:semver-major
+          - major
     commit-message:
       prefix: gomod
       include: scope
@@ -34,10 +39,10 @@ updates:
         update-types:
           - minor
           - patch
-    ignore:
-      - dependency-name: "*"
+      # See the note on go-major above.
+      npm-major:
         update-types:
-          - version-update:semver-major
+          - major
     commit-message:
       prefix: npm
       include: scope
@@ -55,6 +60,9 @@ updates:
         update-types:
           - minor
           - patch
+      actions-major:
+        update-types:
+          - major
     commit-message:
       prefix: actions
       include: scope

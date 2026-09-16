@@ -38,6 +38,9 @@ jobs:
           go install "github.com/wailsapp/wails/v2/cmd/wails@${WAILS_VER}"
           echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
 
+      - name: Frontend tests
+        run: npm --prefix frontend ci && npm --prefix frontend run test
+
       - name: Build releases (mac TUI + GUI universal, linux TUI)
         run: ./scripts/build_releases.sh
 

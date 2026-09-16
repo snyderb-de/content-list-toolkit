@@ -12,6 +12,7 @@ import (
 // of in a manual click-through.
 
 func TestCheckGettyTagsWritesBothOutputs(t *testing.T) {
+	isolateUserConfig(t)
 	path := writeXLSX(t, [][]string{
 		mainTableHeader,
 		rowWithTags("aerial\u00A0photographs; landscapes; city plans"),
@@ -52,6 +53,7 @@ func TestCheckGettyTagsWritesBothOutputs(t *testing.T) {
 // Writing an identical file would only raise the question of which one to
 // upload.
 func TestCheckGettyTagsSkipsTheCleanedCopyWhenNothingChanged(t *testing.T) {
+	isolateUserConfig(t)
 	path := writeXLSX(t, [][]string{
 		mainTableHeader,
 		rowWithTags("aerial photographs; landscapes; city plans"),
@@ -76,6 +78,7 @@ func TestCheckGettyTagsSkipsTheCleanedCopyWhenNothingChanged(t *testing.T) {
 }
 
 func TestCheckGettyTagsVerifiesAgainstATermList(t *testing.T) {
+	isolateUserConfig(t)
 	listPath := filepath.Join(t.TempDir(), "AAT Tags.csv")
 	if err := os.WriteFile(listPath, []byte("aerial photographs\nlandscapes\ncity plans\n"), 0o644); err != nil {
 		t.Fatalf("write list: %v", err)
@@ -104,6 +107,7 @@ func TestCheckGettyTagsVerifiesAgainstATermList(t *testing.T) {
 }
 
 func TestCheckGettyTagsReportsUsableErrors(t *testing.T) {
+	isolateUserConfig(t)
 	app := newApp("")
 
 	for _, tc := range []struct {
@@ -142,6 +146,7 @@ func TestCheckGettyTagsReportsUsableErrors(t *testing.T) {
 // An Access database is the likeliest wrong choice, since it is what the
 // workflow starts from. The error has to say what to do instead.
 func TestCheckGettyTagsGuidesTheUserOffAnAccessFile(t *testing.T) {
+	isolateUserConfig(t)
 	path := filepath.Join(t.TempDir(), "CONTENTdm template.accdb")
 	if err := os.WriteFile(path, []byte("not really a database"), 0o644); err != nil {
 		t.Fatalf("write file: %v", err)
@@ -158,6 +163,7 @@ func TestCheckGettyTagsGuidesTheUserOffAnAccessFile(t *testing.T) {
 }
 
 func TestBuildVocabularySelectsTheRightSource(t *testing.T) {
+	isolateUserConfig(t)
 	app := newApp("")
 
 	if v, err := app.buildVocabulary(GettyCheckOptions{Source: gettySourceNone}); err != nil || v != nil {
@@ -184,6 +190,7 @@ func TestBuildVocabularySelectsTheRightSource(t *testing.T) {
 // held, and editing it in place destroys the only thing a correction can be
 // checked against.
 func TestSaveGettyTagEditsNeverTouchesTheSource(t *testing.T) {
+	isolateUserConfig(t)
 	path := writeXLSX(t, [][]string{
 		mainTableHeader,
 		rowWithTags("landscapes; invented term; city plans"),
@@ -215,6 +222,7 @@ func TestSaveGettyTagEditsNeverTouchesTheSource(t *testing.T) {
 }
 
 func TestSaveGettyTagEditsAppliesTheEdit(t *testing.T) {
+	isolateUserConfig(t)
 	path := writeXLSX(t, [][]string{
 		mainTableHeader,
 		rowWithTags("landscapes; invented term; city plans"),
@@ -247,6 +255,7 @@ func TestSaveGettyTagEditsAppliesTheEdit(t *testing.T) {
 // A term pasted from the Getty website arrives with the same invisible
 // characters as anything else pasted from the Getty website.
 func TestSaveGettyTagEditsCleansWhatWasTyped(t *testing.T) {
+	isolateUserConfig(t)
 	path := writeXLSX(t, [][]string{
 		mainTableHeader,
 		rowWithTags("landscapes; invented term; city plans"),
@@ -274,6 +283,7 @@ func TestSaveGettyTagEditsCleansWhatWasTyped(t *testing.T) {
 // An edit can introduce a problem as easily as fix one, so the saved file is
 // re-checked and the fresh report returned.
 func TestSaveGettyTagEditsReportsWhatWasActuallySaved(t *testing.T) {
+	isolateUserConfig(t)
 	path := writeXLSX(t, [][]string{
 		mainTableHeader,
 		rowWithTags("aerial photographs; landscapes; city plans"),
@@ -296,6 +306,7 @@ func TestSaveGettyTagEditsReportsWhatWasActuallySaved(t *testing.T) {
 }
 
 func TestSaveGettyTagEditsIgnoresBlankEdits(t *testing.T) {
+	isolateUserConfig(t)
 	path := writeXLSX(t, [][]string{
 		mainTableHeader,
 		rowWithTags("aerial photographs; landscapes; city plans"),
@@ -328,6 +339,7 @@ func readXLSXRowsForTest(t *testing.T, path string) ([][]string, error) {
 // it replaces the report that described the problems, so it has to account for
 // what changed or the record of the correction is gone.
 func TestSavedReportRecordsWhatWasFixed(t *testing.T) {
+	isolateUserConfig(t)
 	path := writeXLSX(t, [][]string{
 		mainTableHeader,
 		rowWithTags("automobiles; counters (furniture; counter stools"),
@@ -371,6 +383,7 @@ func TestSavedReportRecordsWhatWasFixed(t *testing.T) {
 // A hand correction and an automatic cleaning answer different questions later,
 // so they are not pooled into one list.
 func TestSavedReportSeparatesHandCorrectionsFromAutomaticOnes(t *testing.T) {
+	isolateUserConfig(t)
 	path := writeXLSX(t, [][]string{
 		mainTableHeader,
 		rowWithTags("automobiles; counters (furniture; counter stools"),
@@ -405,6 +418,7 @@ func TestSavedReportSeparatesHandCorrectionsFromAutomaticOnes(t *testing.T) {
 // The "before" has to be the text as Access exported it, not as some
 // intermediate pass left it.
 func TestSavedReportRecordsTheOriginalText(t *testing.T) {
+	isolateUserConfig(t)
 	path := writeXLSX(t, [][]string{
 		mainTableHeader,
 		rowWithTags("aerial\u00A0photographs; landscapes"),
@@ -424,5 +438,35 @@ func TestSavedReportRecordsTheOriginalText(t *testing.T) {
 	if !strings.Contains(result.Report.Changes[0].Before, "\u00A0") {
 		t.Fatalf("before should be the exported text, invisible characters and all: %q",
 			result.Report.Changes[0].Before)
+	}
+}
+
+// A remembered path can outlive the file it points at. Prefilling one that no
+// longer resolves is worse than prefilling nothing: it looks like a working
+// choice until Check fails.
+func TestGettyDefaultsDropAVanishedSheet(t *testing.T) {
+	isolateUserConfig(t)
+	app := newApp("")
+
+	present := writeXLSX(t, [][]string{mainTableHeader, rowWithTags("a; b; c")})
+	app.rememberSheet(present)
+	if got := app.GetGettyDefaults().LastSheet; got != present {
+		t.Fatalf("LastSheet = %q, want the file that exists", got)
+	}
+
+	app.rememberSheet(filepath.Join(t.TempDir(), "gone", "export.xlsx"))
+	if got := app.GetGettyDefaults().LastSheet; got != "" {
+		t.Fatalf("LastSheet = %q, want empty for a path that no longer exists", got)
+	}
+}
+
+// A directory is not a sheet.
+func TestGettyDefaultsRejectADirectoryAsTheLastSheet(t *testing.T) {
+	isolateUserConfig(t)
+	app := newApp("")
+
+	app.rememberSheet(t.TempDir())
+	if got := app.GetGettyDefaults().LastSheet; got != "" {
+		t.Fatalf("LastSheet = %q, want empty for a directory", got)
 	}
 }

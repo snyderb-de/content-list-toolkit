@@ -119,13 +119,25 @@ func (a *App) GetGettyDefaults() GettyCheckOptions {
 		options.Source = gettyVocabularySource(settings.GettySource)
 	}
 	options.VocabularyPath = settings.GettyVocabularyPath
-	options.LastSheet = settings.GettyLastSheet
+
+	// Only offer the last sheet if it is still there. A remembered path can
+	// outlive the file — a temporary folder, an unmounted share, a deleted
+	// export — and prefilling a path that no longer resolves is worse than
+	// prefilling nothing, because it looks like a working choice.
+	if settings.GettyLastSheet != "" && fileExists(settings.GettyLastSheet) {
+		options.LastSheet = settings.GettyLastSheet
+	}
 	return options
 }
 
 func dirExists(path string) bool {
 	info, err := os.Stat(path)
 	return err == nil && info.IsDir()
+}
+
+func fileExists(path string) bool {
+	info, err := os.Stat(path)
+	return err == nil && !info.IsDir()
 }
 
 // rememberSheet records the export just checked, so the picker and the screen
