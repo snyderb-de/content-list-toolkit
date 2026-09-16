@@ -256,6 +256,13 @@ func (a *App) SaveGettyTagEdits(options GettyCheckOptions, edits []GettyTagEdit)
 			filepath.Base(cleanedPath), err)
 	}
 
+	// The re-check finds a corrected sheet clean, which is the point — but a
+	// report saying only "no problems found" is not a record of anything, and
+	// it overwrites the one that described the problems. Carry the corrections
+	// across so the report accounts for them.
+	saved.SourcePath = options.SheetPath
+	saved.Changes = collectTagChanges(report, byRow)
+
 	if options.WriteReport {
 		if err := writeGettyTagReport(gettyReportPath(options.SheetPath), saved); err != nil {
 			return GettySaveResult{CleanedPath: cleanedPath, Report: saved}, fmt.Errorf("wrote the sheet but could not write the report: %w", err)
@@ -267,4 +274,47 @@ func (a *App) SaveGettyTagEdits(options GettyCheckOptions, edits []GettyTagEdit)
 		Report:      saved,
 		Summary:     saved.Summary(),
 	}, nil
+}
+
+// collectTagChanges pairs every altered cell with what it held before.
+//
+// The "before" is read from the original check of the source, so it is the
+// text as Access exported it rather than as some intermediate pass left it.
+func collectTagChanges(source TagSheetReport, edits map[int]string) []TagChange {
+	before := make(map[int]string, len(source.Rows))
+	for _, row := range source.Rows {
+		before[row.Number] = row.Result.Original
+	}
+
+	var changes []TagChange
+	for _, row := range source.Rows {
+		edited, byHand := edits[row.Number]
+		after := row.Result.Cleaned
+		if byHand {
+			after = checkTagCell(edited).Cleaned
+		}
+		if after == row.Result.Original {
+			continue
+		}
+		changes = append(changes, TagChange{
+			Row:    row.Number,
+			Before: row.Result.Original,
+			After:  after,
+			ByHand: byHand,
+		})
+	}
+
+	// An edit can land on a row the check found nothing wrong with.
+	for number, edited := range edits {
+		if _, alreadyListed := before[number]; alreadyListed {
+			continue
+		}
+		changes = append(changes, TagChange{
+			Row:    number,
+			Before: "(no findings on this row)",
+			After:  checkTagCell(edited).Cleaned,
+			ByHand: true,
+		})
+	}
+	return changes
 }

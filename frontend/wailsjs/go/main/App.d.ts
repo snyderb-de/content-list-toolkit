@@ -32,6 +32,8 @@ export function RestartToApplyUpdate():Promise<void>;
 
 export function ResumeCloneWithDriveB(arg1:string):Promise<void>;
 
+export function RevealPath(arg1:string):Promise<void>;
+
 export function SaveGettyTagEdits(arg1:main.GettyCheckOptions,arg2:Array<main.GettyTagEdit>):Promise<main.GettySaveResult>;
 
 export function SaveGettyVocabulary(arg1:main.gettyVocabularySource,arg2:string):Promise<void>;

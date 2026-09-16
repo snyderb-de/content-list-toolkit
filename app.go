@@ -63,6 +63,28 @@ func (a *App) OpenPath(path string) {
 	}
 }
 
+// RevealPath opens the folder containing a file and selects the file in it,
+// which is what someone wants after a tool writes output: the file next to its
+// siblings, ready to be moved, renamed, or attached.
+//
+// macOS and Windows can both select the file. Linux has no portable way to ask
+// a file manager to do that, so it falls back to opening the folder.
+func (a *App) RevealPath(path string) {
+	if path == "" {
+		return
+	}
+	switch runtime.GOOS {
+	case "darwin":
+		exec.Command("open", "-R", path).Start() //nolint:errcheck
+	case "windows":
+		// explorer exits non-zero even when it succeeds, so the error is
+		// ignored here as it is in OpenPath.
+		exec.Command("explorer", "/select,"+filepath.Clean(path)).Start() //nolint:errcheck
+	default:
+		exec.Command("xdg-open", filepath.Dir(path)).Start() //nolint:errcheck
+	}
+}
+
 func (a *App) GetScanDefaults() ScanOptions {
 	defaults := ScanOptions{
 		SourceDir:     a.startDir,

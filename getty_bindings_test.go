@@ -323,3 +323,106 @@ func readXLSXRowsForTest(t *testing.T, path string) ([][]string, error) {
 	rows, _, err := readXLSXRows(path)
 	return rows, err
 }
+
+// A report on a corrected sheet finds nothing wrong, which is the point. But
+// it replaces the report that described the problems, so it has to account for
+// what changed or the record of the correction is gone.
+func TestSavedReportRecordsWhatWasFixed(t *testing.T) {
+	path := writeXLSX(t, [][]string{
+		mainTableHeader,
+		rowWithTags("automobiles; counters (furniture; counter stools"),
+		rowWithTags("aerial\u00A0photographs; landscapes; city plans"),
+	})
+
+	app := newApp("")
+	result, err := app.SaveGettyTagEdits(
+		GettyCheckOptions{SheetPath: path, Source: gettySourceNone, WriteReport: true},
+		[]GettyTagEdit{{Row: 2, Tags: "automobiles; counters (furniture); counter stools"}},
+	)
+	if err != nil {
+		t.Fatalf("SaveGettyTagEdits: %v", err)
+	}
+
+	if len(result.Report.Rows) != 0 {
+		t.Fatalf("expected the corrected sheet to come back clean, got %+v", result.Report.Rows)
+	}
+	if result.Report.SourcePath == "" {
+		t.Fatal("the report must name the file the corrections came from")
+	}
+
+	text := buildGettyTagReport(result.Report)
+	for _, want := range []string{
+		"Changes applied",
+		"Corrected by hand",
+		"counters (furniture)",  // the hand correction
+		"Cleaned automatically", // the no-break space row
+		"Nothing left to fix",
+	} {
+		if !strings.Contains(text, want) {
+			t.Fatalf("report missing %q:\n%s", want, text)
+		}
+	}
+	// "No problems found" would imply there never were any.
+	if strings.Contains(text, "No problems found") {
+		t.Fatalf("a corrected sheet must not read as one that was never wrong:\n%s", text)
+	}
+}
+
+// A hand correction and an automatic cleaning answer different questions later,
+// so they are not pooled into one list.
+func TestSavedReportSeparatesHandCorrectionsFromAutomaticOnes(t *testing.T) {
+	path := writeXLSX(t, [][]string{
+		mainTableHeader,
+		rowWithTags("automobiles; counters (furniture; counter stools"),
+		rowWithTags("aerial\u00A0photographs; landscapes; city plans"),
+	})
+
+	app := newApp("")
+	result, err := app.SaveGettyTagEdits(
+		GettyCheckOptions{SheetPath: path, Source: gettySourceNone},
+		[]GettyTagEdit{{Row: 2, Tags: "automobiles; counters (furniture); counter stools"}},
+	)
+	if err != nil {
+		t.Fatalf("SaveGettyTagEdits: %v", err)
+	}
+
+	byHand, automatic := 0, 0
+	for _, change := range result.Report.Changes {
+		if change.ByHand {
+			byHand++
+		} else {
+			automatic++
+		}
+	}
+	if byHand != 1 {
+		t.Fatalf("expected 1 hand correction, got %d: %+v", byHand, result.Report.Changes)
+	}
+	if automatic != 1 {
+		t.Fatalf("expected 1 automatic cleaning, got %d: %+v", automatic, result.Report.Changes)
+	}
+}
+
+// The "before" has to be the text as Access exported it, not as some
+// intermediate pass left it.
+func TestSavedReportRecordsTheOriginalText(t *testing.T) {
+	path := writeXLSX(t, [][]string{
+		mainTableHeader,
+		rowWithTags("aerial\u00A0photographs; landscapes"),
+	})
+
+	app := newApp("")
+	result, err := app.SaveGettyTagEdits(
+		GettyCheckOptions{SheetPath: path, Source: gettySourceNone},
+		[]GettyTagEdit{{Row: 2, Tags: "aerial photographs; landscapes; city plans"}},
+	)
+	if err != nil {
+		t.Fatalf("SaveGettyTagEdits: %v", err)
+	}
+	if len(result.Report.Changes) != 1 {
+		t.Fatalf("expected 1 change, got %+v", result.Report.Changes)
+	}
+	if !strings.Contains(result.Report.Changes[0].Before, "\u00A0") {
+		t.Fatalf("before should be the exported text, invisible characters and all: %q",
+			result.Report.Changes[0].Before)
+	}
+}

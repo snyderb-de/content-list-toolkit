@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/xuri/excelize/v2"
@@ -135,8 +136,11 @@ func buildGettyTagReport(report TagSheetReport) string {
 	lines := []string{
 		"Getty Tag Report",
 		fmt.Sprintf("Checked file: %s", filepath.Base(report.Path)),
-		fmt.Sprintf("File type: %s", report.Format),
 	}
+	if report.SourcePath != "" {
+		lines = append(lines, fmt.Sprintf("Corrected from: %s", filepath.Base(report.SourcePath)))
+	}
+	lines = append(lines, fmt.Sprintf("File type: %s", report.Format))
 	if report.SheetName != "" {
 		lines = append(lines, fmt.Sprintf("Worksheet: %s", report.SheetName))
 	}
@@ -154,8 +158,14 @@ func buildGettyTagReport(report TagSheetReport) string {
 		"",
 	)
 
+	lines = append(lines, changeLines(report)...)
+
 	if len(report.Rows) == 0 {
-		lines = append(lines, "No problems found. The Tags column is ready to upload.", "")
+		if len(report.Changes) > 0 {
+			lines = append(lines, "Nothing left to fix. The Tags column is ready to upload.", "")
+		} else {
+			lines = append(lines, "No problems found. The Tags column is ready to upload.", "")
+		}
 		lines = append(lines, gettyAttribution(report)...)
 		return strings.Join(lines, "\n") + "\n"
 	}
@@ -190,6 +200,54 @@ func buildGettyTagReport(report TagSheetReport) string {
 	)
 	lines = append(lines, gettyAttribution(report)...)
 	return strings.Join(lines, "\n") + "\n"
+}
+
+// changeLines records what was altered, so a report on a corrected sheet is a
+// record of the correction rather than only a clean bill of health.
+//
+// Corrections made by hand are listed apart from those the cleaning made.
+// Months later those answer different questions: one is a cataloguing decision
+// somebody took, the other is this tool removing characters that should never
+// have been there.
+func changeLines(report TagSheetReport) []string {
+	if len(report.Changes) == 0 {
+		return nil
+	}
+
+	byHand := make([]TagChange, 0, len(report.Changes))
+	automatic := make([]TagChange, 0, len(report.Changes))
+	for _, change := range report.Changes {
+		if change.ByHand {
+			byHand = append(byHand, change)
+		} else {
+			automatic = append(automatic, change)
+		}
+	}
+
+	lines := []string{
+		fmt.Sprintf("Changes applied: %s", pluralize(len(report.Changes), "row", "rows")),
+		strings.Repeat("─", 38),
+	}
+	lines = append(lines, renderChanges("Corrected by hand", byHand)...)
+	lines = append(lines, renderChanges("Cleaned automatically", automatic)...)
+	return lines
+}
+
+func renderChanges(title string, changes []TagChange) []string {
+	if len(changes) == 0 {
+		return nil
+	}
+	sort.Slice(changes, func(i, j int) bool { return changes[i].Row < changes[j].Row })
+
+	lines := []string{fmt.Sprintf("%s (%d):", title, len(changes))}
+	for _, change := range changes {
+		lines = append(lines,
+			fmt.Sprintf("  Row %d", change.Row),
+			fmt.Sprintf("    was: %s", change.Before),
+			fmt.Sprintf("    now: %s", change.After),
+		)
+	}
+	return append(lines, "")
 }
 
 // issuePrefix states what the reader has to do about a finding before the

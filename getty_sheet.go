@@ -45,6 +45,17 @@ type TagRow struct {
 	Result TagCheckResult `json:"result"`
 }
 
+// TagChange is one Tags cell as it was and as it ended up.
+type TagChange struct {
+	Row    int    `json:"row"`
+	Before string `json:"before"`
+	After  string `json:"after"`
+	// ByHand separates a correction someone made from one the cleaning made,
+	// because they answer different questions later: the first is a cataloguing
+	// decision, the second is this tool doing its job.
+	ByHand bool `json:"byHand"`
+}
+
 // TagSheetReport is the outcome of checking one exported sheet.
 type TagSheetReport struct {
 	Path         string      `json:"path"`
@@ -61,6 +72,15 @@ type TagSheetReport struct {
 	// absent from an exported list means something weaker than one Getty
 	// itself does not hold.
 	VocabularySource string `json:"vocabularySource,omitempty"`
+
+	// SourcePath is the file the corrections came from, when this report
+	// describes a cleaned copy rather than the original export.
+	SourcePath string `json:"sourcePath,omitempty"`
+
+	// Changes records what was altered on the way to this file. A report on a
+	// corrected sheet finds nothing wrong, which is the point — but "nothing
+	// wrong" with no account of what changed is not a record of anything.
+	Changes []TagChange `json:"changes,omitempty"`
 
 	// Rows carries only the rows with something to say. A clean sheet of ten
 	// thousand records produces an empty list rather than ten thousand

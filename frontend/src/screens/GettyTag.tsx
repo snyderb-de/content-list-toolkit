@@ -5,6 +5,7 @@ import {
   GetGettyDefaults,
   OpenPath,
   PickSheet,
+  RevealPath,
   SaveGettyTagEdits,
   SaveGettyVocabulary,
 } from '../../wailsjs/go/main/App'
@@ -435,6 +436,13 @@ export default function GettyTag() {
           {reportPath && (
             <button className="btn btn-outline" onClick={() => OpenPath(reportPath)}>
               Open Report
+            </button>
+          )}
+          {/* Both outputs are written beside the source, so one reveal covers
+              them; it selects whichever was actually written. */}
+          {(cleanedPath || reportPath) && (
+            <button className="btn btn-outline" onClick={() => RevealPath(cleanedPath || reportPath)}>
+              Show in Folder
             </button>
           )}
           <button className="btn btn-ghost" onClick={reset}>Check Another</button>

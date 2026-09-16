@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { CancelEmailCopy, OpenPath, StartEmailCopy } from '../../wailsjs/go/main/App'
+import { CancelEmailCopy, OpenPath, RevealPath, StartEmailCopy } from '../../wailsjs/go/main/App'
 import { EventsOff, EventsOn } from '../../wailsjs/runtime/runtime'
 import FolderPicker from '../components/FolderPicker'
 import ProgressBar from '../components/ProgressBar'

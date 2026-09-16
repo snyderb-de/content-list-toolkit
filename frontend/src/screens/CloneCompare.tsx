@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { CancelCloneCompare, OpenPath, ResumeCloneWithDriveB, StartCloneCompare } from '../../wailsjs/go/main/App'
+import { CancelCloneCompare, OpenPath, RevealPath, ResumeCloneWithDriveB, StartCloneCompare } from '../../wailsjs/go/main/App'
 import { EventsOff, EventsOn } from '../../wailsjs/runtime/runtime'
 import FolderPicker from '../components/FolderPicker'
 import ProgressBar from '../components/ProgressBar'
