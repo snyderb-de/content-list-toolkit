@@ -16,15 +16,8 @@ case "$MODE" in
   go-gui)
     exec ./run-go-gui.sh
     ;;
-  python|python-gui)
-    exec python3 ./python/content_list_generator.py
-    ;;
-  python-cli)
-    shift || true
-    exec python3 ./python/content_list_generator.py --cli "$@"
-    ;;
   *)
-    echo "Usage: $0 [go|go-gui|python|python-cli]" >&2
+    echo "Usage: $0 [go|go-gui]" >&2
     exit 1
     ;;
 esac

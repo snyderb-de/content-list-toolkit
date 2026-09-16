@@ -12,22 +12,17 @@ fixtures all cost maintenance for nothing.
 Documented in `README.md` and `docs/windows-build-checklist.md`. The code is
 still in the tree so existing deployments have somewhere to migrate from.
 
-Removal checklist, not yet started:
+Removed on 2026-09-16, after confirming no machine still runs the `.bat`
+launcher. Deleted `python/`, `deploy/windows/`, the requirements files, the
+Python launchers, the two Python packaging scripts, `parity_check.sh`, and
+`copy_email_files.py`; dropped the `windows-portable` and `windows-python` CI
+jobs, `PYTHON_VERSION`, and the `pip` Dependabot ecosystem; removed both
+download cards from the dashboard and rewrote the user manual's runtime
+guidance.
 
-- [ ] Confirm no admin-deployed machine is still running the `.bat` launcher
-- [ ] Stop publishing `content-list-generator-windows-portable.zip` and
-      `content-list-generator-windows-python.zip`; drop the `windows-portable`
-      and `windows-python` jobs from `.github/workflows/release.yml`
-- [ ] Remove the download cards for both from `project-dashboard/index.html`
-- [ ] Delete `python/`, `deploy/windows/`, `requirements.txt`,
-      `requirements-build.txt`, `run-python-gui.{sh,bat}`,
-      `scripts/package_windows_python_bundle.sh`,
-      `scripts/package_windows_portable.ps1`
-- [ ] Drop the Python steps from `scripts/dev_check.sh` and remove
-      `scripts/parity_check.sh` along with the shared fixtures it drives
-- [ ] Remove the `pip` ecosystem from `.github/dependabot.yml`
-- [ ] Drop `PYTHON_VERSION` from `.github/workflows/release.yml`
-- [ ] Update `testing/README.md` and the `testing/*/` runners that invoke Python
+Kept on purpose: the `testing/` golden fixtures, which Go tests assert against,
+and `generate_fixture.py`, which regenerates them and never imported the
+retired runtime.
 
 ## Recently Shipped
 
@@ -101,7 +96,6 @@ Removal checklist, not yet started:
 ### P0 — capture GUI screenshots
 - macOS `.app` (Wails GUI)
 - Wails Windows GUI (now unblocked by v0.2.2 fix)
-- Python customtkinter GUI (managed Windows path)
 - Bubble Tea TUI (Linux/Mac terminal)
 - Add to README hero + user manual + dashboard hero
 - Suggested resolution: 1600×1000 PNG, light-mode default
@@ -126,7 +120,7 @@ Removal checklist, not yet started:
 
 ## Backlog (no order)
 - Auto-update mechanism for Wails app
-- Decide the final public GitHub repo URL and replace placeholder links in `python/content_list_generator.py`
+- Decide the final public GitHub repo URL (the placeholder link is gone; the Go About screen points at snyderb-de/content-list-toolkit)
 - Transfer repo ownership or publishing control to `dpa-snyder`
 - Decide the final project license (evaluate GPL vs MIT vs Apache)
 - Decide the final attribution requirement for reuse or redistribution

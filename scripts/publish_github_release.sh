@@ -14,8 +14,6 @@ Examples:
   scripts/publish_github_release.sh v0.1.0 --title "Content List Toolkit" --notes-file release-notes.md
 
 Uploads release artifacts under releases/, excluding .gitkeep.
-The Windows Python source bundle publishes only content-list-generator-windows-python.zip,
-not the loose staging files used to create that zip.
 If the GitHub release already exists, matching assets are overwritten.
 EOF
 }
@@ -83,24 +81,10 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-WINDOWS_PY_DIR="$RELEASES_DIR/windows-python"
-WINDOWS_PY_ZIP="$WINDOWS_PY_DIR/content-list-generator-windows-python.zip"
-
-if [[ -d "$WINDOWS_PY_DIR" ]] && [[ -n "$(find "$WINDOWS_PY_DIR" -maxdepth 1 -type f ! -name ".gitkeep" -print -quit)" ]] && [[ ! -f "$WINDOWS_PY_ZIP" ]]; then
-  echo "Windows Python release staging exists but $WINDOWS_PY_ZIP is missing." >&2
-  exit 1
-fi
-
 mapfile -d '' ASSETS < <(
   find "$RELEASES_DIR" -mindepth 2 -maxdepth 2 -type f ! -name ".gitkeep" -print0 |
     sort -z |
     while IFS= read -r -d '' asset; do
-      relative="${asset#$RELEASES_DIR/}"
-      case "$relative" in
-        windows-python/*)
-          [[ "$asset" == "$WINDOWS_PY_ZIP" ]] || continue
-          ;;
-      esac
       printf '%s\0' "$asset"
     done
 )

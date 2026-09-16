@@ -36,23 +36,6 @@ Open PowerShell as your normal user (NOT admin, unless noted).
   npm --version
   ```
 
-### [ ] 4. Install Python 3.14 — RETIRED, skip this step
-The Python runtime is retired. Python is only needed if you are still building
-the legacy portable bundle in Phase 4, which is itself retired. A Wails GUI
-build needs no Python at all.
-
-<details>
-<summary>Legacy steps, kept until the retired runtime is removed</summary>
-
-- Download from https://www.python.org/downloads/windows/
-- During install, CHECK the box "Add python.exe to PATH"
-- Open a NEW PowerShell window and verify:
-  ```powershell
-  python --version
-  pip --version
-  ```
-</details>
-
 ### [ ] 5. Verify WebView2 runtime present
 - Win11 has it by default. Win10 may need it.
 - Run:
@@ -148,36 +131,6 @@ Copy-Item "build\bin\content-list-generator.exe" "releases\windows-go\content-li
 
 ---
 
-## Phase 4 — Build the portable Python bundle (PyInstaller) — RETIRED
-
-The Python runtime is retired, and so is this bundle. The Wails `.exe` from
-Phase 3 needs no installer and runs from any folder including a USB drive,
-which is the only thing this bundle provided. Skip to Phase 5.
-
-<details>
-<summary>Legacy steps, kept until the retired runtime is removed</summary>
-
-### [ ] 1. Run the packager
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\package_windows_portable.ps1
-```
-- Takes ~3–5 min (creates venv, pip installs deps + pyinstaller, builds one-folder bundle, zips it)
-
-### [ ] 2. Verify output
-```powershell
-ls releases\windows-portable\
-# expect: content-list-generator-windows-portable.zip
-```
-
-### [ ] 3. Smoke test the portable bundle
-- Unzip the .zip to a temp folder
-- Double-click `Start Content List Toolkit.cmd`
-- Window opens, no Python install required on the host
-
-</details>
-
----
-
 ## Phase 5 — Publish to GitHub Release (optional)
 
 You only need this if cutting a public release. Skip for local-only builds.
@@ -199,7 +152,7 @@ This uploads everything under `releases/` to the GitHub Release matching the tag
 - Go to https://github.com/snyderb-de/content-list-toolkit/releases
 - Click "Draft a new release"
 - Choose tag `v0.1.0`
-- Drag and drop the `.exe` files from `releases\windows-go\` and the `.zip` from `releases\windows-portable\`
+- Drag and drop the `.exe` files from `releases\windows-go\`
 - Publish
 
 ---
@@ -208,7 +161,7 @@ This uploads everything under `releases/` to the GitHub Release matching the tag
 
 Eventually, this whole checklist becomes unnecessary. CI does it automatically:
 - Push a tag → workflow `.github/workflows/release.yml` runs on `windows-latest` runners
-- Builds Wails GUI (amd64 + arm64) and portable bundle
+- Builds Wails GUI (amd64 + arm64)
 - Publish job attaches them to the GitHub Release
 
 Use this checklist when:
@@ -249,12 +202,10 @@ Use this checklist when:
 ## Quick reference card
 
 ```powershell
-# Full Windows release in 3 commands (after Phase 1 prereqs):
+# Full Windows release in 2 commands (after Phase 1 prereqs):
 git pull
 wails build -platform windows/amd64 -clean -o "content-list-generator.exe"
-powershell -ExecutionPolicy Bypass -File .\scripts\package_windows_portable.ps1
 ```
 
 Outputs:
 - `build\bin\content-list-generator.exe`
-- `releases\windows-portable\content-list-generator-windows-portable.zip`

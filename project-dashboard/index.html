@@ -197,11 +197,6 @@
           <div class="dl-title">.exe — Wails native</div>
           <div class="dl-meta">v0.2.2+ routes GUI builds correctly. Unsigned builds may still show SmartScreen.</div>
         </a>
-        <a href="https://github.com/snyderb-de/content-list-toolkit/releases/latest/download/content-list-generator-windows-portable.zip" class="dl-card">
-          <div class="dl-platform">Windows · portable</div>
-          <div class="dl-title">.zip — no install</div>
-          <div class="dl-meta"><strong>Retired.</strong> The Python runtime behind this bundle is retired — use the Windows GUI .exe above, which also needs no install and runs from USB.</div>
-        </a>
         <a href="https://github.com/snyderb-de/content-list-toolkit/releases/latest/download/content-list-generator-gui-darwin-universal.zip" class="dl-card">
           <div class="dl-platform">macOS · universal</div>
           <div class="dl-title">.app — Wails GUI</div>
@@ -211,11 +206,6 @@
           <div class="dl-platform">Linux · amd64</div>
           <div class="dl-title">TUI binary</div>
           <div class="dl-meta">Bubble Tea terminal UI. <code>chmod +x</code> then run.</div>
-        </a>
-        <a href="https://github.com/snyderb-de/content-list-toolkit/releases/latest/download/content-list-generator-windows-python.zip" class="dl-card">
-          <div class="dl-platform">Windows · Python source</div>
-          <div class="dl-title">.zip — BYO Python</div>
-          <div class="dl-meta"><strong>Retired.</strong> The Python runtime is retired; nothing needs to be pre-installed for the Windows GUI .exe above.</div>
         </a>
       </div>
     </div>
@@ -235,7 +225,7 @@
             <span class="tid">P0-01</span>
             <div>
               <div class="t-title">Verify v0.2.5 builds on target machines</div>
-              <div class="t-note">Smoke test Windows Wails .exe, macOS .app, Linux binary, Windows portable zip, and Windows Python source bundle on their real target hosts.</div>
+              <div class="t-note">Smoke test Windows Wails .exe, macOS .app, and Linux binary on their real target hosts.</div>
             </div>
             <div class="imp"><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span></div>
           </div>
@@ -244,7 +234,7 @@
             <span class="tid">P0-02</span>
             <div>
               <div class="t-title">Capture GUI screenshots</div>
-              <div class="t-note">Mac .app, Wails Windows GUI, Python customtkinter GUI, Bubble Tea TUI. Add to README, user manual, and dashboard hero.</div>
+              <div class="t-note">Mac .app, Wails Windows GUI, Bubble Tea TUI. Add to README, user manual, and dashboard hero.</div>
             </div>
             <div class="imp"><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span></span></div>
           </div>
@@ -258,14 +248,6 @@
             <div class="imp"><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span></span></div>
           </div>
 
-          <div class="todo">
-            <span class="tid">P2-01</span>
-            <div>
-              <div class="t-title">Windows-Python release hygiene</div>
-              <div class="t-note">Publisher now uploads only <code>content-list-generator-windows-python.zip</code>; loose staging files stay out of GitHub Releases.</div>
-            </div>
-            <div class="imp"><span class="on"></span><span class="on"></span><span class="on"></span><span></span><span></span></div>
-          </div>
 
           <div class="todo">
             <span class="tid">P2-02</span>
@@ -425,7 +407,7 @@
           <div class="phase-body">
             <div class="ptasks">
               <div class="ptask"><span class="wid">R-501</span>License decision (evaluate GPL vs MIT vs Apache)</div>
-              <div class="ptask"><span class="wid">R-502</span>Replace <code>PLACEHOLDER_GITHUB_URL</code> in <code>python/content_list_generator.py</code></div>
+              <div class="ptask"><span class="wid">R-502</span>Replace <code>PLACEHOLDER_GITHUB_URL</code> — done; the placeholder and its file are gone</div>
               <div class="ptask"><span class="wid">R-503</span>Full user manual with screenshots</div>
               <div class="ptask"><span class="wid">R-504</span>Repo ownership transfer or publishing handoff to <code>dpa-snyder</code></div>
               <div class="ptask"><span class="wid">R-505</span>End-to-end verification: Win11, Win10, macOS arm64+amd64, Ubuntu, Fedora</div>
@@ -468,7 +450,7 @@
           <div class="done-item"><span class="dcheck">✓</span><span class="did">D-012</span><span class="dtext">Debug doc <code>docs/debug/windows-launch-failure.md</code> tracking the silent .exe exit investigation</span></div>
           <div class="done-item"><span class="dcheck">✓</span><span class="did">D-011</span><span class="dtext">Tag v0.2.1 with <code>-webview2 download</code> flag (default in Wails 2.12, no-op; investigation continues)</span></div>
           <div class="done-item"><span class="dcheck">✓</span><span class="did">D-010</span><span class="dtext">v0.2.0 published with full multi-platform artifact set — first end-to-end tag → release pipeline test</span></div>
-          <div class="done-item"><span class="dcheck">✓</span><span class="did">D-009</span><span class="dtext">CI build matrix green across mac, linux, Windows GUI amd64+arm64, Windows portable, Windows python source</span></div>
+          <div class="done-item"><span class="dcheck">✓</span><span class="did">D-009</span><span class="dtext">CI build matrix green across mac, linux, and Windows GUI amd64+arm64</span></div>
           <div class="done-item"><span class="dcheck">✓</span><span class="did">D-008</span><span class="dtext">App icon set generated from <code>build/icon.svg</code> — appicon.png + icon.icns + multi-resolution icon.ico</span></div>
           <div class="done-item"><span class="dcheck">✓</span><span class="did">D-007</span><span class="dtext">Branch protection enabled on <code>main</code>, PR-driven workflow established</span></div>
           <div class="done-item"><span class="dcheck">✓</span><span class="did">D-006</span><span class="dtext">Python deploy strategy — <code>requirements.txt</code> exact pins + runtime drift banner in GUI</span></div>
@@ -524,7 +506,7 @@
         <a href="https://github.com/snyderb-de/content-list-toolkit/releases/latest" class="res-card" target="_blank" rel="noopener">
           <div class="rc-label">Downloads</div>
           <div class="rc-title">Latest Release</div>
-          <div class="rc-desc">All platform binaries — macOS .app, Windows .exe, Linux binary, portable zip</div>
+          <div class="rc-desc">All platform binaries — macOS .app, Windows .exe, Linux binary</div>
         </a>
         <a href="https://github.com/snyderb-de/content-list-toolkit/blob/main/README.md" class="res-card" target="_blank" rel="noopener">
           <div class="rc-label">Overview</div>

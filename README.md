@@ -5,12 +5,11 @@ Written by Bryan Snyder
 Content List Toolkit is a single Go desktop application: a Wails GUI on macOS,
 Windows, and Linux, plus a Bubble Tea TUI on macOS and Linux.
 
-> **The Python runtime is retired.** It existed to give Windows a GUI before the
-> Wails build covered that platform, and it no longer earns its keep: the Go app
-> is a strict superset. Python offered content list, email copy, and about; the
-> Go app has those plus Clone Compare and the in-app User Manual. See
-> [Retired: the Python runtime](#retired-the-python-runtime) for what this means
-> for existing Windows deployments.
+> **The Python runtime was removed on 2026-09-16.** It existed to give Windows a
+> GUI before the Wails build covered that platform. The Go app is a strict
+> superset, so nothing was lost. See
+> [Retired: the Python runtime](#retired-the-python-runtime) if you are
+> migrating an existing Windows deployment.
 
 End-user docs: [User Manual](project-dashboard/user-manual.html) · [Project Dashboard](https://snyderb-de.github.io/content-list-toolkit/)
 
@@ -37,16 +36,13 @@ Deploy and distribution files that must stay aligned with the app:
 - repo-root launchers such as `run-go-gui.sh` and `content-list-generator.bat`
 - packaging helpers in `scripts/`
 
-Retired, kept only until existing deployments have migrated:
-
-- `python/` — the Python runtime
-- `deploy/windows/` — the `.bat`-launcher deploy bundle
+The `python/` runtime and the `deploy/windows/` `.bat` bundle were removed on
+2026-09-16. They remain in git history at tag `v0.2.10` if ever needed.
 
 Generated outputs belong in `build/` and `releases/` and are intentionally not tracked.
 
 ## Repo Layout
 
-- `python/` retired Python runtime and its tests — see [Retired: the Python runtime](#retired-the-python-runtime)
 - `project-dashboard/` static project dashboard for repo status and docs
 - `scripts/` build, parity, packaging, and local-run helpers
 - `testing/` tool-oriented fixtures, generators, runners, and ignored local manual-test folders
@@ -105,14 +101,13 @@ Automated checks:
 go test ./...
 ```
 
-The Python tests and the cross-language parity checks still run while the
-retired runtime remains in the tree. They stop being meaningful once it is
-removed.
+The golden fixtures under `testing/` began as cross-language parity checks
+against the Python runtime. They outlived it: `scan_test.go` and
+`email_copy_test.go` still assert against them as regression coverage.
 
 Shared helper scripts:
 
-- `./scripts/dev_check.sh` runs the main smoke suite
-- `./scripts/parity_check.sh` runs the cross-language fixture parity checks
+- `./scripts/dev_check.sh` runs vet and the full test suite
 
 Tool-oriented testing layout:
 
@@ -183,9 +178,18 @@ Settings do not carry over automatically. The Python app stored them in
 `%APPDATA%\content-list-generator\settings.json`. They are small and quick to
 re-enter.
 
-### What still remains in the tree
+### What was removed
 
-`python/`, `deploy/windows/`, `requirements.txt`, `requirements-build.txt`, and
-the Python packaging scripts are still present so that existing deployments
-have somewhere to migrate from, and so the decision stays reversible while that
-happens. They receive no new features. Removing them is tracked in `TODO.md`.
+`python/`, `deploy/windows/`, `requirements.txt`, `requirements-build.txt`, the
+Python launchers, `scripts/package_windows_python_bundle.sh`,
+`scripts/package_windows_portable.ps1`, `scripts/parity_check.sh`, and
+`scripts/copy_email_files.py`. The `windows-portable` and `windows-python` CI
+jobs and the `pip` Dependabot ecosystem went with them.
+
+Two things deliberately stayed. The golden fixtures under `testing/` are
+asserted against by Go tests, so they are regression coverage rather than
+parity leftovers. And `testing/*/generate_fixture.py` regenerates those
+fixtures — it is standard-library dev tooling that never imported the retired
+runtime.
+
+Everything removed is in git history at tag `v0.2.10`.

@@ -1,8 +1,0 @@
-# Pinned to exact versions for reproducible deploys.
-# Python deploy mode (deploy/windows/*) expects these EXACT versions.
-# When bumping, also update EXPECTED in python/deps_check.py
-# and re-deploy the .bat-launched scripts to user machines.
-# Verify against your dev env with: pip freeze | grep -E "customtkinter|blake3"
-
-customtkinter==6.0.0
-blake3==1.0.9

@@ -398,12 +398,6 @@
               <strong>First launch:</strong> Gatekeeper says "could not verify free of malware." Right-click the app → Open → Open. Or System Settings → Privacy &amp; Security → "Open Anyway."
             </div>
           </div>
-          <div class="card">
-            <span class="pill">Windows · portable</span>
-            <h3 style="margin-bottom:6px">No-install zip</h3>
-            <p>Download <code>content-list-generator-windows-portable.zip</code>. Unzip anywhere — USB, Desktop, a network share. Run <code>Start Content List Toolkit.cmd</code>.</p>
-            <p style="margin-top:8px">Settings stay in <code>data\</code> beside the launcher. Recommended for managed Windows fleets.</p>
-          </div>
         </div>
         <div class="card-row">
           <div class="card">
@@ -597,7 +591,7 @@ my-folder-content-list-2026-05-20T13-45-02.xlsx   (if XLSX enabled)</code></pre>
               <tr><td><code>Off</code></td><td>~ disk read speed</td><td>Quick inventories where bytewise identity does not matter.</td></tr>
               <tr><td><code>SHA-1</code></td><td>fast</td><td>Legacy compatibility, casual fingerprinting.</td></tr>
               <tr><td><code>SHA-256</code></td><td>slower, stronger</td><td>Default for verifications that must hold up to scrutiny.</td></tr>
-              <tr><td><code>BLAKE3</code></td><td>fastest secure hash</td><td>Best speed/strength trade-off. Requires the <code>blake3</code> Python package on the Python runtime.</td></tr>
+              <tr><td><code>BLAKE3</code></td><td>fastest secure hash</td><td>Best speed/strength trade-off. Built in — nothing to install.</td></tr>
             </tbody>
           </table>
           <div class="note" style="margin-top:12px">
@@ -774,8 +768,8 @@ my-folder-content-list-2026-05-20T13-45-02.xlsx   (if XLSX enabled)</code></pre>
         <div class="timeline-item">
           <h3>Windows: .exe does not launch at all</h3>
           <p>
-            Fixed in v0.2.2. If you are on an earlier version, upgrade or use the portable
-            <code>.zip</code> instead. Details in <code>docs/debug/windows-launch-failure.md</code> in the repo.
+            Fixed in v0.2.2. If you are on an earlier version, upgrade to the current
+            <code>.exe</code>. Details in <code>docs/debug/windows-launch-failure.md</code> in the repo.
           </p>
         </div>
         <div class="timeline-item">
@@ -793,14 +787,6 @@ my-folder-content-list-2026-05-20T13-45-02.xlsx   (if XLSX enabled)</code></pre>
             For a quick inventory, turn hashing off and rerun.
           </p>
         </div>
-        <div class="timeline-item">
-          <h3>Python deploy: dependency-drift banner appears</h3>
-          <p>
-            The orange banner at the top of the window means an installed Python package's version
-            does not match the expected version. Tell your IT Admin — they need to run
-            <code>pip install -U -r requirements.txt</code> on the affected machine.
-          </p>
-        </div>
       </div>
     </section>
 
@@ -812,8 +798,8 @@ my-folder-content-list-2026-05-20T13-45-02.xlsx   (if XLSX enabled)</code></pre>
       </div>
       <div class="cards">
         <div class="card">
-          <h3>Which runtime should I install — Go or Python?</h3>
-          <p>On macOS or Linux, install the Go GUI <code>.app</code> or Linux binary. On Windows, prefer the portable Python <code>.zip</code> for managed fleets (no admin rights, no install, settings beside the launcher); use the Wails <code>.exe</code> on personal machines for the lighter download. Both runtimes produce identical CSV output — parity is enforced by fixture tests.</p>
+          <h3>Which download do I need?</h3>
+          <p>macOS: the <code>.app</code>. Linux: the binary. Windows: the <code>.exe</code>. There is one application now — the Python runtime was retired once the Windows <code>.exe</code> could do everything it did. The <code>.exe</code> needs no admin rights and no installer, and runs from a USB drive or network share, so it suits managed fleets as well as personal machines.</p>
         </div>
         <div class="card">
           <h3>Does it work on network drives?</h3>
@@ -832,8 +818,8 @@ my-folder-content-list-2026-05-20T13-45-02.xlsx   (if XLSX enabled)</code></pre>
           <p>No — stopping a scan discards its partial CSV. Scans are fast enough that restart is the safer model. For very large drives, work folder-by-folder so a stop only loses one subtree.</p>
         </div>
         <div class="card">
-          <h3>Why does BLAKE3 require a Python package but SHA-1 / SHA-256 do not?</h3>
-          <p>SHA-1 and SHA-256 ship in Python's standard library (<code>hashlib</code>). BLAKE3 needs the third-party <code>blake3</code> package because it is not yet part of <code>hashlib</code>. The Go runtime has BLAKE3 built in via <code>github.com/zeebo/blake3</code>, no install step required.</p>
+          <h3>Do any of the hash options need something installed?</h3>
+          <p>No. BLAKE3, SHA-1, and SHA-256 are all built into the application via <code>github.com/zeebo/blake3</code> and the Go standard library. This used to be a real question on the retired Python runtime, where BLAKE3 needed a separate package.</p>
         </div>
         <div class="card">
           <h3>Will email-copy modify or open <code>.pst</code> / <code>.ost</code> files?</h3>
@@ -867,7 +853,7 @@ my-folder-content-list-2026-05-20T13-45-02.xlsx   (if XLSX enabled)</code></pre>
             <li>Stop a scan with <code>s</code> or <code>esc</code> in the TUI; in the GUI use the Stop button.</li>
             <li>Filtered samples in the done summary tell you what got skipped. Glance over them to confirm exclusions did what you expected.</li>
             <li>For migrations, write the original and clone CSVs to the same output folder so the diff is easy to file alongside.</li>
-            <li>The portable Windows .zip is the most reliable Windows install path — no admin rights, no install. Recommend it to less-technical users.</li>
+            <li>The Windows .exe needs no admin rights and no installer — it runs from wherever you put it. Recommend it to less-technical users.</li>
             <li>Folders-only mode + a depth cap is the fastest way to map a drive before deciding what to scan in full.</li>
             <li>Settings persist across launches per-user. Reset them by deleting the settings file (path listed in <a href="#about">About</a>).</li>
           </ul>
@@ -891,11 +877,11 @@ my-folder-content-list-2026-05-20T13-45-02.xlsx   (if XLSX enabled)</code></pre>
               <tr><td>Settings file (macOS)</td><td><code>~/Library/Application Support/content-list-generator/settings.json</code></td></tr>
               <tr><td>Settings file (Windows)</td><td><code>%APPDATA%\content-list-generator\settings.json</code></td></tr>
               <tr><td>Settings file (Linux)</td><td><code>~/.config/content-list-generator/settings.json</code></td></tr>
-              <tr><td>Settings file (Windows portable)</td><td><code>data\content-list-generator-settings.json</code> beside the launcher.</td></tr>
+              <tr><td>Settings file (Windows)</td><td><code>%APPDATA%\content-list-generator\settings.json</code></td></tr>
               <tr><td>Latest release</td><td><a href="https://github.com/snyderb-de/content-list-toolkit/releases/latest" target="_blank" rel="noopener">github.com/snyderb-de/content-list-toolkit/releases/latest</a></td></tr>
               <tr><td>Source code</td><td><a href="https://github.com/snyderb-de/content-list-toolkit" target="_blank" rel="noopener">github.com/snyderb-de/content-list-toolkit</a></td></tr>
               <tr><td>Project dashboard</td><td><a href="index.html">Open the dashboard</a> — live stats, downloads, roadmap.</td></tr>
-              <tr><td>Python deploy deps</td><td><code>customtkinter 5.2.2</code>, <code>blake3 1.0.8</code></td></tr>
+              
             </tbody>
           </table>
           <div class="note" style="margin-top:12px">
