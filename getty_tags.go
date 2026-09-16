@@ -184,6 +184,7 @@ const (
 	tagIssueUnknownTerm     tagIssueKind = "unknown-term"
 	tagIssueTermCase        tagIssueKind = "term-case"
 	tagIssueNotChecked      tagIssueKind = "not-checked"
+	tagIssueUnbalanced      tagIssueKind = "unbalanced-brackets"
 )
 
 // accessTagsFieldLimit is the width of [Tags] in the CONTENTdm Access
@@ -317,6 +318,9 @@ func checkTagCell(s string) TagCheckResult {
 	if duplicates := duplicateTags(tags); len(duplicates) > 0 {
 		result.Issues = append(result.Issues, newTagIssue(tagIssueDuplicateTag,
 			fmt.Sprintf("repeated: %s", strings.Join(duplicates, ", "))))
+	}
+	if detail := describeUnbalancedTags(tags); detail != "" {
+		result.Issues = append(result.Issues, newTagIssue(tagIssueUnbalanced, detail))
 	}
 	if detail := describeFieldLimit(s, tags); detail != "" {
 		result.Issues = append(result.Issues, newTagIssue(tagIssueFieldLimit, detail))
@@ -458,4 +462,48 @@ func describeFieldLimit(original string, tags []string) string {
 	default:
 		return ""
 	}
+}
+
+// describeUnbalancedTags reports tags with an unclosed bracket.
+//
+// AAT qualifies many terms parenthetically — "counters (furniture)",
+// "cafeterias (eating and drinking spaces)" — and a lost closing bracket is a
+// real failure seen in production data. It usually means the term was
+// truncated or mangled on the way in, and the result is a tag that no
+// vocabulary will ever match.
+//
+// It is reported rather than repaired. Where the bracket belongs is a guess:
+// "counters (furniture" might want a bracket at the end, or might have lost
+// several words before it.
+func describeUnbalancedTags(tags []string) string {
+	var broken []string
+	for _, tag := range tags {
+		if unbalancedBrackets(tag) {
+			broken = append(broken, tag)
+		}
+	}
+	if len(broken) == 0 {
+		return ""
+	}
+	return fmt.Sprintf("unclosed bracket in %s", strings.Join(quoteAll(broken), ", "))
+}
+
+// unbalancedBrackets reports whether a tag's brackets fail to pair up. It
+// tracks nesting rather than counting, so ")text(" is caught as well as a
+// simple missing close.
+func unbalancedBrackets(tag string) bool {
+	pairs := map[rune]rune{')': '(', ']': '[', '}': '{'}
+	var stack []rune
+	for _, r := range tag {
+		switch r {
+		case '(', '[', '{':
+			stack = append(stack, r)
+		case ')', ']', '}':
+			if len(stack) == 0 || stack[len(stack)-1] != pairs[r] {
+				return true
+			}
+			stack = stack[:len(stack)-1]
+		}
+	}
+	return len(stack) > 0
 }

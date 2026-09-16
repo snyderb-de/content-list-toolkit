@@ -496,3 +496,63 @@ func TestGhostCharactersStillBlockWhenMixedWithOrdinarySpaces(t *testing.T) {
 		t.Fatal("a no-break space blocks the upload regardless of surrounding spaces")
 	}
 }
+
+// Found in a real export: an AAT term that lost its closing bracket. The cell
+// passes every other structural check — five tags, correct separators — so
+// nothing else would have caught it.
+func TestCheckTagCellFlagsAnUnclosedBracket(t *testing.T) {
+	result := checkTagCell("automobiles; cafeteria trays; cafeterias (eating and drinking spaces); counters (furniture; counter stools")
+
+	if !hasIssue(result, tagIssueUnbalanced) {
+		t.Fatalf("expected an unbalanced-brackets issue, got %+v", result.Issues)
+	}
+	for _, issue := range result.Issues {
+		if issue.Kind != tagIssueUnbalanced {
+			continue
+		}
+		if !strings.Contains(issue.Detail, `"counters (furniture"`) {
+			t.Fatalf("detail should quote the broken tag, got %q", issue.Detail)
+		}
+		if issue.Repaired {
+			t.Fatal("where the bracket belongs is a guess, so this cannot be repaired")
+		}
+		if issue.Severity != severityReview {
+			t.Fatalf("a broken bracket uploads fine, got %q", issue.Severity)
+		}
+	}
+	// The correctly bracketed term alongside it must not be flagged.
+	if strings.Contains(result.Issues[0].Detail, "eating and drinking") {
+		t.Fatal("a balanced term was reported as broken")
+	}
+}
+
+func TestUnbalancedBracketsTracksNesting(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		tag  string
+		want bool
+	}{
+		{name: "balanced", tag: "counters (furniture)", want: false},
+		{name: "no brackets", tag: "automobiles", want: false},
+		{name: "nested", tag: "signs (objects (marked))", want: false},
+		{name: "unclosed", tag: "counters (furniture", want: true},
+		{name: "unopened", tag: "counters furniture)", want: true},
+		{name: "inverted", tag: ")furniture(", want: true},
+		{name: "square", tag: "term [qualifier", want: true},
+		{name: "mismatched", tag: "term (qualifier]", want: true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := unbalancedBrackets(tc.tag); got != tc.want {
+				t.Fatalf("unbalancedBrackets(%q) = %v, want %v", tc.tag, got, tc.want)
+			}
+		})
+	}
+}
+
+// Parenthetical qualifiers are normal in AAT and must not be flagged.
+func TestBalancedQualifiersAreNotFlagged(t *testing.T) {
+	result := checkTagCell("cafeterias (eating and drinking spaces); counters (furniture); signs (objects)")
+	if hasIssue(result, tagIssueUnbalanced) {
+		t.Fatalf("balanced qualifiers must not be flagged, got %+v", result.Issues)
+	}
+}
