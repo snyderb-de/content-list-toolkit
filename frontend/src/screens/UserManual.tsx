@@ -19,6 +19,27 @@ const agencyRows = [
   ['Material Type, Record Level', 'These start as Born Digital and Item. Change them only when the whole sheet needs different values.'],
 ]
 
+const gettySourceRows = [
+  ['Getty, live', 'Nothing to set up, but needs internet access to Getty', 'Always, when it is reachable. It is the only up-to-date source.'],
+  ['Built-in list', 'Nothing. The list is inside the app.', 'When Getty cannot be reached. Works with no internet at all.'],
+  ['A term list on this machine', 'A file you choose', 'When you keep your own list, or downloaded a newer one.'],
+  ['Do not verify terms', 'Nothing', 'When you only want the hidden characters cleaned up.'],
+]
+
+const gettyFindingRows = [
+  ['Invisible characters', 'Hidden characters pasted in with the term. These are what stop an upload. The app fixes these for you.'],
+  ['Separator', 'A semicolon missing its space, or a space in front of one. Fixed for you.'],
+  ['Spacing', 'Extra spaces at the start, end, or middle. Fixed for you.'],
+  ['Empty tag', 'Two semicolons together, or one at the end. The empty entry is removed.'],
+  ['Not in AAT', 'Getty has no such term. Suggested replacements appear beside it when there are any.'],
+  ['Spelling case', 'The term exists but Getty spells it with different capital letters, which can mean a different thing.'],
+  ['Unclosed bracket', 'A term that lost its closing bracket, such as counters (furniture. Nothing will ever match it.'],
+  ['Duplicate', 'The same term twice in one cell.'],
+  ['Tag count', 'Fewer than 3 or more than 5 terms.'],
+  ['Too long', 'The cell fills the 255 characters Access allows, so Access probably cut the last term off mid-word.'],
+  ['Not checked', 'Getty could not be reached for that term. This does not mean the term is wrong.'],
+]
+
 const emailTypes = [
   '.dbx', '.eml', '.emlx', '.mbox', '.mbx', '.msg', '.olk14msgsource',
   '.olk15message', '.ost', '.pst', '.rge', '.tbb', '.wdseml',
@@ -39,6 +60,7 @@ export default function UserManual() {
           <a href="#manual-agency-template">Agency Template</a>
           <a href="#manual-email-copy">Email Copy</a>
           <a href="#manual-clone-compare">Clone Compare</a>
+          <a href="#manual-getty-tags">Getty Tags</a>
           <a href="#manual-outputs">Outputs</a>
           <a href="#manual-updates">Updates</a>
           <a href="#manual-troubleshooting">Troubleshooting</a>
@@ -129,6 +151,61 @@ export default function UserManual() {
               <div><dt>Metadata Clone</dt><dd>The app found likely PDF saved-detail differences only.</dd></div>
               <div><dt>Not a Clone</dt><dd>Files are missing, extra, or different.</dd></div>
             </dl>
+          </section>
+
+          <section id="manual-getty-tags" className="manual-section">
+            <p className="manual-kicker">Workflow</p>
+            <h3>Getty Tags</h3>
+            <p>
+              Use Getty Tags to check the Tags column of a CONTENTdm export before you upload it. It removes the
+              hidden characters that stop a tab-delimited file from loading, and checks every term against the Getty
+              Art &amp; Architecture Thesaurus. Your export is never changed — the app writes a corrected copy beside it.
+            </p>
+            <ol className="manual-steps">
+              <li>Export the Access Main table to Excel as you normally would.</li>
+              <li>Browse to that file. Excel, CSV, and tab-delimited text files all work.</li>
+              <li>Choose where terms should be checked, using the table below.</li>
+              <li>Click Check Tags. Rows with nothing wrong are not listed.</li>
+              <li>Fix what it found. Edit a tag, or click one of the suggested replacements.</li>
+              <li>Click Apply Fixes and Re-check. Repeat until nothing is left.</li>
+              <li>Upload the cleaned copy, not the original.</li>
+            </ol>
+            <table className="manual-table">
+              <thead>
+                <tr><th>Check terms against</th><th>Needs</th><th>Use when</th></tr>
+              </thead>
+              <tbody>
+                {gettySourceRows.map(([option, needs, use]) => (
+                  <tr key={option}><td>{option}</td><td>{needs}</td><td>{use}</td></tr>
+                ))}
+              </tbody>
+            </table>
+            <div className="manual-callout">
+              The built-in list and any downloaded list are fixed copies from January 2026. Getty keeps changing the
+              thesaurus, so a copy can accept a term Getty has since renamed. The app tells you when an answer came
+              from a fixed copy. Use the live check whenever you can reach it.
+            </div>
+            <p>
+              Each finding starts with what it wants from you. <strong>Fixed</strong> means the app already corrected it
+              and there is nothing to do. <strong>Must Fix</strong> means correct it before uploading.
+              <strong> Review</strong> means it is your judgement call and will upload either way.
+            </p>
+            <table className="manual-table">
+              <thead>
+                <tr><th>Finding</th><th>What it means</th></tr>
+              </thead>
+              <tbody>
+                {gettyFindingRows.map(([finding, meaning]) => (
+                  <tr key={finding}><td>{finding}</td><td>{meaning}</td></tr>
+                ))}
+              </tbody>
+            </table>
+            <ul className="manual-list">
+              <li>The corrected copy is named with <strong>-tags-cleaned</strong> and sits beside your export.</li>
+              <li>The report is named with <strong>-tags-report</strong> and lists what was found and what changed.</li>
+              <li>Use Show in Folder to find both files.</li>
+              <li>A sheet with nothing to correct does not get a cleaned copy, so there is no doubt about which file to upload.</li>
+            </ul>
           </section>
 
           <section id="manual-outputs" className="manual-section">
