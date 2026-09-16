@@ -18,12 +18,24 @@ export function CheckForUpdates() {
   return window['go']['main']['App']['CheckForUpdates']();
 }
 
+export function CheckGettyReachability() {
+  return window['go']['main']['App']['CheckGettyReachability']();
+}
+
+export function CheckGettyTags(arg1) {
+  return window['go']['main']['App']['CheckGettyTags'](arg1);
+}
+
 export function CheckOutputExists(arg1) {
   return window['go']['main']['App']['CheckOutputExists'](arg1);
 }
 
 export function GetAppVersion() {
   return window['go']['main']['App']['GetAppVersion']();
+}
+
+export function GetGettyDefaults() {
+  return window['go']['main']['App']['GetGettyDefaults']();
 }
 
 export function GetScanDefaults() {
@@ -38,12 +50,20 @@ export function PickFolder(arg1) {
   return window['go']['main']['App']['PickFolder'](arg1);
 }
 
+export function PickSheet(arg1) {
+  return window['go']['main']['App']['PickSheet'](arg1);
+}
+
 export function RestartToApplyUpdate() {
   return window['go']['main']['App']['RestartToApplyUpdate']();
 }
 
 export function ResumeCloneWithDriveB(arg1) {
   return window['go']['main']['App']['ResumeCloneWithDriveB'](arg1);
+}
+
+export function SaveGettyVocabulary(arg1, arg2) {
+  return window['go']['main']['App']['SaveGettyVocabulary'](arg1, arg2);
 }
 
 export function SaveReleaseFolder(arg1) {

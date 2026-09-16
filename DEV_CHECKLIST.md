@@ -33,6 +33,20 @@
 - [y] CC4 Done view shows all 6 diff stat categories
 - [y] CC5 Open Diff CSV + Open Report buttons work
 
+## Getty Tags
+
+- [ ] G1 Browse opens a file dialog filtered to .xlsx / .csv / .txt
+- [ ] G2 "Verify Terms Against" remembers the last choice after reopening the app
+- [ ] G3 Live source shows a reachability line — green with a latency, or red with a reason
+- [ ] G4 Choosing the term list source reveals the list picker; Check stays disabled until a list is chosen
+- [ ] G5 Check Tags on `testing/manual-samples/getty/sample-export.xlsx` returns findings on 4 of 5 rows
+- [ ] G6 Row 3 is marked "would have stopped the upload"; its before/after shows the invisible characters gone
+- [ ] G7 Open Cleaned Sheet opens `sample-export-tags-cleaned.xlsx`; the Tags column is corrected, other columns untouched
+- [ ] G8 Open Report opens `sample-export-tags-report.txt` and matches what the screen shows
+- [ ] G9 A sheet with no problems writes no cleaned copy and says so
+- [ ] G10 Pointing it at `CONTENTdm template.accdb` explains to export the Main table first
+- [ ] G11 With the network off, the live source shows red and the run still completes with terms unchecked
+
 ## About
 
 - [y] AB1 Version shown

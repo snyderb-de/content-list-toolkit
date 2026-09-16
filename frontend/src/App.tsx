@@ -3,6 +3,7 @@ import Sidebar from './components/Sidebar'
 import ContentList from './screens/ContentList'
 import EmailCopy from './screens/EmailCopy'
 import CloneCompare from './screens/CloneCompare'
+import GettyTag from './screens/GettyTag'
 import UserManual from './screens/UserManual'
 import About from './screens/About'
 import { CheckForUpdates, RestartToApplyUpdate } from '../wailsjs/go/main/App'
@@ -76,6 +77,7 @@ export default function App() {
         {screen === 'content-list'  && <ContentList />}
         {screen === 'email-copy'    && <EmailCopy />}
         {screen === 'clone-compare' && <CloneCompare />}
+        {screen === 'getty-tag'     && <GettyTag />}
         {screen === 'manual'        && <UserManual />}
         {screen === 'about'         && <About />}
       </main>

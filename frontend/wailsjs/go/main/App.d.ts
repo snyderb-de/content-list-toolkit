@@ -10,9 +10,15 @@ export function CancelScan():Promise<void>;
 
 export function CheckForUpdates():Promise<main.UpdateStatus>;
 
+export function CheckGettyReachability():Promise<main.GettyReachability>;
+
+export function CheckGettyTags(arg1:main.GettyCheckOptions):Promise<main.GettyCheckResult>;
+
 export function CheckOutputExists(arg1:main.ScanOptions):Promise<boolean>;
 
 export function GetAppVersion():Promise<string>;
+
+export function GetGettyDefaults():Promise<main.GettyCheckOptions>;
 
 export function GetScanDefaults():Promise<main.ScanOptions>;
 
@@ -20,9 +26,13 @@ export function OpenPath(arg1:string):Promise<void>;
 
 export function PickFolder(arg1:string):Promise<string>;
 
+export function PickSheet(arg1:string):Promise<string>;
+
 export function RestartToApplyUpdate():Promise<void>;
 
 export function ResumeCloneWithDriveB(arg1:string):Promise<void>;
+
+export function SaveGettyVocabulary(arg1:main.gettyVocabularySource,arg2:string):Promise<void>;
 
 export function SaveReleaseFolder(arg1:string):Promise<void>;
 

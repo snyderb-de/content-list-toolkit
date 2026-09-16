@@ -1,0 +1,361 @@
+import { useEffect, useState } from 'react'
+import {
+  CheckGettyReachability,
+  CheckGettyTags,
+  GetGettyDefaults,
+  OpenPath,
+  PickSheet,
+  SaveGettyVocabulary,
+} from '../../wailsjs/go/main/App'
+import { main } from '../../wailsjs/go/models'
+import Toggle from '../components/Toggle'
+
+type Phase = 'idle' | 'checking' | 'done' | 'error'
+type Source = 'live' | 'file' | 'none'
+
+// Matches the marker scheme in the written report, so the screen and the file
+// tell the same story.
+function issueMarker(issue: main.TagIssue): string {
+  if (issue.repaired) return '✓'
+  if (issue.severity === 'blocks-upload') return '⚠'
+  return '?'
+}
+
+function issueClass(issue: main.TagIssue): string {
+  if (issue.repaired) return 'success-text'
+  if (issue.severity === 'blocks-upload') return 'danger-text'
+  return ''
+}
+
+export default function GettyTag() {
+  const [sheetPath, setSheetPath] = useState('')
+  const [source, setSource] = useState<Source>('live')
+  const [vocabPath, setVocabPath] = useState('')
+  const [writeCleaned, setWriteCleaned] = useState(true)
+  const [writeReport, setWriteReport] = useState(true)
+
+  const [reach, setReach] = useState<main.GettyReachability | null>(null)
+  const [probing, setProbing] = useState(false)
+
+  const [phase, setPhase] = useState<Phase>('idle')
+  const [result, setResult] = useState<main.GettyCheckResult | null>(null)
+  const [err, setErr] = useState('')
+
+  useEffect(() => {
+    GetGettyDefaults()
+      .then((d) => {
+        if (d.source) setSource(d.source as Source)
+        if (d.vocabularyPath) setVocabPath(d.vocabularyPath)
+      })
+      .catch(() => {})
+  }, [])
+
+  // Probe on open and whenever the live source is selected, so the indicator
+  // reflects this machine rather than an assumption about the network.
+  useEffect(() => {
+    if (source !== 'live') return
+    setProbing(true)
+    CheckGettyReachability()
+      .then(setReach)
+      .catch(() => setReach(null))
+      .finally(() => setProbing(false))
+  }, [source])
+
+  const chooseSheet = async () => {
+    const p = await PickSheet('Choose the exported Access sheet')
+    if (p) setSheetPath(p)
+  }
+
+  const chooseVocabulary = async () => {
+    const p = await PickSheet('Choose the AAT term list')
+    if (p) {
+      setVocabPath(p)
+      SaveGettyVocabulary('file', p).catch(() => {})
+    }
+  }
+
+  const pickSource = (next: Source) => {
+    setSource(next)
+    SaveGettyVocabulary(next, vocabPath).catch(() => {})
+  }
+
+  const run = async () => {
+    if (!sheetPath) return
+    setPhase('checking')
+    setErr('')
+    try {
+      const r = await CheckGettyTags({
+        sheetPath,
+        source,
+        vocabularyPath: vocabPath,
+        writeCleaned,
+        writeReport,
+      } as main.GettyCheckOptions)
+      setResult(r)
+      setPhase('done')
+    } catch (e: any) {
+      setErr(String(e))
+      setPhase('error')
+    }
+  }
+
+  const reset = () => {
+    setPhase('idle')
+    setResult(null)
+    setErr('')
+  }
+
+  // ── Form ──────────────────────────────────────────────────
+  if (phase === 'idle') {
+    const liveBlocked = source === 'live' && reach !== null && !reach.reachable
+    return (
+      <div>
+        <div className="screen-header">
+          <h2 className="screen-title">Getty Tag Check</h2>
+          <p className="screen-subtitle">
+            Clean the invisible characters that stop a CONTENTdm upload, and check every term
+            against the Getty Art &amp; Architecture Thesaurus.
+          </p>
+        </div>
+
+        <div className="card">
+          <p className="card-title">Exported sheet</p>
+          <div className="field">
+            <label className="field-label">Exported Sheet</label>
+            <div className="field-row">
+              <input
+                className="text-input monospace"
+                value={sheetPath}
+                onChange={(e) => setSheetPath(e.target.value)}
+                placeholder="Access Main table exported to .xlsx, .csv, or tab-delimited .txt"
+              />
+              <button className="btn btn-outline btn-sm" onClick={chooseSheet}>Browse</button>
+            </div>
+          </div>
+          <div className="info-text" style={{ marginTop: 12 }}>
+            The check reads the <code>Tags</code> column. The original file is never modified —
+            a corrected copy is written beside it.
+          </div>
+        </div>
+
+        <div className="card">
+          <p className="card-title">Check terms against</p>
+
+          <div className="field">
+            <label className="field-label">Verify Terms Against</label>
+            <select
+              className="select"
+              value={source}
+              onChange={(e) => pickSource(e.target.value as Source)}
+            >
+              <option value="live">Getty, live — authoritative</option>
+              <option value="file">A term list on this machine — works offline</option>
+              <option value="none">Do not verify terms — only clean the text</option>
+            </select>
+          </div>
+
+          {source === 'live' && (
+            <div className="info-text">
+              {probing && 'Checking whether Getty is reachable from this machine…'}
+              {!probing && reach !== null && (
+                <span className={reach.reachable ? 'success-text' : 'danger-text'}>
+                  {reach.reachable ? `● Getty is reachable — responded in ${reach.latencyMs} ms` : '● Getty is not reachable'}
+                </span>
+              )}
+            </div>
+          )}
+
+          {source === 'file' && (
+            <div className="field">
+              <label className="field-label">Term List</label>
+              <div className="field-row">
+                <input
+                  className="text-input monospace"
+                  value={vocabPath}
+                  onChange={(e) => setVocabPath(e.target.value)}
+                  placeholder="AAT term list, one term per line"
+                />
+                <button className="btn btn-outline btn-sm" onClick={chooseVocabulary}>Browse</button>
+              </div>
+            </div>
+          )}
+
+          {liveBlocked && (
+            <div className="info-text danger-text" style={{ marginTop: 12 }}>
+              {reach?.detail} Terms cannot be verified from this machine right now. Use a term
+              list, or clean the text only.
+            </div>
+          )}
+        </div>
+
+        <div className="card">
+          <p className="card-title">Output</p>
+          <Toggle label="Write a cleaned copy of the sheet" checked={writeCleaned} onChange={setWriteCleaned} />
+          <Toggle label="Write a report of everything found" checked={writeReport} onChange={setWriteReport} />
+
+          <button
+            className="btn btn-primary btn-lg"
+            style={{ marginTop: 16 }}
+            onClick={run}
+            disabled={!sheetPath || (source === 'file' && !vocabPath)}
+          >
+            Check Tags
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // ── Checking ──────────────────────────────────────────────
+  if (phase === 'checking') {
+    return (
+      <div>
+        <div className="screen-header"><h2 className="screen-title">Checking…</h2></div>
+        <div className="card">
+          <div className="phase-badge">
+            <span className="phase-dot" />
+            {source === 'live'
+              ? 'Cleaning the Tags column and asking Getty about each term'
+              : 'Cleaning the Tags column'}…
+          </div>
+          <div className="stat-row">
+            <span className="stat-row-label">Sheet</span>
+            <span className="stat-row-value">{sheetPath}</span>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // ── Error ─────────────────────────────────────────────────
+  if (phase === 'error') {
+    return (
+      <div>
+        <div className="screen-header"><h2 className="screen-title">Check Failed</h2></div>
+        <div className="card">
+          <p className="danger-text" style={{ marginBottom: 16 }}>{err}</p>
+          <button className="btn btn-outline" onClick={reset}>Try Again</button>
+        </div>
+      </div>
+    )
+  }
+
+  // ── Done ──────────────────────────────────────────────────
+  if (!result) return null
+  const report = result.report
+  const rows = report.rows ?? []
+  const blocking = rows.filter((r) => r.result.issues?.some((i) => i.severity === 'blocks-upload')).length
+  const needsReview = rows.filter((r) => r.result.issues?.some((i) => !i.repaired)).length
+  const repaired = rows.filter((r) => r.result.cleaned !== r.result.original).length
+  const cleanedPath = result.cleanedPath ?? ''
+  const reportPath = result.reportPath ?? ''
+
+  return (
+    <div>
+      <div className="screen-header">
+        <h2 className="screen-title">Check Complete</h2>
+        <p className={`screen-subtitle ${rows.length === 0 ? 'success-text' : ''}`}>
+          {rows.length === 0
+            ? `All ${report.totalRows} rows are ready to upload.`
+            : `${rows.length} of ${report.totalRows} rows need attention.`}
+        </p>
+      </div>
+
+      <div className="card">
+        <p className="card-title">Results</p>
+        <div className="stat-grid" style={{ marginBottom: 16 }}>
+          <div className="stat-block">
+            <div className="stat-block-label">Would have failed upload</div>
+            <div className={`stat-block-value ${blocking > 0 ? 'danger-text' : 'success-text'}`}>{blocking}</div>
+          </div>
+          <div className="stat-block">
+            <div className="stat-block-label">Repaired</div>
+            <div className="stat-block-value success-text">{repaired}</div>
+          </div>
+          <div className="stat-block">
+            <div className="stat-block-label">Need review</div>
+            <div className="stat-block-value">{needsReview}</div>
+          </div>
+          <div className="stat-block">
+            <div className="stat-block-label">Elapsed</div>
+            <div className="stat-block-value">{result.elapsed}</div>
+          </div>
+        </div>
+
+        <div className="stat-row">
+          <span className="stat-row-label">Tags column</span>
+          <span className="stat-row-value">{report.columnLetter || `index ${report.columnIndex}`}</span>
+        </div>
+        <div className="stat-row">
+          <span className="stat-row-label">Vocabulary</span>
+          <span className="stat-row-value">{report.vocabularySource || 'not checked — structure only'}</span>
+        </div>
+        <div className="stat-row">
+          <span className="stat-row-label">Empty Tags cells</span>
+          <span className="stat-row-value">{report.emptyCells}</span>
+        </div>
+
+        <div className="result-actions">
+          {cleanedPath && (
+            <button className="btn btn-primary" onClick={() => OpenPath(cleanedPath)}>
+              Open Cleaned Sheet
+            </button>
+          )}
+          {reportPath && (
+            <button className="btn btn-outline" onClick={() => OpenPath(reportPath)}>
+              Open Report
+            </button>
+          )}
+          <button className="btn btn-ghost" onClick={reset}>Check Another</button>
+        </div>
+      </div>
+
+      {rows.length > 0 && (
+        <div className="card">
+          <p className="card-title">Findings by row</p>
+          <div className="diff-table-wrap">
+            <table className="diff-table">
+              <thead>
+                <tr>
+                  <th style={{ width: 70 }}>Row</th>
+                  <th>Tags</th>
+                  <th>Findings</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((row) => (
+                  <tr key={row.number}>
+                    <td>{row.number}</td>
+                    <td>
+                      <div className="current-file">{row.result.original}</div>
+                      {row.result.cleaned !== row.result.original && (
+                        <div className="current-file success-text">→ {row.result.cleaned}</div>
+                      )}
+                    </td>
+                    <td>
+                      {(row.result.issues ?? []).map((issue, i) => (
+                        <div key={i} className={issueClass(issue)}>
+                          {issueMarker(issue)} {issue.kind}: {issue.detail}
+                        </div>
+                      ))}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="info-text" style={{ marginTop: 12 }}>
+            ✓ repaired in the cleaned copy · ⚠ would have stopped the upload · ? needs a person to decide
+          </div>
+        </div>
+      )}
+
+      {report.vocabularySource && (
+        <div className="info-text" style={{ marginTop: 16 }}>
+          Term verification uses the Getty Art &amp; Architecture Thesaurus (AAT), J. Paul Getty
+          Trust, under the Open Data Commons Attribution License (ODC-By) 1.0.
+        </div>
+      )}
+    </div>
+  )
+}
