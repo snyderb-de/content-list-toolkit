@@ -44,6 +44,8 @@ Generated outputs belong in `build/` and `releases/` and are intentionally not t
 ## Repo Layout
 
 - `project-dashboard/` static project dashboard for repo status and docs
+  - `user-manual.html` is the standalone web manual, written by hand
+  - `app-user-manual.html` is generated from `frontend/src/manual.json` and mirrors the manual inside the app; edit the JSON, never this page
 - `scripts/` build, parity, packaging, and local-run helpers
 - `testing/` tool-oriented fixtures, generators, runners, and ignored local manual-test folders
 - `deploy/` copy-ready deployment files that are part of the operational workflow

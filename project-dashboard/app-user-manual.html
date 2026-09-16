@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>User Manual — Content List Toolkit</title>
+<style>
+:root {
+  --ground: #ffffff; --surface: #f7f8fa; --ink: #1b2430; --ink-soft: #4a5663;
+  --ink-faint: #6e7a87; --rule: #dde2e8; --accent: #1f5f8b; --warn: #8a5a17;
+  --warn-wash: rgba(138, 90, 23, 0.09);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ground: #10151b; --surface: #171e26; --ink: #e6ebf1; --ink-soft: #aeb9c4;
+    --ink-faint: #8794a1; --rule: #2a3440; --accent: #6fb4e0; --warn: #d5a35c;
+    --warn-wash: rgba(213, 163, 92, 0.12);
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--ground); color: var(--ink);
+  font: 16px/1.62 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+.page { max-width: 54rem; margin: 0 auto; padding: 3.5rem 1.5rem 5rem; }
+header { border-bottom: 1px solid var(--rule); padding-bottom: 1.5rem; margin-bottom: 2rem; }
+h1 { font-size: 2rem; margin: 0 0 .4rem; letter-spacing: -.015em; }
+.lede { color: var(--ink-soft); margin: 0; }
+.mirror-note { margin-top: 1rem; font-size: .84rem; color: var(--ink-faint); }
+nav { display: flex; flex-wrap: wrap; gap: .5rem 1rem; margin-bottom: 2.5rem; }
+nav a { color: var(--accent); text-decoration: none; font-size: .9rem; }
+nav a:hover, nav a:focus-visible { text-decoration: underline; }
+section { margin-bottom: 3rem; scroll-margin-top: 1rem; }
+.kicker {
+  font-size: .7rem; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--ink-faint); margin: 0 0 .3rem;
+}
+h2 { font-size: 1.4rem; margin: 0 0 .9rem; letter-spacing: -.01em; }
+h4 { font-size: .95rem; margin: 0 0 .25rem; }
+p { color: var(--ink-soft); margin: 0 0 1rem; }
+.steps, .list { color: var(--ink-soft); margin: 0 0 1rem; padding-left: 1.3rem; }
+.steps li, .list li { margin-bottom: .35rem; }
+.callout {
+  border-left: 3px solid var(--accent); background: var(--surface);
+  padding: .85rem 1.1rem; margin: 0 0 1rem; color: var(--ink-soft); border-radius: 0 3px 3px 0;
+}
+.callout.warning { border-left-color: var(--warn); background: var(--warn-wash); }
+.table-wrap { overflow-x: auto; margin: 0 0 1rem; }
+table { border-collapse: collapse; width: 100%; font-size: .92rem; min-width: 30rem; }
+th {
+  text-align: left; font-size: .72rem; letter-spacing: .07em; text-transform: uppercase;
+  color: var(--ink-faint); padding: .6rem .8rem; border-bottom: 1px solid var(--rule);
+}
+td { padding: .65rem .8rem; border-bottom: 1px solid var(--rule); color: var(--ink-soft); vertical-align: top; }
+.definitions { margin: 0 0 1rem; }
+.definitions > div { display: grid; grid-template-columns: minmax(8rem, 12rem) 1fr; gap: 1rem; padding: .5rem 0; border-bottom: 1px solid var(--rule); }
+dt { font-weight: 600; color: var(--ink); }
+dd { margin: 0; color: var(--ink-soft); }
+.chips { list-style: none; display: flex; flex-wrap: wrap; gap: .4rem; padding: 0; margin: 0 0 1rem; }
+.chips li { background: var(--surface); border: 1px solid var(--rule); border-radius: 999px; padding: .15rem .6rem; }
+.support { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 1.25rem; }
+.support p { margin: 0; }
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: .88em;
+  background: var(--surface); border-radius: 3px; padding: .1em .35em; color: var(--ink);
+}
+footer { border-top: 1px solid var(--rule); padding-top: 1.25rem; font-size: .82rem; color: var(--ink-faint); }
+</style>
+</head>
+<body>
+<div class="page">
+<header>
+<h1>User Manual</h1>
+<p class="lede">Step-by-step help for staff using Content List Toolkit.</p>
+<p class="mirror-note">This page mirrors the User Manual built into the application. Both are generated from the same source, so they always say the same thing.</p>
+</header>
+
+<nav aria-label="Contents">
+<a href="#manual-quick-start">Quick start</a>
+<a href="#manual-content-list">Content List</a>
+<a href="#manual-agency-template">Agency Template</a>
+<a href="#manual-email-copy">Email Copy</a>
+<a href="#manual-clone-compare">Clone Compare</a>
+<a href="#manual-getty-tags">Getty Tags</a>
+<a href="#manual-outputs">Outputs</a>
+<a href="#manual-updates">Updates</a>
+<a href="#manual-troubleshooting">Troubleshooting</a>
+</nav>
+
+<section id="manual-quick-start">
+<p class="kicker">Getting Started</p>
+<h2>Quick start</h2>
+<ol class="steps"><li>Choose the job you need from the sidebar.</li><li>Use Browse to pick the source folder and the output folder.</li><li>Choose only the options that apply to this job.</li><li>Start the job and leave the app open until the done screen appears.</li><li>Open the output folder from the done screen and review the files before sharing them.</li></ol>
+<div class="callout">The Light, Dark, and System buttons in the lower-left sidebar change this manual and the app together.</div>
+</section>
+
+<section id="manual-content-list">
+<p class="kicker">Workflow</p>
+<h2>Content List</h2>
+<p>Use Content List when you need a spreadsheet of files or folders. The app scans the source folder and writes one row for each item it includes. Turn on verification only when you need a file fingerprint for later checking.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Setting</th><th>Use</th></tr></thead>
+<tbody><tr><td>Verification Hash</td><td>Adds a unique fingerprint for each file so copies can be checked later. BLAKE3 is the usual fast choice; choose Off for a quick list.</td></tr><tr><td>Exclude hidden files</td><td>Leaves out hidden computer files that are usually not part of the records.</td></tr><tr><td>Exclude common system files</td><td>Leaves out small files created by Windows or macOS, such as Thumbs.db or .DS_Store.</td></tr><tr><td>Exclude extensions</td><td>Skips file types you do not want in the list. Enter examples like tmp, log, or cache.</td></tr><tr><td>Create XLSX after scan</td><td>Also creates an Excel workbook after the scan finishes.</td></tr><tr><td>Preserve leading zeros</td><td>Keeps numbers such as 001.001 from changing when the workbook opens in Excel.</td></tr><tr><td>Delete CSV after XLSX</td><td>Keeps only the Excel workbook after it is made successfully.</td></tr><tr><td>Folders only</td><td>Lists folders instead of files. Use Max depth when you only want the top few folder levels.</td></tr></tbody>
+</table></div>
+</section>
+
+<section id="manual-agency-template">
+<p class="kicker">Workflow</p>
+<h2>Agency Template</h2>
+<p>Use Agency Template when the spreadsheet must match the area agency headers. Fill in only the values that should be the same for the entire sheet. These fields start blank for every new scan so a value from an earlier job cannot be reused by mistake.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Field group</th><th>Guidance</th></tr></thead>
+<tbody><tr><td>RC Series</td><td>Required for every agency-template scan. Enter it before starting the scan.</td></tr><tr><td>RG, SG, Series</td><td>Use digits only. RG exports as 4 digits; SG and Series export as 3 digits, so 1 becomes 001 and 35 becomes 035.</td></tr><tr><td>Department, Division, Section, Unit</td><td>Use these when the same value belongs on every row in the sheet.</td></tr><tr><td>Begin Date, End Date</td><td>Use these when one date range applies to the whole sheet.</td></tr><tr><td>Description, Comments</td><td>Use these for notes that should appear on every row.</td></tr><tr><td>Location Override</td><td>Optional. Leave it blank unless every row should use one shared location.</td></tr><tr><td>Material Type, Record Level</td><td>These start as Born Digital and Item. Change them only when the whole sheet needs different values.</td></tr></tbody>
+</table></div>
+<div class="callout warning">RC Series is required for agency-template scans. If it is blank, Start Scan stays disabled.</div>
+</section>
+
+<section id="manual-email-copy">
+<p class="kicker">Workflow</p>
+<h2>Email Copy</h2>
+<p>Use Email Copy when you need to gather email files from a larger folder tree. The app copies recognized email files into the destination folder, keeps their folder layout, and writes a manifest listing what was copied.</p>
+<ul class="chips" aria-label="Recognized email extensions"><li><code>.dbx</code></li><li><code>.eml</code></li><li><code>.emlx</code></li><li><code>.mbox</code></li><li><code>.mbx</code></li><li><code>.msg</code></li><li><code>.olk14msgsource</code></li><li><code>.olk15message</code></li><li><code>.ost</code></li><li><code>.pst</code></li><li><code>.rge</code></li><li><code>.tbb</code></li><li><code>.wdseml</code></li></ul>
+</section>
+
+<section id="manual-clone-compare">
+<p class="kicker">Workflow</p>
+<h2>Clone Compare</h2>
+<p>Use Clone Compare to check whether two drives or folders contain the same files. Choose the same verification setting for both sides. Single drive mode lets you scan Drive A, swap media, then scan Drive B.</p>
+<dl class="definitions"><div><dt>Exact Clone</dt><dd>Everything checked matched.</dd></div><div><dt>Content Clone</dt><dd>The files appear to match, but folder layout or saved details differ.</dd></div><div><dt>Metadata Clone</dt><dd>The app found likely PDF saved-detail differences only.</dd></div><div><dt>Not a Clone</dt><dd>Files are missing, extra, or different.</dd></div></dl>
+</section>
+
+<section id="manual-getty-tags">
+<p class="kicker">Workflow</p>
+<h2>Getty Tags</h2>
+<p>Use Getty Tags to check the Tags column of a CONTENTdm export before you upload it. It removes the hidden characters that stop a tab-delimited file from loading, and checks every term against the Getty Art &amp; Architecture Thesaurus. Your export is never changed — the app writes a corrected copy beside it.</p>
+<ol class="steps"><li>Export the Access Main table to Excel as you normally would.</li><li>Browse to that file. Excel, CSV, and tab-delimited text files all work.</li><li>Choose where terms should be checked, using the table below.</li><li>Click Check Tags. Rows with nothing wrong are not listed.</li><li>Fix what it found. Edit a tag, or click one of the suggested replacements.</li><li>Click Apply Fixes and Re-check. Repeat until nothing is left.</li><li>Upload the cleaned copy, not the original.</li></ol>
+<div class="table-wrap"><table>
+<thead><tr><th>Check terms against</th><th>Needs</th><th>Use when</th></tr></thead>
+<tbody><tr><td>Getty, live</td><td>Internet access to Getty</td><td>Always, when it is reachable. It is the only up-to-date source.</td></tr><tr><td>Built-in list</td><td>Nothing. The list is inside the app.</td><td>When Getty cannot be reached. Works with no internet at all.</td></tr><tr><td>A term list on this machine</td><td>A file you choose</td><td>When you keep your own list, or downloaded a newer one.</td></tr><tr><td>Do not verify terms</td><td>Nothing</td><td>When you only want the hidden characters cleaned up.</td></tr></tbody>
+</table></div>
+<div class="callout warning">The built-in list and any downloaded list are fixed copies from January 2026. Getty keeps changing the thesaurus, so a copy can accept a term Getty has since renamed. The app tells you when an answer came from a fixed copy. Use the live check whenever you can reach it.</div>
+<p>Each finding starts with what it wants from you. <strong>Fixed</strong> means the app already corrected it and there is nothing to do. <strong>Must Fix</strong> means correct it before uploading. <strong>Review</strong> means it is your judgement call and will upload either way.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Finding</th><th>What it means</th></tr></thead>
+<tbody><tr><td>Invisible characters</td><td>Hidden characters pasted in with the term. These are what stop an upload. The app fixes these for you.</td></tr><tr><td>Separator</td><td>A semicolon missing its space, or a space in front of one. Fixed for you.</td></tr><tr><td>Spacing</td><td>Extra spaces at the start, end, or middle. Fixed for you.</td></tr><tr><td>Empty tag</td><td>Two semicolons together, or one at the end. The empty entry is removed.</td></tr><tr><td>Not in AAT</td><td>Getty has no such term. Suggested replacements appear beside it when there are any.</td></tr><tr><td>Spelling case</td><td>The term exists but Getty spells it with different capital letters, which can mean a different thing.</td></tr><tr><td>Unclosed bracket</td><td>A term that lost its closing bracket, such as <code>counters (furniture</code>. Nothing will ever match it.</td></tr><tr><td>Duplicate</td><td>The same term twice in one cell.</td></tr><tr><td>Tag count</td><td>Fewer than 3 or more than 5 terms.</td></tr><tr><td>Too long</td><td>The cell fills the 255 characters Access allows, so Access probably cut the last term off mid-word.</td></tr><tr><td>Not checked</td><td>Getty could not be reached for that term. This does not mean the term is wrong.</td></tr></tbody>
+</table></div>
+<ul class="list"><li>The corrected copy is named with <strong>-tags-cleaned</strong> and sits beside your export.</li><li>The report is named with <strong>-tags-report</strong> and lists what was found and what changed.</li><li>Use Show in Folder to find both files.</li><li>A sheet with nothing to correct does not get a cleaned copy, so there is no doubt about which file to upload.</li></ul>
+</section>
+
+<section id="manual-outputs">
+<p class="kicker">Reference</p>
+<h2>Outputs</h2>
+<ul class="list"><li>The app names output files with the source folder name and the date and time of the job.</li><li>CSV files open in Excel and other spreadsheet tools.</li><li>XLSX files are Excel workbooks. Create one when the final handoff should be an Excel file.</li><li>The report file includes totals, the options used, skipped-file examples, and file type summaries.</li><li>Very large jobs may be split into multiple spreadsheet parts so Excel can still open them.</li></ul>
+</section>
+
+<section id="manual-updates">
+<p class="kicker">Reference</p>
+<h2>Updates</h2>
+<p>On Windows, the app checks the <code>X:\Apps</code> folder for a newer signed <code>content-list-generator.exe</code>. Open About if support gives you a different release folder.</p>
+<ul class="list"><li>The app only installs a newer signed executable from the configured release folder.</li><li>When an update is ready, restart the app from the update prompt.</li></ul>
+</section>
+
+<section id="manual-troubleshooting">
+<p class="kicker">Support</p>
+<h2>Troubleshooting</h2>
+<div class="support"><div><h4>macOS security prompt</h4><p>Right-click the app, choose Open, then confirm. You usually only need to do this the first time.</p></div><div><h4>Windows SmartScreen</h4><p>Choose More info, then Run anyway if this app came from your trusted release location.</p></div><div><h4>Slow scans</h4><p>Network drives, very large files, and verification all add time. Choose Off for verification when you only need a quick list.</p></div><div><h4>Reset settings</h4><p>Open About and share the settings location with support if the app needs to be reset.</p></div></div>
+</section>
+
+<footer>Generated from <code>frontend/src/manual.json</code>. Edit that file, not this page.</footer>
+</div>
+</body>
+</html>
