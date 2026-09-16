@@ -1,0 +1,480 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Getty Call Paths — Content List Toolkit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:wght@500;600&display=swap">
+
+<style>
+  :root {
+    --ground: #f7f8fa;
+    --surface: #ffffff;
+    --surface-sunk: #eef1f5;
+    --ink: #17212b;
+    --ink-soft: #46535f;
+    --ink-faint: #6b7884;
+    --rule: #d9dee6;
+    --rule-firm: #bcc5d0;
+
+    --live: #1f5f8b;
+    --live-wash: rgba(31, 95, 139, 0.10);
+    --archive: #8a5a17;
+    --archive-wash: rgba(138, 90, 23, 0.11);
+    --blocked: #a32b22;
+    --blocked-wash: rgba(163, 43, 34, 0.10);
+
+    --serif: "IBM Plex Serif", Georgia, "Times New Roman", serif;
+    --sans: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #10151b;
+      --surface: #171e26;
+      --surface-sunk: #1d262f;
+      --ink: #e6ebf1;
+      --ink-soft: #aeb9c4;
+      --ink-faint: #8794a1;
+      --rule: #2a3440;
+      --rule-firm: #3a4654;
+
+      --live: #6fb4e0;
+      --live-wash: rgba(111, 180, 224, 0.13);
+      --archive: #d5a35c;
+      --archive-wash: rgba(213, 163, 92, 0.13);
+      --blocked: #e8857c;
+      --blocked-wash: rgba(232, 133, 124, 0.13);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #10151b;
+    --surface: #171e26;
+    --surface-sunk: #1d262f;
+    --ink: #e6ebf1;
+    --ink-soft: #aeb9c4;
+    --ink-faint: #8794a1;
+    --rule: #2a3440;
+    --rule-firm: #3a4654;
+
+    --live: #6fb4e0;
+    --live-wash: rgba(111, 180, 224, 0.13);
+    --archive: #d5a35c;
+    --archive-wash: rgba(213, 163, 92, 0.13);
+    --blocked: #e8857c;
+    --blocked-wash: rgba(232, 133, 124, 0.13);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    max-width: 62rem;
+    margin: 0 auto;
+    padding: 4rem 1.5rem 6rem;
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+  }
+
+  header { display: flex; flex-direction: column; gap: 0.75rem; }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  h1 {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: clamp(2rem, 5vw, 2.85rem);
+    line-height: 1.12;
+    margin: 0;
+    text-wrap: balance;
+    letter-spacing: -0.015em;
+  }
+
+  .standfirst {
+    font-size: 1.08rem;
+    color: var(--ink-soft);
+    max-width: 60ch;
+    margin: 0;
+  }
+
+  h2 {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: 1.5rem;
+    margin: 0 0 0.25rem;
+    letter-spacing: -0.01em;
+  }
+
+  h3 {
+    font-family: var(--sans);
+    font-weight: 600;
+    font-size: 1rem;
+    margin: 0;
+  }
+
+  section { display: flex; flex-direction: column; gap: 1.1rem; }
+
+  p { margin: 0; max-width: 68ch; color: var(--ink-soft); }
+  p strong { color: var(--ink); font-weight: 600; }
+
+  .rule-top { border-top: 1px solid var(--rule); padding-top: 2rem; }
+
+  /* ── Allow-list table ───────────────────────────────── */
+  .table-wrap { overflow-x: auto; border: 1px solid var(--rule); border-radius: 4px; background: var(--surface); }
+
+  table { border-collapse: collapse; width: 100%; font-size: 0.9rem; min-width: 46rem; }
+
+  th {
+    text-align: left;
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-weight: 500;
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid var(--rule-firm);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 0.95rem 1rem;
+    border-bottom: 1px solid var(--rule);
+    vertical-align: top;
+    color: var(--ink-soft);
+  }
+
+  tr:last-child td { border-bottom: none; }
+
+  td.host { font-family: var(--mono); font-size: 0.85rem; color: var(--ink); white-space: nowrap; }
+
+  .port {
+    font-family: var(--mono);
+    font-size: 0.82rem;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .tag {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 0.15rem 0.5rem;
+    border-radius: 2px;
+    white-space: nowrap;
+  }
+  .tag-live { background: var(--live-wash); color: var(--live); }
+  .tag-archive { background: var(--archive-wash); color: var(--archive); }
+  .tag-blocked { background: var(--blocked-wash); color: var(--blocked); }
+
+  /* ── Figure ─────────────────────────────────────────── */
+  figure { margin: 0; display: flex; flex-direction: column; gap: 0.9rem; }
+
+  .figure-frame {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 1.5rem 1rem;
+    overflow-x: auto;
+  }
+
+  figure svg { display: block; max-width: 100%; height: auto; margin: 0 auto; min-width: 40rem; }
+
+  figcaption { font-size: 0.88rem; color: var(--ink-faint); max-width: 68ch; }
+
+  /* ── Call detail cards ──────────────────────────────── */
+  .calls { display: flex; flex-direction: column; gap: 1rem; }
+
+  .call {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--rule-firm);
+    border-radius: 4px;
+    padding: 1.25rem 1.4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+  }
+  .call-live { border-left-color: var(--live); }
+  .call-archive { border-left-color: var(--archive); }
+
+  .call-head { display: flex; align-items: baseline; gap: 0.75rem; flex-wrap: wrap; }
+
+  .endpoint {
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    color: var(--ink);
+    word-break: break-all;
+    background: var(--surface-sunk);
+    padding: 0.55rem 0.7rem;
+    border-radius: 3px;
+  }
+
+  .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: 0.9rem 1.5rem; }
+
+  .fact { display: flex; flex-direction: column; gap: 0.15rem; }
+
+  .fact-label {
+    font-family: var(--mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  .fact-value { font-size: 0.92rem; color: var(--ink); font-variant-numeric: tabular-nums; }
+
+  /* ── Callout ────────────────────────────────────────── */
+  .note {
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 1.1rem 1.3rem;
+    background: var(--surface);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .note-caution { border-color: var(--archive); background: var(--archive-wash); }
+  .note-caution h3 { color: var(--archive); }
+  .note p { color: var(--ink-soft); }
+
+  ul { margin: 0; padding-left: 1.15rem; color: var(--ink-soft); max-width: 68ch; display: flex; flex-direction: column; gap: 0.4rem; }
+  li::marker { color: var(--ink-faint); }
+
+  code {
+    font-family: var(--mono);
+    font-size: 0.86em;
+    background: var(--surface-sunk);
+    padding: 0.1em 0.35em;
+    border-radius: 2px;
+    color: var(--ink);
+  }
+
+  footer {
+    border-top: 1px solid var(--rule);
+    padding-top: 1.5rem;
+    font-size: 0.82rem;
+    color: var(--ink-faint);
+    max-width: 68ch;
+  }
+</style>
+
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <div class="eyebrow">Content List Toolkit · Network reference</div>
+    <h1>Getty Call Paths</h1>
+    <p class="standfirst">Every outbound request the Getty Tag check makes, which host serves it, and what happens when a firewall blocks it. Written for whoever approves the exception.</p>
+  </header>
+
+  <section>
+    <h2>What to allow</h2>
+    <p>Two hosts, and they are independent. Verifying terms live needs the first; downloading a term list for offline use needs the second. <strong>Allowing either one makes the feature work</strong> — they are alternative routes to the same answer, which is why both exist.</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Host</th>
+            <th>Port</th>
+            <th>Purpose</th>
+            <th>Needed for</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="host">vocab.getty.edu</td>
+            <td class="port">443 · TLS</td>
+            <td>SPARQL queries against the Art &amp; Architecture Thesaurus</td>
+            <td><span class="tag tag-live">Live check</span></td>
+          </tr>
+          <tr>
+            <td class="host">aatdownloads.getty.edu</td>
+            <td class="port">80 · plaintext</td>
+            <td>Bulk vocabulary archive download</td>
+            <td><span class="tag tag-archive">Offline list</span></td>
+          </tr>
+          <tr>
+            <td class="host">fonts.googleapis.com</td>
+            <td class="port">—</td>
+            <td>Not used. The application ships its own fonts.</td>
+            <td><span class="tag tag-blocked">Not required</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="rule-top">
+    <h2>The call paths</h2>
+
+    <figure>
+      <div class="figure-frame">
+        <svg viewBox="0 0 900 430" role="img" aria-label="Content List Toolkit makes three kinds of outbound request: a reachability probe and per-term lookups to vocab.getty.edu over HTTPS port 443, both passing through an in-memory term cache, and an archive download from aatdownloads.getty.edu over plaintext HTTP port 80.">
+          <defs>
+            <marker id="tip" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/>
+            </marker>
+            <marker id="tip-live" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="#1f5f8b"/>
+            </marker>
+            <marker id="tip-archive" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="#8a5a17"/>
+            </marker>
+          </defs>
+
+          <!-- Application -->
+          <rect x="24" y="150" width="186" height="130" rx="3" fill="none" stroke="currentColor" stroke-width="1.5"/>
+          <text x="117" y="200" text-anchor="middle" font-family="IBM Plex Sans, sans-serif" font-size="14" font-weight="600" fill="currentColor">Content List</text>
+          <text x="117" y="219" text-anchor="middle" font-family="IBM Plex Sans, sans-serif" font-size="14" font-weight="600" fill="currentColor">Toolkit</text>
+          <text x="117" y="243" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="11" fill="currentColor" opacity="0.65">on the workstation</text>
+
+          <!-- Term cache -->
+          <rect x="300" y="178" width="132" height="74" rx="3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="4 3"/>
+          <text x="366" y="208" text-anchor="middle" font-family="IBM Plex Sans, sans-serif" font-size="13" font-weight="600" fill="currentColor">Term cache</text>
+          <text x="366" y="228" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="currentColor" opacity="0.65">in memory</text>
+
+          <!-- vocab.getty.edu -->
+          <rect x="574" y="56" width="302" height="104" rx="3" fill="none" stroke="#1f5f8b" stroke-width="2"/>
+          <text x="598" y="90" font-family="IBM Plex Mono, monospace" font-size="14" font-weight="500" fill="#1f5f8b">vocab.getty.edu</text>
+          <text x="598" y="114" font-family="IBM Plex Mono, monospace" font-size="11.5" fill="#1f5f8b" opacity="0.85">port 443 · TLS</text>
+          <text x="598" y="136" font-family="IBM Plex Sans, sans-serif" font-size="12" fill="currentColor" opacity="0.7">SPARQL endpoint · authoritative</text>
+
+          <!-- aatdownloads.getty.edu -->
+          <rect x="574" y="290" width="302" height="104" rx="3" fill="none" stroke="#8a5a17" stroke-width="2"/>
+          <text x="598" y="324" font-family="IBM Plex Mono, monospace" font-size="14" font-weight="500" fill="#8a5a17">aatdownloads.getty.edu</text>
+          <text x="598" y="348" font-family="IBM Plex Mono, monospace" font-size="11.5" fill="#8a5a17" opacity="0.9">port 80 · plaintext</text>
+          <text x="598" y="370" font-family="IBM Plex Sans, sans-serif" font-size="12" fill="currentColor" opacity="0.7">archive files · frozen Jan 2026</text>
+
+          <!-- Probe: app -> vocab, arcs above the cache -->
+          <path d="M 210 172 C 330 120, 420 92, 574 92" fill="none" stroke="#1f5f8b" stroke-width="1.6" marker-end="url(#tip-live)"/>
+          <text x="392" y="106" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="11" fill="#1f5f8b">reachability probe · once per visit</text>
+
+          <!-- Lookup: app -> cache -->
+          <line x1="210" y1="215" x2="300" y2="215" stroke="currentColor" stroke-width="1.6" marker-end="url(#tip)"/>
+          <text x="255" y="205" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="11" fill="currentColor">each tag</text>
+
+          <!-- Cache -> vocab (miss only) -->
+          <path d="M 432 200 C 500 190, 520 150, 574 140" fill="none" stroke="#1f5f8b" stroke-width="1.6" marker-end="url(#tip-live)"/>
+          <text x="512" y="172" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="11" fill="#1f5f8b">on miss only</text>
+
+          <!-- Cache self-loop: repeat terms answered locally -->
+          <path d="M 330 252 C 322 286, 410 286, 402 252" fill="none" stroke="currentColor" stroke-width="1.4" stroke-dasharray="3 3" marker-end="url(#tip)"/>
+          <text x="366" y="300" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="11" fill="currentColor" opacity="0.72">repeats answered locally</text>
+
+          <!-- Download: app -> downloads -->
+          <path d="M 210 258 C 330 330, 430 342, 574 342" fill="none" stroke="#8a5a17" stroke-width="1.6" marker-end="url(#tip-archive)"/>
+          <text x="392" y="332" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="11" fill="#8a5a17">archive download · on request</text>
+        </svg>
+      </div>
+      <figcaption>The two hosts are reached independently. Term lookups pass through an in-memory cache first, so a sheet of ten thousand rows built from thirty distinct tags produces roughly thirty requests, not ten thousand.</figcaption>
+    </figure>
+  </section>
+
+  <section class="rule-top">
+    <h2>Request by request</h2>
+
+    <div class="calls">
+
+      <article class="call call-live">
+        <div class="call-head">
+          <h3>Reachability probe</h3>
+          <span class="tag tag-live">vocab.getty.edu</span>
+        </div>
+        <p>Fetches one fixed, well-known concept to decide whether the service is usable from this machine, so the answer is shown before a check runs rather than discovered afterwards. Deliberately not a search — a probe should not depend on query syntax staying still.</p>
+        <div class="endpoint">GET https://vocab.getty.edu/aat/300046300.json</div>
+        <div class="facts">
+          <div class="fact"><span class="fact-label">Frequency</span><span class="fact-value">Once per screen visit</span></div>
+          <div class="fact"><span class="fact-label">Timeout</span><span class="fact-value">6 seconds</span></div>
+          <div class="fact"><span class="fact-label">Response</span><span class="fact-value">~2 KB JSON</span></div>
+        </div>
+      </article>
+
+      <article class="call call-live">
+        <div class="call-head">
+          <h3>Term lookup</h3>
+          <span class="tag tag-live">vocab.getty.edu</span>
+        </div>
+        <p>Asks whether one tag exists in the thesaurus. The tag text travels in the query string; nothing else from the spreadsheet is sent. Answered from the cache when the same tag has already been asked about during the run.</p>
+        <div class="endpoint">GET https://vocab.getty.edu/sparql.json?query=&lt;SPARQL&gt;</div>
+        <div class="facts">
+          <div class="fact"><span class="fact-label">Frequency</span><span class="fact-value">Once per distinct tag</span></div>
+          <div class="fact"><span class="fact-label">Timeout</span><span class="fact-value">15 seconds</span></div>
+          <div class="fact"><span class="fact-label">Response</span><span class="fact-value">Under 1 MB, capped</span></div>
+        </div>
+      </article>
+
+      <article class="call call-archive">
+        <div class="call-head">
+          <h3>Archive download</h3>
+          <span class="tag tag-archive">aatdownloads.getty.edu</span>
+        </div>
+        <p>Runs only when somebody presses <em>Download list from Getty</em>. Reads the index page to find the current archive, then fetches it and extracts an English term list to a file chosen by the user. Nothing is sent but the requests themselves.</p>
+        <div class="endpoint">GET http://aatdownloads.getty.edu/<br>GET http://aatdownloads.getty.edu/VocabData/aat_rel_&lt;mmyy&gt;.zip</div>
+        <div class="facts">
+          <div class="fact"><span class="fact-label">Frequency</span><span class="fact-value">Manual only</span></div>
+          <div class="fact"><span class="fact-label">Timeout</span><span class="fact-value">10 minutes</span></div>
+          <div class="fact"><span class="fact-label">Download</span><span class="fact-value">~73 MB</span></div>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <section class="rule-top">
+    <h2>What leaves the machine</h2>
+    <p>Only the tag text itself — controlled-vocabulary terms such as <code>aerial photographs</code> — and only when the live check is selected. The requests carry no collection metadata, no titles, no file names, no identifiers, and no credentials. Getty requires no account and the application holds none.</p>
+    <ul>
+      <li><strong>Not sent:</strong> the spreadsheet, any column other than Tags, file paths, machine or user names.</li>
+      <li><strong>Not stored by us:</strong> responses live in memory for the duration of one check and are discarded when it ends.</li>
+      <li><strong>Written to disk only on request:</strong> the downloaded term list, to a folder the user picks.</li>
+    </ul>
+  </section>
+
+  <section class="rule-top">
+    <h2>If it is blocked</h2>
+    <p>Blocking is handled as a known state, not an error. A failed lookup is recorded as <strong>“could not be checked”</strong> and never as “this term is wrong” — a false accusation would send a cataloguer to re-verify metadata that was already correct.</p>
+    <ul>
+      <li><strong>Live check blocked:</strong> the indicator turns red before the run and names the cause — blocked host, DNS failure, or TLS interception. Cleaning, structural checks, and the offline list all continue to work.</li>
+      <li><strong>Download blocked:</strong> the live check is unaffected. The two routes fail independently.</li>
+      <li><strong>Both blocked:</strong> everything except term verification still runs, which is the half that catches the characters that break a CONTENTdm upload.</li>
+    </ul>
+
+    <div class="note note-caution">
+      <h3>Two things worth raising in review</h3>
+      <p><strong>The download host refuses HTTPS.</strong> <code>aatdownloads.getty.edu</code> answers on port 80 and does not serve TLS, so that transfer is unprotected in transit. For a public vocabulary the exposure is modest, but it is real and cannot be fixed from this end.</p>
+      <p><strong>The archives are frozen.</strong> Getty stopped refreshing these datasets after January 2026, so a downloaded list is a dated snapshot and grows staler over time. The publication date is written into the filename for that reason. The live endpoint is the only current source.</p>
+    </div>
+  </section>
+
+  <footer>
+    Endpoints, ports, and timeouts describe Content List Toolkit v0.3.0 and were confirmed against the live services. Vocabulary data is published by the J. Paul Getty Trust under the Open Data Commons Attribution License (ODC-By) 1.0.
+  </footer>
+
+</div>
+</body>
+</html>
