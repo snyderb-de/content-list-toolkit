@@ -14,12 +14,14 @@ import (
 // The live source queries Getty's SPARQL endpoint. It is authoritative in a
 // way an exported term list cannot be, at the cost of needing the network.
 //
-// Two properties of the endpoint shape this code. luc:term is a full-text
-// search, so it returns candidates rather than exact matches, and the label
-// pattern returns the preferred label in every language Getty holds — a search
-// for "aerial photographs" comes back with the Spanish and Dutch labels for
-// the same concept alongside the English one. Deciding whether the sheet's
-// term is really in the vocabulary therefore happens here, not in the query.
+// Two properties of the endpoint shape this code, both observed rather than
+// assumed. luc:term is a full-text search that saturates the row limit on
+// ordinary terms, so the equality test belongs in the query where LIMIT cannot
+// discard the true match. And the label pattern returns the preferred label in
+// every language Getty holds — a search for "aerial photographs" comes back
+// with the Spanish and Dutch labels for the same concept alongside the English
+// one — so the language test belongs here, where a silent mismatch cannot be
+// confused with a term that genuinely does not exist.
 //
 // Getty Vocabulary data is published under ODC-By 1.0: results displayed to a
 // user must credit the Getty Research Institute and name the vocabulary.
@@ -97,12 +99,22 @@ func (v *sparqlVocabulary) Lookup(ctx context.Context, term string) (gettyTermMa
 	return parseAATLookupResponse(body, term, cleaned)
 }
 
-// buildAATLookupQuery asks for candidate concepts and their preferred labels.
+// buildAATLookupQuery finds concepts whose preferred label equals the term.
 //
-// The search deliberately stays broad and the exact comparison happens in Go.
-// Pushing the comparison into SPARQL would mean relying on the endpoint's
-// collation for case folding, and a stricter query that returned nothing would
-// be indistinguishable from a term that genuinely does not exist.
+// luc:term is a full-text search and saturates easily: a search for
+// "black-and-white photographs" returns candidates until the row limit is
+// reached. Selecting candidates and comparing them in Go would therefore drop
+// the true match whenever it fell outside the returned window, reporting a
+// perfectly good term as absent.
+//
+// Filtering inside the query fixes that, because LIMIT applies to the filtered
+// result sequence rather than to the candidates scanned. Only genuine matches
+// consume rows, and a handful of rows is always enough.
+//
+// The language is deliberately not filtered here. A SPARQL langMatches that
+// excluded untagged literals would fail silently, producing false absences
+// that look identical to real ones, so labels come back in every language and
+// Go decides which count.
 func buildAATLookupQuery(term string) string {
 	return fmt.Sprintf(`PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
 PREFIX xl: <http://www.w3.org/2008/05/skos-xl#>
@@ -111,7 +123,8 @@ SELECT ?s ?label WHERE {
   ?s luc:term %s ;
      skos:inScheme <%s> ;
      xl:prefLabel/xl:literalForm ?label .
-} LIMIT 50`, sparqlStringLiteral(term), aatScheme)
+  FILTER(lcase(str(?label)) = %s)
+} LIMIT 25`, sparqlStringLiteral(term), aatScheme, sparqlStringLiteral(strings.ToLower(term)))
 }
 
 // sparqlStringLiteral quotes a term for inclusion in a query.

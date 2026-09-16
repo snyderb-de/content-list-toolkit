@@ -243,3 +243,51 @@ func TestSPARQLVocabularyComposesWithTheCache(t *testing.T) {
 		t.Fatalf("endpoint received %d requests, want 1", requests)
 	}
 }
+
+// luc:term saturates the row limit on ordinary terms — "black-and-white
+// photographs", "balustrades, railings and their components", and "artists'
+// books" each returned a full page of candidates from the live endpoint. If
+// the equality test lived only in Go, the true match would be dropped whenever
+// it fell outside that page, and a valid term would be reported as absent.
+func TestAATQueryFiltersServerSideSoTheLimitCannotHideAMatch(t *testing.T) {
+	query := buildAATLookupQuery("black-and-white photographs")
+
+	if !strings.Contains(query, "FILTER(lcase(str(?label))") {
+		t.Fatalf("query must compare labels server-side, got:\n%s", query)
+	}
+	if !strings.Contains(query, `"black-and-white photographs"`) {
+		t.Fatalf("query must carry the lowercased term to compare against, got:\n%s", query)
+	}
+	if !strings.Contains(query, "luc:term") {
+		t.Fatalf("query should still use the full-text index to find candidates, got:\n%s", query)
+	}
+}
+
+// Language is deliberately not filtered in SPARQL: a langMatches that excluded
+// untagged literals would produce absences indistinguishable from real ones.
+func TestAATQueryDoesNotFilterLanguageServerSide(t *testing.T) {
+	query := buildAATLookupQuery("landscapes")
+	if strings.Contains(query, "langMatches") {
+		t.Fatalf("language belongs in Go, not the query, got:\n%s", query)
+	}
+}
+
+// The term is lowercased for the server-side comparison, but a mixed-case
+// sheet entry must still match.
+func TestAATQueryLowercasesTheComparisonTerm(t *testing.T) {
+	query := buildAATLookupQuery("Aerial Photographs")
+	if !strings.Contains(query, `"aerial photographs"`) {
+		t.Fatalf("comparison term should be lowercased, got:\n%s", query)
+	}
+	if !strings.Contains(query, `luc:term "Aerial Photographs"`) {
+		t.Fatalf("the search term should keep its original spelling, got:\n%s", query)
+	}
+}
+
+// Escaping still has to hold now that the term appears in the query twice.
+func TestAATQueryEscapesTheTermInBothPositions(t *testing.T) {
+	query := buildAATLookupQuery(`a"b`)
+	if strings.Count(query, `\"`) != 2 {
+		t.Fatalf("both occurrences of the term must be escaped, got:\n%s", query)
+	}
+}
