@@ -1,9 +1,14 @@
 # Wails Dev Checklist
 
+Items marked `[?]` were recorded as failing in an earlier round, but the code
+that caused them has since changed. They need one pass to confirm before being
+marked either way — a checklist that reports bugs the app no longer has is
+worse than one with gaps.
+
 ## App Shell
 
-- [y] A1 Sidebar nav — all 4 items visible, active highlight works
-- [n] A2 Dark mode toggle — switches theme, persists on reload - no toggle exists.
+- [y] A1 Sidebar nav — all 6 items visible (Content List, Email Copy, Clone Compare, Getty Tags, User Manual, About), active highlight works
+- [?] A2 Theme toggle — cycles light / dark / system and persists on reload. Recorded as "no toggle exists"; `App.tsx` now wires `cycleTheme` and the sidebar renders it, so re-test.
 - [y] A3 Window min-size (try shrinking to ~800×600)
 - [ ] A4 View menu: Toggle Full Screen works and comes back out (macOS: Ctrl+Cmd+F)
 - [ ] A5 View menu: Zoom / Maximise fills the screen; Reset Window Size restores 1100×720 centred
@@ -13,11 +18,11 @@
 ## Content List
 
 - [y] C1 Browse buttons open native folder dialog
-- [n] C2 Output filename auto-populates from source folder name - it says it will auto populate but it doesn't
+- [?] C2 Output filename auto-populates from source folder name. The `useEffect` on `sourceDir` in `ContentList.tsx` does populate it; suspected race with `GetScanDefaults()` resolving afterwards and overwriting with an empty value, which would make it intermittent. Re-test, and note whether it fails always or only sometimes.
 - [y] C3 All toggles work (XLSX, preserve zeros, delete CSV — sub-options disable when XLSX off)
 - [y] C4 Hash selector has all 4 options
 - [y] C5 Start Scan → progress view shows (phase badge, bar, counters, current file)
-- C5 note: first scan erroed b/c file name didn't have .csv, this should be automatic and abstracted from the user, also i want a progress bar
+- [y] C5 note (resolved): the missing `.csv` extension is now appended automatically in `app.go:173`, so a name without it no longer errors
 - [y] C6 Stop button cancels, returns to form with "Scan was stopped"
 - [y] C7 Done view shows stats, top extensions tables, open output button
 
@@ -25,13 +30,13 @@
 
 - [y] E1 Browse source + dest
 - [y] E2 Start → progress spinner
-- Email copy has no stop button and no progress bar
+- [?] E4 Email copy Stop button and progress bar. Recorded as missing; `EmailCopy.tsx` now renders both, so re-test.
 - [y] E3 Done view shows manifest path, open dest button
 
 ## Clone Compare
 
 - [y] CC1 Can't start with same folder for A and B (client-side guard)
-- CC1... this works but it doenst tell you until you scan, it should tell you after drive 2 is chosen.
+- [?] CC1 note: recorded as only warning at scan time. `CloneCompare.tsx:360` now renders the mismatch warning reactively as soon as drive 2 is chosen, so re-test.
 - [y] CC2 3-phase indicator steps through scan-a → scan-b → diff
 - [y] CC3 Live diff table populates during diff phase
 - [y] CC4 Done view shows all 6 diff stat categories
@@ -61,4 +66,4 @@
 ## About
 
 - [y] AB1 Version shown
-- [y] AB2 GitHub link opens in browser (not WebView) - there is no link
+- [?] AB2 GitHub link opens in the browser, not the WebView. Recorded as "there is no link"; `About.tsx` now calls `BrowserOpenURL` against snyderb-de/content-list-toolkit, so re-test.
