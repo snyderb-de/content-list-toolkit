@@ -21,7 +21,7 @@ Branch protection is a GitHub setting on the repo (not in code — configured in
 2. Click "Add branch protection rule"
 3. Branch name pattern: `main`
 4. Check the boxes above
-5. Under "Require status checks", search for the job names from `release.yml` (`unix-bundle`, `windows-gui`, `windows-portable`, `windows-python`) — add the ones you want as required
+5. Under "Require status checks", search for the job names from `release.yml` (`unix-bundle`, `windows-gui`) — add the ones you want as required
 6. Save
 
 After the first CI run, the job names will appear in the search box. Before that first run, the dropdown is empty. So: push the workflow first, let it run once, then come back to add the required checks.
@@ -78,7 +78,6 @@ This is a file at `.github/CODEOWNERS` that maps file paths to GitHub usernames 
 core.go                     @yourusername @anotherusername
 
 # Python files need both you and someone else
-python/                     @yourusername @collaborator
 
 # Frontend
 frontend/                   @frontend-team-member

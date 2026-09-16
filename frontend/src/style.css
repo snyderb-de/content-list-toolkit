@@ -1062,3 +1062,160 @@ textarea.text-input {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* ─── Getty tag findings ─────────────────────────────────────
+   The shared .diff-table truncates cells to one line, which suits the file
+   paths Clone Compare shows. A finding is a sentence and has to be readable
+   in full, so this table opts out of the truncation rather than changing it
+   for every table. */
+.getty-findings td {
+  white-space: normal;
+  max-width: none;
+  overflow: visible;
+  text-overflow: clip;
+  vertical-align: top;
+  word-break: break-word;
+  line-height: 1.5;
+}
+
+.getty-findings .current-file {
+  white-space: pre-wrap;
+  overflow: visible;
+  text-overflow: clip;
+  word-break: break-word;
+  margin-bottom: 4px;
+}
+
+.getty-findings .current-file:last-child { margin-bottom: 0; }
+
+.getty-findings td:first-child { white-space: nowrap; }
+
+/* ─── Getty findings, one per line ───────────────────────────
+   A finding is a badge naming what was found plus the detail. Colour carries
+   the same three-way meaning as the written report: green is already fixed,
+   red needs correcting, amber is a judgement call. */
+.finding {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  margin-bottom: 5px;
+}
+
+.finding:last-child { margin-bottom: 0; }
+
+.finding-prefix {
+  flex: 0 0 62px;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: var(--font-ui, inherit);
+}
+
+.finding-fixed  .finding-prefix { color: var(--success); }
+.finding-review .finding-prefix { color: var(--warning); }
+.finding-error  .finding-prefix { color: var(--danger); }
+
+.finding-badge {
+  flex: 0 0 auto;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  font-family: var(--font-ui, inherit);
+}
+
+.finding-detail {
+  font-family: var(--font-ui, inherit);
+  font-size: 11.5px;
+  color: var(--text-secondary);
+}
+
+.finding-fixed .finding-badge  { background: var(--success-bg); color: var(--success); }
+.finding-review .finding-badge { background: var(--warning-bg); color: var(--warning); }
+.finding-error .finding-badge  { background: var(--danger-bg);  color: var(--danger); }
+
+/* An unverifiable term is the substantive finding on the screen, so it reads
+   as an error rather than as commentary. */
+.finding-error .finding-detail { color: var(--danger); }
+
+.getty-row-status {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-top: 3px;
+}
+
+.tag-before { color: var(--text-muted); }
+.tag-after  { color: var(--success); }
+
+/* ─── Getty suggestions and editing ──────────────────────────
+   A term the vocabulary rejects is a dead end without somewhere to go, so the
+   near matches are offered as buttons that replace just that term. */
+.findings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.findings-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.suggestion-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.suggestion-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: var(--font-ui, inherit);
+}
+
+.suggestion-chip {
+  padding: 2px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  font-size: 11px;
+  font-family: var(--font-ui, inherit);
+  cursor: pointer;
+}
+
+.suggestion-chip:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.getty-findings .text-input {
+  margin-top: 4px;
+  font-size: 11.5px;
+  padding: 5px 8px;
+}
+
+/* A term and what to do about it stay together, so a row with three problem
+   tags reads as three decisions rather than one list of complaints followed by
+   one list of buttons. */
+.term-finding {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px dashed var(--border);
+}
+
+.term-finding:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}

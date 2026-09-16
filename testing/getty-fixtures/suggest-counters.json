@@ -1,0 +1,368 @@
+{
+  "head" : {
+    "vars" : [ "label" ]
+  },
+  "results" : {
+    "bindings" : [ {
+      "label" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "tally counters"
+      }
+    }, {
+      "label" : {
+        "xml:lang" : "fr",
+        "type" : "literal",
+        "value" : "compteur-enregistreur"
+      }
+    }, {
+      "label" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "proportional counters"
+      }
+    }, {
+      "label" : {
+        "xml:lang" : "nl",
+        "type" : "literal",
+        "value" : "proportionele tellers"
+      }
+    }, {
+      "label" : {
+        "xml:lang" : "de",
+        "type" : "literal",
+        "value" : "Proportionalzähler"
+      }
+    }, {
+      "label" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "counters (furniture)"
+      }
+    }, {
+      "label" : {
+        "xml:lang" : "es",
+        "type" : "literal",
+        "value" : "mostradores (mueble de caja)"
+      }
+    }, {
+      "label" : {
+        "xml:lang" : "nl",
+        "type" : "literal",
+        "value" : "toonbanken"
+      }
+    }, {
+      "label" : {
+        "xml:lang" : "fr",
+        "type" : "literal",
+        "value" : "comptoir"
+      }
+    }, {
+      "label" : {
+        "xml:lang" : "de",
+        "type" : "literal",
+        "value" : "Theke"
+      }
+    }, {
+      "label" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "blood counters"
+      }
+    }, {
+      "label" : {
+        "xml:lang" : "fr",
+        "type" : "literal",
+        "value" : "appareil de numération sanguine"
+      }
+    }, {
+      "label" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "sales counters"
+      }
+    }, {
+      "label" : {
+        "xml:lang" : "fr",
+        "type" : "literal",
+        "value" : "comptoir de vente"
+      }
+    }, {
+      "label" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "game counters"
+      }
+    }, {
+      "label" : {
+        "xml:lang" : "fr",
+        "type" : "literal",
+        "value" : "compteur de jeu"
+      }
+    }, {
+      "label" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "thread counters"
+      }
+    }, {
+      "label" : {
+        "xml:lang" : "fr",
+        "type" : "literal",
+        "value" : "compte-fils"
+      }
+    }, {
+      "label" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "gaming counters"
+      }
+    }, {
+      "label" : {
+        "xml:lang" : "nl",
+        "type" : "literal",
+        "value" : "speelpenningen"
+      }
+    }, {
+      "label" : {
+        "xml:lang" : "fr",
+        "type" : "literal",
+        "value" : "jeton de jeu de hasard"
+      }
+    }, {
+      "label" : {
+        "xml:lang" : "es",
+        "type" : "literal",
+        "value" : "fichas de juego"
+      }
+    }, {
+      "label" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Geiger counters"
+      }
+    }, {
+      "label" : {
+        "xml:lang" : "zh-hant",
+        "type" : "literal",
+        "value" : "蓋革計數器"
+      }
+    }, {
+      "label" : {
+        "xml:lang" : "zh-latn-pinyin-x-hanyu",
+        "type" : "literal",
+        "value" : "gài gé jì shù qì"
+      }
+    }, {
+      "label" : {
+        "xml:lang" : "zh-latn-pinyin-x-notone",
+        "type" : "literal",
+        "value" : "gai ge ji shu qi"
+      }
+    }, {
+      "label" : {
+        "xml:lang" : "zh-latn-wadegile",
+        "type" : "literal",
+        "value" : "kai ko chi shu ch'i"
+      }
+    }, {
+      "label" : {
+        "xml:lang" : "nl",
+        "type" : "literal",
+        "value" : "geigertellers"
+      }
+    }, {
+      "label" : {
+        "xml:lang" : "fr",
+        "type" : "literal",
+        "value" : "compteur geiger"
+      }
+    }, {
+      "label" : {
+        "xml:lang" : "de",
+        "type" : "literal",
+        "value" : "Geigerzähler"
+      }
+    }, {
+      "label" : {
+        "xml:lang" : "es",
+        "type" : "literal",
+        "value" : "contador de radiaciones iónicas Geiger"
+      }
+    }, {
+      "label" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "jettons"
+      }
+    }, {
+      "label" : {
+        "xml:lang" : "nl",
+        "type" : "literal",
+        "value" : "jetons"
+      }
+    }, {
+      "label" : {
+        "xml:lang" : "zh-hant",
+        "type" : "literal",
+        "value" : "籌碼"
+      }
+    }, {
+      "label" : {
+        "xml:lang" : "zh-latn-pinyin-x-hanyu",
+        "type" : "literal",
+        "value" : "chóu ma"
+      }
+    }, {
+      "label" : {
+        "xml:lang" : "zh-latn-pinyin-x-notone",
+        "type" : "literal",
+        "value" : "chou ma"
+      }
+    }, {
+      "label" : {
+        "xml:lang" : "zh-latn-wadegile",
+        "type" : "literal",
+        "value" : "ch'ou ma"
+      }
+    }, {
+      "label" : {
+        "xml:lang" : "fr",
+        "type" : "literal",
+        "value" : "jeton"
+      }
+    }, {
+      "label" : {
+        "xml:lang" : "es",
+        "type" : "literal",
+        "value" : "guitones"
+      }
+    }, {
+      "label" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "counters (letterform components)"
+      }
+    }, {
+      "label" : {
+        "xml:lang" : "zh-latn-pinyin-x-notone",
+        "type" : "literal",
+        "value" : "zi gu ( )"
+      }
+    }, {
+      "label" : {
+        "xml:lang" : "nl",
+        "type" : "literal",
+        "value" : "ponsen (onderdelen van lettertypen)"
+      }
+    }, {
+      "label" : {
+        "xml:lang" : "zh-hant",
+        "type" : "literal",
+        "value" : "字谷"
+      }
+    }, {
+      "label" : {
+        "xml:lang" : "zh-latn-pinyin-x-hanyu",
+        "type" : "literal",
+        "value" : "zì gǔ"
+      }
+    }, {
+      "label" : {
+        "xml:lang" : "zh-latn-wadegile",
+        "type" : "literal",
+        "value" : "tzu ku"
+      }
+    }, {
+      "label" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "compters"
+      }
+    }, {
+      "label" : {
+        "xml:lang" : "zh-hant",
+        "type" : "literal",
+        "value" : "債家監獄"
+      }
+    }, {
+      "label" : {
+        "xml:lang" : "zh-latn-pinyin-x-hanyu",
+        "type" : "literal",
+        "value" : "zhài jiā jiān yù"
+      }
+    }, {
+      "label" : {
+        "xml:lang" : "zh-latn-pinyin-x-notone",
+        "type" : "literal",
+        "value" : "zhai jia jian yu"
+      }
+    }, {
+      "label" : {
+        "xml:lang" : "zh-latn-wadegile",
+        "type" : "literal",
+        "value" : "chai chia chien yü"
+      }
+    }, {
+      "label" : {
+        "xml:lang" : "de",
+        "type" : "literal",
+        "value" : "Compter"
+      }
+    }, {
+      "label" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "counter tables"
+      }
+    }, {
+      "label" : {
+        "xml:lang" : "nl",
+        "type" : "literal",
+        "value" : "counter tables"
+      }
+    }, {
+      "label" : {
+        "xml:lang" : "zh-hant",
+        "type" : "literal",
+        "value" : "櫃檯桌"
+      }
+    }, {
+      "label" : {
+        "xml:lang" : "zh-latn-pinyin-x-hanyu",
+        "type" : "literal",
+        "value" : "guì tái zhuō"
+      }
+    }, {
+      "label" : {
+        "xml:lang" : "zh-latn-pinyin-x-notone",
+        "type" : "literal",
+        "value" : "gui tai zhuo"
+      }
+    }, {
+      "label" : {
+        "xml:lang" : "zh-latn-wadegile",
+        "type" : "literal",
+        "value" : "kuei t'ai cho"
+      }
+    }, {
+      "label" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "counters (watercraft components)"
+      }
+    }, {
+      "label" : {
+        "xml:lang" : "zh-hant",
+        "type" : "literal",
+        "value" : "扇形艉"
+      }
+    }, {
+      "label" : {
+        "xml:lang" : "zh-latn-pinyin-x-hanyu",
+        "type" : "literal",
+        "value" : "shàn xíng wěi"
+      }
+    } ]
+  }
+}

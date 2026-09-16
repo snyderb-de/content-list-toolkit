@@ -6,9 +6,8 @@ RELEASES_DIR="$ROOT_DIR/releases"
 MACOS_DIR="$RELEASES_DIR/macos"
 LINUX_DIR="$RELEASES_DIR/linux"
 WINDOWS_GO_DIR="$RELEASES_DIR/windows-go"
-WINDOWS_PY_DIR="$RELEASES_DIR/windows-python"
 
-mkdir -p "$MACOS_DIR" "$LINUX_DIR" "$WINDOWS_GO_DIR" "$WINDOWS_PY_DIR"
+mkdir -p "$MACOS_DIR" "$LINUX_DIR" "$WINDOWS_GO_DIR"
 
 cd "$ROOT_DIR"
 
@@ -38,12 +37,12 @@ if [ -d "$APP_SRC" ]; then
     cd "$MACOS_DIR" && zip -qr "content-list-generator-gui-darwin-universal.zip" "content-list-generator.app"
     echo "  → $MACOS_DIR/content-list-generator-gui-darwin-universal.zip"
 else
-    # wails may use the name from wails.json ("Content List Generator")
-    APP_SRC2="$ROOT_DIR/build/bin/Content List Generator.app"
+    # wails may use the name from wails.json ("Content List Toolkit")
+    APP_SRC2="$ROOT_DIR/build/bin/Content List Toolkit.app"
     if [ -d "$APP_SRC2" ]; then
-        rm -rf "$MACOS_DIR/Content List Generator.app"
-        cp -r "$APP_SRC2" "$MACOS_DIR/Content List Generator.app"
-        cd "$MACOS_DIR" && zip -qr "content-list-generator-gui-darwin-universal.zip" "Content List Generator.app"
+        rm -rf "$MACOS_DIR/Content List Toolkit.app"
+        cp -r "$APP_SRC2" "$MACOS_DIR/Content List Toolkit.app"
+        cd "$MACOS_DIR" && zip -qr "content-list-generator-gui-darwin-universal.zip" "Content List Toolkit.app"
         echo "  → $MACOS_DIR/content-list-generator-gui-darwin-universal.zip"
     fi
 fi

@@ -1,5 +1,29 @@
 # TODO
 
+## Retiring the Python runtime
+
+Decided 2026-09-16. The Python app existed to give Windows a GUI before Wails
+could build one. The Go app is now a strict superset — Python had content list,
+email copy, and about; Go has those plus Clone Compare, the User Manual, and the
+Getty Tag check — so the second implementation, the pinned `customtkinter` and
+`blake3` versions, the duplicated `deps_check.py`, and the cross-language parity
+fixtures all cost maintenance for nothing.
+
+Documented in `README.md` and `docs/windows-build-checklist.md`. The code is
+still in the tree so existing deployments have somewhere to migrate from.
+
+Removed on 2026-09-16, after confirming no machine still runs the `.bat`
+launcher. Deleted `python/`, `deploy/windows/`, the requirements files, the
+Python launchers, the two Python packaging scripts, `parity_check.sh`, and
+`copy_email_files.py`; dropped the `windows-portable` and `windows-python` CI
+jobs, `PYTHON_VERSION`, and the `pip` Dependabot ecosystem; removed both
+download cards from the dashboard and rewrote the user manual's runtime
+guidance.
+
+Kept on purpose: the `testing/` golden fixtures, which Go tests assert against,
+and `generate_fixture.py`, which regenerates them and never imported the
+retired runtime.
+
 ## Recently Shipped
 
 ### v0.2.7 (2026-06-12)
@@ -28,7 +52,7 @@
 - ✅ GitHub Actions JavaScript actions updated to Node 24-compatible major versions
 
 ### v0.2.3 (2026-05-20)
-- ✅ GitHub Pages dashboard deploy workflow shipped and Pages is live at `https://snyderb-de.github.io/content-list-generator/`
+- ✅ GitHub Pages dashboard deploy workflow shipped and Pages is live at `https://snyderb-de.github.io/content-list-toolkit/`
 - ✅ User manual redesigned in the dashboard style and linked from `README.md`
 - ✅ Scan progress overlay now persists while navigating between GUI screens
 - ✅ Sponsor button support merged via `.github/FUNDING.yml` after v0.2.3
@@ -72,13 +96,12 @@
 ### P0 — capture GUI screenshots
 - macOS `.app` (Wails GUI)
 - Wails Windows GUI (now unblocked by v0.2.2 fix)
-- Python customtkinter GUI (managed Windows path)
 - Bubble Tea TUI (Linux/Mac terminal)
 - Add to README hero + user manual + dashboard hero
 - Suggested resolution: 1600×1000 PNG, light-mode default
 
 ### ~~P0 — enable GitHub Pages for the dashboard~~ ✅ (2026-05-20)
-- ✅ Dashboard URL: `https://snyderb-de.github.io/content-list-generator/`
+- ✅ Dashboard URL: `https://snyderb-de.github.io/content-list-toolkit/`
 - Followup (P2): add the URL to README hero + repo About sidebar if desired
 
 ### ~~P1 — finish dependabot / Actions runtime sweep~~ ✅ (2026-06-12)
@@ -97,7 +120,7 @@
 
 ## Backlog (no order)
 - Auto-update mechanism for Wails app
-- Decide the final public GitHub repo URL and replace placeholder links in `python/content_list_generator.py`
+- Decide the final public GitHub repo URL (the placeholder link is gone; the Go About screen points at snyderb-de/content-list-toolkit)
 - Transfer repo ownership or publishing control to `dpa-snyder`
 - Decide the final project license (evaluate GPL vs MIT vs Apache)
 - Decide the final attribution requirement for reuse or redistribution

@@ -354,9 +354,9 @@ func compareScanOutputs(
 	// ── Pass 1: streaming sorted merge ───────────────────────────────────────
 	// Path matches are resolved immediately (exact or hash mismatch).
 	// Path-only rows are held in memory for Pass 2 hash cross-reference.
-	unmatchedA := make(map[string][]scanCSVRow)  // hash → A rows with no path match in B
-	unmatchedB := make(map[string][]scanCSVRow)  // hash → B rows with no path match in A
-	softBIndex  := make(map[string][]scanCSVRow) // filename::size → B rows (for PDF soft compare)
+	unmatchedA := make(map[string][]scanCSVRow) // hash → A rows with no path match in B
+	unmatchedB := make(map[string][]scanCSVRow) // hash → B rows with no path match in A
+	softBIndex := make(map[string][]scanCSVRow) // filename::size → B rows (for PDF soft compare)
 
 	for nextA != nil || nextB != nil {
 		select {

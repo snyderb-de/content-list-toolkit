@@ -16,6 +16,13 @@ type ScanOptions struct {
 	AgencyTemplate bool                 `json:"agencyTemplate"`
 	AgencyFields   AgencyTemplateFields `json:"agencyFields"`
 	ReleaseFolder  string               `json:"releaseFolder"`
+	// GettySource and GettyVocabularyPath remember the Getty Tag screen's
+	// choice of where to verify terms.
+	GettySource         string `json:"gettySource,omitempty"`
+	GettyVocabularyPath string `json:"gettyVocabularyPath,omitempty"`
+	// GettyLastSheet is the export checked last, so the picker opens where the
+	// work is rather than at the home directory every time.
+	GettyLastSheet string `json:"gettyLastSheet,omitempty"`
 }
 
 type AgencyTemplateFields struct {
@@ -55,6 +62,29 @@ type AppSettings struct {
 	AgencyTemplate bool                 `json:"agencyTemplate"`
 	AgencyFields   AgencyTemplateFields `json:"agencyFields"`
 	ReleaseFolder  string               `json:"releaseFolder"`
+	// GettySource and GettyVocabularyPath remember the Getty Tag screen's
+	// choice of where to verify terms.
+	GettySource         string `json:"gettySource,omitempty"`
+	GettyVocabularyPath string `json:"gettyVocabularyPath,omitempty"`
+	// GettyLastSheet is the export checked last, so the picker opens where the
+	// work is rather than at the home directory every time.
+	GettyLastSheet string `json:"gettyLastSheet,omitempty"`
+}
+
+// defaultAppSettings is the baseline used whenever settings are missing or
+// unreadable, so a corrupt file degrades to sane defaults rather than zero
+// values.
+func defaultAppSettings() AppSettings {
+	return AppSettings{
+		HashAlgorithm: string(defaultHashAlgorithm()),
+		ExcludeHidden: true,
+		ExcludeSystem: true,
+		CreateXLSX:    true,
+		PreserveZeros: true,
+		DeleteCSV:     true,
+		AgencyFields:  defaultAgencyTemplateFields(),
+		ReleaseFolder: defaultReleaseFolder,
+	}
 }
 
 type UpdateStatus struct {

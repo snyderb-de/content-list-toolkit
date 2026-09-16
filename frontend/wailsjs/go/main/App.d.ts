@@ -10,9 +10,17 @@ export function CancelScan():Promise<void>;
 
 export function CheckForUpdates():Promise<main.UpdateStatus>;
 
+export function CheckGettyReachability():Promise<main.GettyReachability>;
+
+export function CheckGettyTags(arg1:main.GettyCheckOptions):Promise<main.GettyCheckResult>;
+
 export function CheckOutputExists(arg1:main.ScanOptions):Promise<boolean>;
 
+export function DownloadGettyVocabulary(arg1:string):Promise<main.GettyDownloadResult>;
+
 export function GetAppVersion():Promise<string>;
+
+export function GetGettyDefaults():Promise<main.GettyCheckOptions>;
 
 export function GetScanDefaults():Promise<main.ScanOptions>;
 
@@ -20,13 +28,21 @@ export function OpenPath(arg1:string):Promise<void>;
 
 export function PickFolder(arg1:string):Promise<string>;
 
+export function PickSheet(arg1:string):Promise<string>;
+
+export function RestartToApplyUpdate():Promise<void>;
+
 export function ResumeCloneWithDriveB(arg1:string):Promise<void>;
 
-export function SaveSettings(arg1:main.ScanOptions):Promise<void>;
+export function RevealPath(arg1:string):Promise<void>;
+
+export function SaveGettyTagEdits(arg1:main.GettyCheckOptions,arg2:Array<main.GettyTagEdit>):Promise<main.GettySaveResult>;
+
+export function SaveGettyVocabulary(arg1:main.gettyVocabularySource,arg2:string):Promise<void>;
 
 export function SaveReleaseFolder(arg1:string):Promise<void>;
 
-export function RestartToApplyUpdate():Promise<void>;
+export function SaveSettings(arg1:main.ScanOptions):Promise<void>;
 
 export function StartCloneCompare(arg1:main.CloneCompareOptions):Promise<void>;
 

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Content List Generator — User Manual</title>
+  <title>Content List Toolkit — User Manual</title>
   <style>
     /* ── Design tokens ────────────────────────────────────────── */
     :root {
@@ -299,7 +299,7 @@
   <nav class="nav" aria-label="Manual navigation">
     <div class="nav-brand">
       <p>User Manual</p>
-      <strong><a href="index.html">Content List Generator</a></strong>
+      <strong><a href="index.html">Content List Toolkit</a></strong>
     </div>
 
     <div class="nav-links">
@@ -313,6 +313,8 @@
       <a class="nav-link" href="#scan">1. Generate content list</a>
       <a class="nav-link" href="#email">2. Copy email files</a>
       <a class="nav-link" href="#clone">3. Clone compare</a>
+      <a class="nav-link" href="#getty">4. Getty tag check</a>
+      <a class="nav-link" href="app-user-manual.html">In-app manual &rarr;</a>
 
       <div class="nav-group-label">Reference</div>
       <a class="nav-link" href="#output">Understanding output</a>
@@ -321,6 +323,7 @@
       <a class="nav-link" href="#filters">Filters &amp; exclusions</a>
       <a class="nav-link" href="#email-types">Email file types</a>
       <a class="nav-link" href="#verdicts">Clone verdicts</a>
+      <a class="nav-link" href="#getty-findings">Getty findings</a>
       <a class="nav-link" href="#updates">Updates</a>
       <a class="nav-link" href="#troubleshooting">Troubleshooting</a>
       <a class="nav-link" href="#faq">FAQ</a>
@@ -349,7 +352,7 @@
 
     <header class="hero" id="top">
       <p class="eyebrow">User Manual</p>
-      <h1>Content List Generator</h1>
+      <h1>Content List Toolkit</h1>
       <p class="hero-tagline">
         Scan large folder trees, write CSV inventories with optional hash columns, copy email
         files into curated destinations, and verify drive clones. macOS, Linux, and Windows.
@@ -365,15 +368,16 @@
       <div class="cards">
         <div class="card">
           <p>
-            Content List Generator is a desktop tool for archival migration workflows. Point it
+            Content List Toolkit is a desktop tool for archival migration workflows. Point it
             at a folder, and it produces a CSV inventory of every file under that folder —
             relative path, size, modified date, and an optional hash. Output streams to disk
             so multi-million-row scans do not run out of memory.
           </p>
           <p>
-            Two additional workflows live alongside the scan: copy every email-related file
-            under a tree into a curated destination, and compare two drives' content lists
-            to verify a clone.
+            Three additional workflows live alongside the scan: copy every email-related file
+            under a tree into a curated destination, compare two drives' content lists to
+            verify a clone, and check the Getty tags on a CONTENTdm export before it is
+            uploaded.
           </p>
         </div>
       </div>
@@ -398,12 +402,6 @@
               <strong>First launch:</strong> Gatekeeper says "could not verify free of malware." Right-click the app → Open → Open. Or System Settings → Privacy &amp; Security → "Open Anyway."
             </div>
           </div>
-          <div class="card">
-            <span class="pill">Windows · portable</span>
-            <h3 style="margin-bottom:6px">No-install zip</h3>
-            <p>Download <code>content-list-generator-windows-portable.zip</code>. Unzip anywhere — USB, Desktop, a network share. Run <code>Start Content List Generator.cmd</code>.</p>
-            <p style="margin-top:8px">Settings stay in <code>data\</code> beside the launcher. Recommended for managed Windows fleets.</p>
-          </div>
         </div>
         <div class="card-row">
           <div class="card">
@@ -423,7 +421,7 @@
           </div>
         </div>
         <div class="card">
-          <p>Latest release: <a href="https://github.com/snyderb-de/content-list-generator/releases/latest" target="_blank" rel="noopener">github.com/snyderb-de/content-list-generator/releases/latest</a></p>
+          <p>Latest release: <a href="https://github.com/snyderb-de/content-list-toolkit/releases/latest" target="_blank" rel="noopener">github.com/snyderb-de/content-list-toolkit/releases/latest</a></p>
         </div>
       </div>
     </section>
@@ -545,6 +543,72 @@
       </div>
     </section>
 
+
+    <!-- ── Getty tag check ────────────────────────────────────── -->
+    <section class="section" id="getty">
+      <div class="section-header">
+        <p class="eyebrow">Workflow 4</p>
+        <h2>Getty tag check</h2>
+      </div>
+      <div class="cards">
+        <div class="card">
+          <p>
+            Checks the <code>Tags</code> column of a CONTENTdm export before you upload it. It does two jobs: it removes the invisible characters
+            that stop a tab-delimited file loading, and it checks every term against the Getty Art &amp; Architecture Thesaurus. It writes a corrected
+            copy and a report, and never changes the file you point it at.
+          </p>
+          <ol class="steps-list" style="margin-top:12px">
+            <li><strong>Export the Access <code>Main</code> table</strong> to Excel, as the CONTENTdm process already has you do.</li>
+            <li><strong>Open Getty Tags</strong> and browse to the export. <code>.xlsx</code>, <code>.csv</code>, and tab-delimited <code>.txt</code> all work — including the <code>.txt</code> you are about to upload.</li>
+            <li><strong>Choose where terms are verified.</strong> See the table below.</li>
+            <li><strong>Click Check Tags.</strong> Rows with nothing wrong are not listed; a clean sheet says so.</li>
+            <li><strong>Fix what it found.</strong> Edit a tag directly, or click a suggested replacement.</li>
+            <li><strong>Apply Fixes &amp; Re-check.</strong> Repeat until nothing is left, then upload the cleaned copy.</li>
+          </ol>
+        </div>
+
+        <div class="card">
+          <h3>What it writes</h3>
+          <p>Both files land beside the export. The export itself is never modified — it is the record of what Access held.</p>
+          <table style="margin-top:10px">
+            <tbody>
+              <tr><td><code>&lt;name&gt;-tags-cleaned.xlsx</code></td><td>A copy with the Tags column corrected. Every other column is untouched.</td></tr>
+              <tr><td><code>&lt;name&gt;-tags-report.txt</code></td><td>What was found, what was changed, and what still needs a person.</td></tr>
+            </tbody>
+          </table>
+          <p style="margin-top:10px">Use <strong>Show in Folder</strong> to find them. A sheet with nothing to correct gets no cleaned copy — an identical file would only raise the question of which one to upload.</p>
+        </div>
+
+        <div class="card">
+          <h3>Where terms are verified</h3>
+          <p>Three choices, and they are not equivalent. Pick the first one your network allows.</p>
+          <table style="margin-top:10px">
+            <thead><tr><th>Option</th><th>Needs</th><th>Use when</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Getty, live</strong></td><td><code>vocab.getty.edu</code> on port 443</td><td>Always, when it is reachable. It is the only current source.</td></tr>
+              <tr><td><strong>Built-in list</strong></td><td>Nothing</td><td>Offline, or the live check is blocked. 169,307 English terms ship inside the app.</td></tr>
+              <tr><td><strong>A term list on this machine</strong></td><td>A file you supply</td><td>You keep your own curated list, or you downloaded a newer one.</td></tr>
+              <tr><td><strong>Do not verify terms</strong></td><td>Nothing</td><td>You only want the invisible characters cleaned.</td></tr>
+            </tbody>
+          </table>
+          <div class="note" style="margin-top:12px">
+            <strong>The offline lists are dated.</strong> Getty froze the downloadable archives in January 2026 but keeps revising the thesaurus, so a
+            list can accept a term Getty has since renamed. A real example: the January archive lists <code>landscapes</code> as a valid term; Getty no
+            longer holds it, having split it into qualified forms. The app says so wherever an answer comes from a dated list. The live check is the authority.
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Getting a fresher list</h3>
+          <p>
+            <strong>Download list from Getty</strong> fetches Getty's current archive and extracts an English term list, saving it where you choose and
+            selecting it. It downloads from <code>aatdownloads.getty.edu</code>, which is a different machine from the one the live check uses — so on
+            some networks this works when the live check does not. The download is about 73&nbsp;MB and the publication date is written into the filename.
+          </p>
+        </div>
+      </div>
+    </section>
+
     <!-- ── Output ─────────────────────────────────────────────── -->
     <section class="section" id="output">
       <div class="section-header">
@@ -597,7 +661,7 @@ my-folder-content-list-2026-05-20T13-45-02.xlsx   (if XLSX enabled)</code></pre>
               <tr><td><code>Off</code></td><td>~ disk read speed</td><td>Quick inventories where bytewise identity does not matter.</td></tr>
               <tr><td><code>SHA-1</code></td><td>fast</td><td>Legacy compatibility, casual fingerprinting.</td></tr>
               <tr><td><code>SHA-256</code></td><td>slower, stronger</td><td>Default for verifications that must hold up to scrutiny.</td></tr>
-              <tr><td><code>BLAKE3</code></td><td>fastest secure hash</td><td>Best speed/strength trade-off. Requires the <code>blake3</code> Python package on the Python runtime.</td></tr>
+              <tr><td><code>BLAKE3</code></td><td>fastest secure hash</td><td>Best speed/strength trade-off. Built in — nothing to install.</td></tr>
             </tbody>
           </table>
           <div class="note" style="margin-top:12px">
@@ -617,7 +681,7 @@ my-folder-content-list-2026-05-20T13-45-02.xlsx   (if XLSX enabled)</code></pre>
         <div class="card">
           <p>
             CSV files over a few hundred thousand rows get unwieldy in Excel and many text editors.
-            Content List Generator splits output every 300,000 rows by default.
+            Content List Toolkit splits output every 300,000 rows by default.
           </p>
           <table>
             <thead><tr><th>Row count</th><th>Output files</th></tr></thead>
@@ -732,6 +796,59 @@ my-folder-content-list-2026-05-20T13-45-02.xlsx   (if XLSX enabled)</code></pre>
       </div>
     </section>
 
+
+    <!-- ── Getty findings ─────────────────────────────────────── -->
+    <section class="section" id="getty-findings">
+      <div class="section-header">
+        <p class="eyebrow">Reference</p>
+        <h2>Getty findings, and what to do about each</h2>
+      </div>
+      <div class="cards">
+        <div class="card">
+          <p>Every finding leads with what it wants from you.</p>
+          <table style="margin-top:10px">
+            <thead><tr><th>Prefix</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Fixed</strong></td><td>Already corrected in the cleaned copy. Nothing to do.</td></tr>
+              <tr><td><strong>Must Fix</strong></td><td>Correct it before uploading.</td></tr>
+              <tr><td><strong>Review</strong></td><td>A judgement call. It will upload either way.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <h3>What it looks for</h3>
+          <table style="margin-top:10px">
+            <thead><tr><th>Finding</th><th>What it means</th></tr></thead>
+            <tbody>
+              <tr><td>Invisible characters</td><td>A no-break space, zero-width space, tab, or similar, pasted in along with the term. These are what stop a tab-delimited upload. Fixed automatically.</td></tr>
+              <tr><td>Separator</td><td>A semicolon without its following space, or a space before it. Fixed automatically.</td></tr>
+              <tr><td>Spacing</td><td>Leading, trailing, or repeated spaces. Fixed automatically.</td></tr>
+              <tr><td>Empty tag</td><td>Two semicolons together, or a trailing one. The empty entry is dropped.</td></tr>
+              <tr><td>Not in AAT</td><td>Getty has no such term. Suggested replacements appear beside it where there are any.</td></tr>
+              <tr><td>Spelling case</td><td>The term exists but Getty spells it differently. AAT treats case as meaningful — <code>acacia</code> the wood is not <code>Acacia</code> the genus.</td></tr>
+              <tr><td>Unclosed bracket</td><td>A qualified term that lost its closing bracket, such as <code>counters (furniture</code>. No vocabulary will ever match it.</td></tr>
+              <tr><td>Duplicate</td><td>The same term twice in one cell, ignoring case.</td></tr>
+              <tr><td>Tag count</td><td>Fewer than 3 or more than 5 terms.</td></tr>
+              <tr><td>Too long</td><td>The cell is at or over 255 characters, the width of the Access <code>Tags</code> field. Access truncates at entry by character count rather than at a separator, so the last term arrives cut mid-word while looking complete.</td></tr>
+              <tr><td>Damaged text</td><td>A replacement character from an earlier encoding error. The original character cannot be recovered, so it is reported rather than guessed at.</td></tr>
+              <tr><td>Not checked</td><td>The vocabulary could not be reached for that term. This is not the same as the term being wrong, and is never reported as though it were.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <h3>If Getty cannot be reached</h3>
+          <p>
+            The indicator beside the live option turns red before you run anything, and names the cause — a blocked host, a DNS failure, or a proxy
+            intercepting the connection. Cleaning and every structural check still work; only term verification stops. Terms are then reported as
+            <strong>not checked</strong>, never as wrong, because sending someone to re-verify metadata that was correct is worse than saying nothing.
+          </p>
+          <p style="margin-top:8px">Switch to the built-in list and the check runs with no network at all.</p>
+        </div>
+      </div>
+    </section>
+
     <!-- ── Updates ─────────────────────────────────────────── -->
     <section class="section" id="updates">
       <div class="section-header">
@@ -774,8 +891,8 @@ my-folder-content-list-2026-05-20T13-45-02.xlsx   (if XLSX enabled)</code></pre>
         <div class="timeline-item">
           <h3>Windows: .exe does not launch at all</h3>
           <p>
-            Fixed in v0.2.2. If you are on an earlier version, upgrade or use the portable
-            <code>.zip</code> instead. Details in <code>docs/debug/windows-launch-failure.md</code> in the repo.
+            Fixed in v0.2.2. If you are on an earlier version, upgrade to the current
+            <code>.exe</code>. Details in <code>docs/debug/windows-launch-failure.md</code> in the repo.
           </p>
         </div>
         <div class="timeline-item">
@@ -793,14 +910,6 @@ my-folder-content-list-2026-05-20T13-45-02.xlsx   (if XLSX enabled)</code></pre>
             For a quick inventory, turn hashing off and rerun.
           </p>
         </div>
-        <div class="timeline-item">
-          <h3>Python deploy: dependency-drift banner appears</h3>
-          <p>
-            The orange banner at the top of the window means an installed Python package's version
-            does not match the expected version. Tell your IT Admin — they need to run
-            <code>pip install -U -r requirements.txt</code> on the affected machine.
-          </p>
-        </div>
       </div>
     </section>
 
@@ -812,8 +921,8 @@ my-folder-content-list-2026-05-20T13-45-02.xlsx   (if XLSX enabled)</code></pre>
       </div>
       <div class="cards">
         <div class="card">
-          <h3>Which runtime should I install — Go or Python?</h3>
-          <p>On macOS or Linux, install the Go GUI <code>.app</code> or Linux binary. On Windows, prefer the portable Python <code>.zip</code> for managed fleets (no admin rights, no install, settings beside the launcher); use the Wails <code>.exe</code> on personal machines for the lighter download. Both runtimes produce identical CSV output — parity is enforced by fixture tests.</p>
+          <h3>Which download do I need?</h3>
+          <p>macOS: the <code>.app</code>. Linux: the binary. Windows: the <code>.exe</code>. There is one application now — the Python runtime was retired once the Windows <code>.exe</code> could do everything it did. The <code>.exe</code> needs no admin rights and no installer, and runs from a USB drive or network share, so it suits managed fleets as well as personal machines.</p>
         </div>
         <div class="card">
           <h3>Does it work on network drives?</h3>
@@ -832,8 +941,8 @@ my-folder-content-list-2026-05-20T13-45-02.xlsx   (if XLSX enabled)</code></pre>
           <p>No — stopping a scan discards its partial CSV. Scans are fast enough that restart is the safer model. For very large drives, work folder-by-folder so a stop only loses one subtree.</p>
         </div>
         <div class="card">
-          <h3>Why does BLAKE3 require a Python package but SHA-1 / SHA-256 do not?</h3>
-          <p>SHA-1 and SHA-256 ship in Python's standard library (<code>hashlib</code>). BLAKE3 needs the third-party <code>blake3</code> package because it is not yet part of <code>hashlib</code>. The Go runtime has BLAKE3 built in via <code>github.com/zeebo/blake3</code>, no install step required.</p>
+          <h3>Do any of the hash options need something installed?</h3>
+          <p>No. BLAKE3, SHA-1, and SHA-256 are all built into the application via <code>github.com/zeebo/blake3</code> and the Go standard library. This used to be a real question on the retired Python runtime, where BLAKE3 needed a separate package.</p>
         </div>
         <div class="card">
           <h3>Will email-copy modify or open <code>.pst</code> / <code>.ost</code> files?</h3>
@@ -867,7 +976,7 @@ my-folder-content-list-2026-05-20T13-45-02.xlsx   (if XLSX enabled)</code></pre>
             <li>Stop a scan with <code>s</code> or <code>esc</code> in the TUI; in the GUI use the Stop button.</li>
             <li>Filtered samples in the done summary tell you what got skipped. Glance over them to confirm exclusions did what you expected.</li>
             <li>For migrations, write the original and clone CSVs to the same output folder so the diff is easy to file alongside.</li>
-            <li>The portable Windows .zip is the most reliable Windows install path — no admin rights, no install. Recommend it to less-technical users.</li>
+            <li>The Windows .exe needs no admin rights and no installer — it runs from wherever you put it. Recommend it to less-technical users.</li>
             <li>Folders-only mode + a depth cap is the fastest way to map a drive before deciding what to scan in full.</li>
             <li>Settings persist across launches per-user. Reset them by deleting the settings file (path listed in <a href="#about">About</a>).</li>
           </ul>
@@ -891,11 +1000,11 @@ my-folder-content-list-2026-05-20T13-45-02.xlsx   (if XLSX enabled)</code></pre>
               <tr><td>Settings file (macOS)</td><td><code>~/Library/Application Support/content-list-generator/settings.json</code></td></tr>
               <tr><td>Settings file (Windows)</td><td><code>%APPDATA%\content-list-generator\settings.json</code></td></tr>
               <tr><td>Settings file (Linux)</td><td><code>~/.config/content-list-generator/settings.json</code></td></tr>
-              <tr><td>Settings file (Windows portable)</td><td><code>data\content-list-generator-settings.json</code> beside the launcher.</td></tr>
-              <tr><td>Latest release</td><td><a href="https://github.com/snyderb-de/content-list-generator/releases/latest" target="_blank" rel="noopener">github.com/snyderb-de/content-list-generator/releases/latest</a></td></tr>
-              <tr><td>Source code</td><td><a href="https://github.com/snyderb-de/content-list-generator" target="_blank" rel="noopener">github.com/snyderb-de/content-list-generator</a></td></tr>
+              <tr><td>Settings file (Windows)</td><td><code>%APPDATA%\content-list-generator\settings.json</code></td></tr>
+              <tr><td>Latest release</td><td><a href="https://github.com/snyderb-de/content-list-toolkit/releases/latest" target="_blank" rel="noopener">github.com/snyderb-de/content-list-toolkit/releases/latest</a></td></tr>
+              <tr><td>Source code</td><td><a href="https://github.com/snyderb-de/content-list-toolkit" target="_blank" rel="noopener">github.com/snyderb-de/content-list-toolkit</a></td></tr>
               <tr><td>Project dashboard</td><td><a href="index.html">Open the dashboard</a> — live stats, downloads, roadmap.</td></tr>
-              <tr><td>Python deploy deps</td><td><code>customtkinter 5.2.2</code>, <code>blake3 1.0.8</code></td></tr>
+              
             </tbody>
           </table>
           <div class="note" style="margin-top:12px">
@@ -906,9 +1015,9 @@ my-folder-content-list-2026-05-20T13-45-02.xlsx   (if XLSX enabled)</code></pre>
     </section>
 
     <footer class="footer">
-      <p>Content List Generator — User Manual &middot;
+      <p>Content List Toolkit — User Manual &middot;
       <a href="index.html">Dashboard</a> &middot;
-      <a href="https://github.com/snyderb-de/content-list-generator" target="_blank" rel="noopener">GitHub</a></p>
+      <a href="https://github.com/snyderb-de/content-list-toolkit" target="_blank" rel="noopener">GitHub</a></p>
     </footer>
   </div>
 </div>

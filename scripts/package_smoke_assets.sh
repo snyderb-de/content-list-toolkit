@@ -17,6 +17,5 @@ case "$(uname -s)" in
     ;;
 esac
 
-./scripts/package_windows_python_bundle.sh
 
 echo "Release package build complete."

@@ -1,0 +1,23 @@
+{
+  "head" : {
+    "vars" : [ "s", "matched", "label" ]
+  },
+  "results" : {
+    "bindings" : [ {
+      "s" : {
+        "type" : "uri",
+        "value" : "http://vocab.getty.edu/aat/300128347"
+      },
+      "matched" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "black-and-white photographs"
+      },
+      "label" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "black-and-white photographs"
+      }
+    } ]
+  }
+}

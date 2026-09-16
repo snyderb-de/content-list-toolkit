@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { CheckOutputExists, GetScanDefaults, OpenPath, SaveSettings, StartScan, CancelScan, ValidateScanPaths } from '../../wailsjs/go/main/App'
+import { CheckOutputExists, GetScanDefaults, OpenPath, RevealPath, SaveSettings, StartScan, CancelScan, ValidateScanPaths } from '../../wailsjs/go/main/App'
 import { main } from '../../wailsjs/go/models'
 import { EventsOff, EventsOn } from '../../wailsjs/runtime/runtime'
 import FolderPicker from '../components/FolderPicker'
@@ -133,7 +133,20 @@ export default function ContentList() {
 
   useEffect(() => {
     GetScanDefaults()
-      .then(d => setOpts(o => ({ ...o, ...d, agencyFields: freshAgencyFields() })))
+      .then(d => setOpts(o => ({
+        ...o,
+        ...d,
+        // Defaults arrive asynchronously and can land after a folder has
+        // already been chosen. Spreading them wholesale would reset sourceDir
+        // to the startup directory and blank the generated output filename —
+        // GetScanDefaults sets SourceDir but never OutputFile — so a fast
+        // click would silently scan the wrong folder. Anything already filled
+        // in wins over the default.
+        sourceDir: o.sourceDir || d.sourceDir,
+        outputDir: o.outputDir || d.outputDir,
+        outputFile: o.outputFile || d.outputFile,
+        agencyFields: freshAgencyFields(),
+      })))
       .catch(() => {})
     return () => {
       EventsOff('scan:progress')

@@ -32,7 +32,7 @@ export default function About() {
     <div>
       <div className="screen-header">
         <h2 className="screen-title">About</h2>
-        <p className="screen-subtitle">Content List Generator v{version}</p>
+        <p className="screen-subtitle">Content List Toolkit v{version}</p>
       </div>
 
       <div className="card">
@@ -72,9 +72,9 @@ export default function About() {
             <button
               className="btn btn-ghost"
               style={{ padding: 0, color: 'var(--accent)', fontWeight: 500, fontSize: 13 }}
-              onClick={() => BrowserOpenURL('https://github.com/snyderb-de/content-list-generator')}
+              onClick={() => BrowserOpenURL('https://github.com/snyderb-de/content-list-toolkit')}
             >
-              github.com/snyderb-de/content-list-generator
+              github.com/snyderb-de/content-list-toolkit
             </button>
           </span>
         </div>

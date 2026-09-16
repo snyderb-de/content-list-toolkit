@@ -27,22 +27,13 @@ Open PowerShell as your normal user (NOT admin, unless noted).
   # expect: go version go1.26.0 windows/amd64
   ```
 
-### [ ] 3. Install Node.js 20 LTS
-- Download Node 20.x LTS installer from https://nodejs.org/
+### [ ] 3. Install Node.js 24 LTS
+- Download Node 24.x LTS installer from https://nodejs.org/
 - Run the installer with defaults
 - Open a NEW PowerShell window and verify:
   ```powershell
   node --version
   npm --version
-  ```
-
-### [ ] 4. Install Python 3.12
-- Download from https://www.python.org/downloads/windows/
-- During install, CHECK the box "Add python.exe to PATH"
-- Open a NEW PowerShell window and verify:
-  ```powershell
-  python --version
-  pip --version
   ```
 
 ### [ ] 5. Verify WebView2 runtime present
@@ -56,7 +47,7 @@ Open PowerShell as your normal user (NOT admin, unless noted).
 
 ### [ ] 6. Install Wails CLI
 ```powershell
-go install github.com/wailsapp/wails/v2/cmd/wails@v2.12.0
+go install github.com/wailsapp/wails/v2/cmd/wails@v2.16.0
 ```
 
 ### [ ] 7. Add Go bin directory to PATH
@@ -71,7 +62,7 @@ go install github.com/wailsapp/wails/v2/cmd/wails@v2.12.0
 - Open a NEW PowerShell window and verify:
   ```powershell
   wails version
-  # expect: v2.12.0
+  # expect: v2.16.0
   ```
 
 ### [ ] 8. Install GitHub CLI (optional, for publishing)
@@ -101,7 +92,7 @@ cd code
 
 ### [ ] 2. Clone
 ```powershell
-git clone https://github.com/snyderb-de/content-list-generator.git
+git clone https://github.com/snyderb-de/content-list-toolkit.git
 cd content-list-generator
 ```
 
@@ -130,34 +121,13 @@ Copy-Item "build\bin\content-list-generator.exe" "releases\windows-go\content-li
 
 ### [ ] 3. Smoke test
 - Double-click `releases\windows-go\content-list-generator.exe`
-- Window opens, title reads "Content List Generator"
+- Window opens, title reads "Content List Toolkit"
 - Click "Generate" → browse a small folder → confirm CSV writes
 
 ### [ ] 4. Expected SmartScreen warning
 - First launch will show "Windows protected your PC" because the .exe is unsigned
 - Click "More info" → "Run anyway"
 - Code-signing is a separate backlog item — see `TODO.md`
-
----
-
-## Phase 4 — Build the portable Python bundle (PyInstaller)
-
-### [ ] 1. Run the packager
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\package_windows_portable.ps1
-```
-- Takes ~3–5 min (creates venv, pip installs deps + pyinstaller, builds one-folder bundle, zips it)
-
-### [ ] 2. Verify output
-```powershell
-ls releases\windows-portable\
-# expect: content-list-generator-windows-portable.zip
-```
-
-### [ ] 3. Smoke test the portable bundle
-- Unzip the .zip to a temp folder
-- Double-click `Start Content List Generator.cmd`
-- Window opens, no Python install required on the host
 
 ---
 
@@ -179,10 +149,10 @@ Open Git Bash:
 This uploads everything under `releases/` to the GitHub Release matching the tag.
 
 ### [ ] 3. Or upload manually
-- Go to https://github.com/snyderb-de/content-list-generator/releases
+- Go to https://github.com/snyderb-de/content-list-toolkit/releases
 - Click "Draft a new release"
 - Choose tag `v0.1.0`
-- Drag and drop the `.exe` files from `releases\windows-go\` and the `.zip` from `releases\windows-portable\`
+- Drag and drop the `.exe` files from `releases\windows-go\`
 - Publish
 
 ---
@@ -191,7 +161,7 @@ This uploads everything under `releases/` to the GitHub Release matching the tag
 
 Eventually, this whole checklist becomes unnecessary. CI does it automatically:
 - Push a tag → workflow `.github/workflows/release.yml` runs on `windows-latest` runners
-- Builds Wails GUI (amd64 + arm64) and portable bundle
+- Builds Wails GUI (amd64 + arm64)
 - Publish job attaches them to the GitHub Release
 
 Use this checklist when:
@@ -232,12 +202,10 @@ Use this checklist when:
 ## Quick reference card
 
 ```powershell
-# Full Windows release in 3 commands (after Phase 1 prereqs):
+# Full Windows release in 2 commands (after Phase 1 prereqs):
 git pull
 wails build -platform windows/amd64 -clean -o "content-list-generator.exe"
-powershell -ExecutionPolicy Bypass -File .\scripts\package_windows_portable.ps1
 ```
 
 Outputs:
 - `build\bin\content-list-generator.exe`
-- `releases\windows-portable\content-list-generator-windows-portable.zip`

@@ -17,10 +17,6 @@ __pycache__/
 !releases/macos/.gitkeep
 /releases/windows-go/*
 !releases/windows-go/.gitkeep
-/releases/windows-python/*
-!releases/windows-python/.gitkeep
-/releases/windows-portable/*
-!releases/windows-portable/.gitkeep
 /testing/content-scan/generated/*
 !/testing/content-scan/generated/.gitkeep
 /testing/email-copy/generated/*

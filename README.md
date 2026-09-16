@@ -1,15 +1,19 @@
-# Content List Generator
+# Content List Toolkit
 
 Written by Bryan Snyder
 
-Content List Generator is maintained as two live desktop runtimes that stay in feature parity as closely as practical:
+Content List Toolkit is a single Go desktop application: a Wails GUI on macOS,
+Windows, and Linux, plus a Bubble Tea TUI on macOS and Linux.
 
-- Go app for macOS and Linux, with optional Windows `.exe` build outputs
-- Python app for Windows portable deployment
+> **The Python runtime was removed on 2026-09-16.** It existed to give Windows a
+> GUI before the Wails build covered that platform. The Go app is a strict
+> superset, so nothing was lost. See
+> [Retired: the Python runtime](#retired-the-python-runtime) if you are
+> migrating an existing Windows deployment.
 
-End-user docs: [User Manual](project-dashboard/user-manual.html) · [Project Dashboard](https://snyderb-de.github.io/content-list-generator/)
+End-user docs: [User Manual](project-dashboard/user-manual.html) · [Project Dashboard](https://snyderb-de.github.io/content-list-toolkit/)
 
-Both runtimes support:
+The app supports:
 
 - recursive content-list export to CSV
 - automatic CSV chunking for large scans (default: 300,000 rows per file, named like `report-001.csv`, `report-002.csv`)
@@ -24,23 +28,24 @@ Both runtimes support:
 Core app/runtime files:
 
 - `main.go`, `core.go`, `app.go`, `app_types.go`, `gui_wails.go`, `scan_*.go` — Go runtime
+- `getty_*.go` — Getty AAT tag checking for the CONTENTdm workflow
 - `frontend/` — React + TypeScript UI (Vite, built into the Wails app bundle)
-- `python/content_list_generator.py`, `python/content_list_core.py` — Python runtime
 
 Deploy and distribution files that must stay aligned with the app:
 
-- `deploy/windows/desktop/content-list-generator.bat`
-- `deploy/windows/scripts/content-list-gen/content_list_generator.py`
-- `deploy/windows/scripts/content-list-gen/content_list_core.py`
-- repo-root launchers such as `run-go-gui.sh`, `run-python-gui.sh`, and `content-list-generator.bat`
+- repo-root launchers such as `run-go-gui.sh` and `content-list-generator.bat`
 - packaging helpers in `scripts/`
+
+The `python/` runtime and the `deploy/windows/` `.bat` bundle were removed on
+2026-09-16. They remain in git history at tag `v0.2.10` if ever needed.
 
 Generated outputs belong in `build/` and `releases/` and are intentionally not tracked.
 
 ## Repo Layout
 
-- `python/` Python runtime code and Python automated tests
 - `project-dashboard/` static project dashboard for repo status and docs
+  - `user-manual.html` is the standalone web manual, written by hand
+  - `app-user-manual.html` is generated from `frontend/src/manual.json` and mirrors the manual inside the app; edit the JSON, never this page
 - `scripts/` build, parity, packaging, and local-run helpers
 - `testing/` tool-oriented fixtures, generators, runners, and ignored local manual-test folders
 - `deploy/` copy-ready deployment files that are part of the operational workflow
@@ -56,58 +61,39 @@ cd content-list-generator
 Local launchers:
 
 - macOS/Linux Go GUI: `./run-go-gui.sh`
-- macOS/Linux Python GUI: `./run-python-gui.sh`
-- cross-platform helper: `./scripts/run_local.sh [go|go-gui|python|python-cli]`
+- cross-platform helper: `./scripts/run_local.sh [go|go-gui]`
 - Windows desktop launcher: `content-list-generator.bat`
 
 ## Release Strategy
 
 Two distinct release tracks with different update policies:
 
-**Native bundles (Wails GUI .exe, mac .app, Linux binary, PyInstaller portable zip)**
+**Native bundles (Wails GUI .exe, mac .app, Linux binary)**
 - Deps frozen into the bundle at build time
 - Users redownload the bundle to update
-- Auto-update mechanism planned (see `TODO.md`)
-
-**Python `.bat`-launcher deploy path** (`deploy/windows/*`)
-- Deps pinned to EXACT versions in `requirements.txt`
-- Admin installs Python + deps on user machines via `pip install -r requirements.txt`
-- App shows a non-blocking orange banner at the top of the window if installed deps drift from the pinned versions (see `python/deps_check.py`)
-- Bumping a dep is a deliberate event: update `requirements.txt`, bump matching entry in `deps_check.py`, re-deploy scripts via the deploy bundle, admin re-runs `pip install` on user machines
+- Windows has an in-app updater that checks a release folder (see `update.go`)
 - Dependabot ignores major bumps for npm + gomod, but still surfaces security advisories
+
+The Python-derived artifacts — the PyInstaller portable zip and the Windows
+Python source bundle — are retired along with the runtime that produced them.
 
 ## Platform Notes
 
 macOS and Linux:
 
 - use the Go app (Wails GUI or Bubble Tea TUI)
-- GUI: double-click `releases/macos/Content List Generator.app` or run `./run-go-gui.sh` in dev mode
+- GUI: double-click `releases/macos/Content List Toolkit.app` or run `./run-go-gui.sh` in dev mode
 - TUI: run the CLI binary directly (no `--gui` flag, no `.app` bundle)
 - local binaries are built into `build/`
 - local release packages are produced by `./scripts/build_releases.sh`
-
-Windows portable Python path:
-
-- install Python 3 with Tkinter
-- install GUI dependencies with `pip install -r requirements.txt`
-- Python defaults to `SHA-1`
-- `BLAKE3` is optional on Python and requires the `blake3` package from `requirements.txt`
-- copy the deploy bundle from `deploy/windows/` or generate a fresh bundle with `./scripts/package_windows_python_bundle.sh`
-- supported launcher lookup paths remain `%USERPROFILE%\\scripts\\` and `%USERPROFILE%\\scripts\\content-list-gen\\`
-
-Windows portable no-install ZIP:
-
-- build on a Windows host with `powershell -ExecutionPolicy Bypass -File .\scripts\package_windows_portable.ps1`
-- the script creates `releases/windows-portable/content-list-generator-windows-portable.zip`
-- unzip the package to a USB drive or local folder, then run `Start Content List Generator.cmd`
-- portable settings are stored beside the app in `data/content-list-generator-settings.json`
 
 Windows Wails GUI path:
 
 - must be built on a Windows host (Wails cannot cross-compile WebView2)
 - run `wails build -platform windows/amd64 -o "content-list-generator.exe"`
 - copy the resulting `.exe` into `releases/windows-go/` with the same filename
-- the Windows TUI binary is intentionally not shipped — Windows users get the Wails GUI or the Python bundles
+- the `.exe` needs no installer and runs from any folder, including a USB drive, which is what the retired PyInstaller portable zip existed to provide
+- the Windows TUI binary is intentionally not shipped — Windows users get the Wails GUI
 
 ## Testing
 
@@ -115,14 +101,15 @@ Automated checks:
 
 ```bash
 go test ./...
-python3 -m unittest discover -s ./python/tests -p 'test_*.py'
-python3 -m py_compile python/content_list_core.py python/content_list_generator.py scripts/copy_email_files.py
 ```
+
+The golden fixtures under `testing/` began as cross-language parity checks
+against the Python runtime. They outlived it: `scan_test.go` and
+`email_copy_test.go` still assert against them as regression coverage.
 
 Shared helper scripts:
 
-- `./scripts/dev_check.sh` runs the main smoke suite
-- `./scripts/parity_check.sh` runs the cross-language fixture parity checks
+- `./scripts/dev_check.sh` runs vet and the full test suite
 
 Tool-oriented testing layout:
 
@@ -138,8 +125,6 @@ Release and local package helpers:
 ./scripts/build_releases.sh
 ./scripts/package_macos_local.sh
 ./scripts/package_linux_local.sh
-./scripts/package_windows_python_bundle.sh
-./scripts/package_windows_portable.ps1
 ./scripts/package_smoke_assets.sh
 ./scripts/package_local.sh
 ```
@@ -167,18 +152,46 @@ Canonical docs now live in:
 - `TODO.md` for active follow-up work
 - `project-dashboard/` for a lightweight static project overview
 
-## Local GUI Reference
+## Retired: the Python runtime
 
-For Python GUI work that depends on `customtkinter`, we also have a local fork checked out at:
+The Python app was the Windows GUI before Wails could build one. Now that the
+Go app ships a Windows `.exe` that needs no installer and runs from a USB
+drive, Python covers nothing the Go app does not, and it cost real maintenance:
+a second implementation of every feature, pinned `customtkinter` and `blake3`
+versions to keep aligned on admin-deployed machines, a duplicated
+`deps_check.py` that had already drifted out of sync, and cross-language parity
+fixtures for every change.
 
-- `/Users/baghead/code/CustomTkinter`
+**Nothing is lost.** The Python GUI had three screens — content list, email
+copy, and about. The Go app has those plus Clone Compare, the in-app User
+Manual, and the Getty Tag check.
 
-Use that local repo as an offline reference for:
+### If you have a Python deployment today
 
-- source-level behavior review
-- examples and usage patterns
-- platform-specific GUI behavior checks
-- future work such as matching the system light/dark mode on Windows, Linux, and macOS
-- verifying that text is not clipped or truncated in widgets and layouts
+| Was | Now |
+| --- | --- |
+| `.bat` launcher running `content_list_generator.py` from `%USERPROFILE%\scripts\content-list-gen\` | `content-list-generator.exe` from the Windows GUI release |
+| `content-list-generator-windows-portable.zip` (PyInstaller) | the same `.exe` — no installer, runs from any folder |
+| `content-list-generator-windows-python.zip` | no replacement needed |
+| `pip install -r requirements.txt` on each machine | nothing to install |
 
-When making Python GUI changes in this repo, prefer checking the local `CustomTkinter` fork before assuming behavior from memory or from internet docs.
+Settings do not carry over automatically. The Python app stored them in
+`~/scripts/settings/content-list-generator-settings.json`; the Go app uses
+`%APPDATA%\content-list-generator\settings.json`. They are small and quick to
+re-enter.
+
+### What was removed
+
+`python/`, `deploy/windows/`, `requirements.txt`, `requirements-build.txt`, the
+Python launchers, `scripts/package_windows_python_bundle.sh`,
+`scripts/package_windows_portable.ps1`, `scripts/parity_check.sh`, and
+`scripts/copy_email_files.py`. The `windows-portable` and `windows-python` CI
+jobs and the `pip` Dependabot ecosystem went with them.
+
+Two things deliberately stayed. The golden fixtures under `testing/` are
+asserted against by Go tests, so they are regression coverage rather than
+parity leftovers. And `testing/*/generate_fixture.py` regenerates those
+fixtures — it is standard-library dev tooling that never imported the retired
+runtime.
+
+Everything removed is in git history at tag `v0.2.10`.

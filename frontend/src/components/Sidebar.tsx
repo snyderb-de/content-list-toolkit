@@ -53,6 +53,12 @@ const Icons = {
       <path d="M5.8 6h4.4M5.8 8.4h3.6"/>
     </svg>
   ),
+  tag: (
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <path d="M7.4 1.6H2.6a1 1 0 00-1 1v4.8a1 1 0 00.3.7l6 6a1 1 0 001.4 0l4.8-4.8a1 1 0 000-1.4l-6-6a1 1 0 00-.7-.3z" strokeLinejoin="round"/>
+      <circle cx="4.9" cy="4.9" r="1"/>
+    </svg>
+  ),
   sun: (
     <svg viewBox="0 0 16 16" fill="currentColor">
       <circle cx="8" cy="8" r="3"/>
@@ -92,7 +98,7 @@ export default function Sidebar({ active, onNav, theme, onCycleTheme }: SidebarP
     <aside className="sidebar">
       <div className="sidebar-header">
         <div className="sidebar-logo">
-          Content List Generator
+          Content List Toolkit
           <span>Folder scan &amp; compare tool</span>
         </div>
       </div>
@@ -101,6 +107,7 @@ export default function Sidebar({ active, onNav, theme, onCycleTheme }: SidebarP
         <NavItem id="content-list"  label="Content List"  icon={Icons.list}  active={active === 'content-list'}  onClick={onNav} />
         <NavItem id="email-copy"    label="Email Copy"    icon={Icons.mail}  active={active === 'email-copy'}    onClick={onNav} />
         <NavItem id="clone-compare" label="Clone Compare" icon={Icons.clone} active={active === 'clone-compare'} onClick={onNav} />
+        <NavItem id="getty-tag"     label="Getty Tags"    icon={Icons.tag}   active={active === 'getty-tag'}     onClick={onNav} />
         <NavItem id="manual"        label="User Manual"   icon={Icons.manual} active={active === 'manual'}        onClick={onNav} />
         <NavItem id="about"         label="About"         icon={Icons.info}  active={active === 'about'}         onClick={onNav} />
       </nav>

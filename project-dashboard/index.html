@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Content List Generator — Project Dashboard</title>
+  <title>Content List Toolkit — Project Dashboard</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
@@ -158,12 +158,12 @@
   <div class="hero-inner">
     <div class="hero-top">
       <div>
-        <h1>Content List Generator</h1>
+        <h1>Content List Toolkit</h1>
         <p class="hero-desc">Cross-platform desktop tool for recursive content scanning, CSV export, email-file copy, and hash verification. Built for archival migration workflows on macOS, Linux, and Windows. Go + Wails GUI plus a parallel Python deployment for managed Windows fleets.</p>
         <div class="hero-actions">
           <a href="user-manual.html" class="hbtn hbtn-primary">📘 User Manual</a>
-          <a href="https://github.com/snyderb-de/content-list-generator/releases/latest" class="hbtn hbtn-ghost" target="_blank" rel="noopener">⬇ Latest Release</a>
-          <a href="https://github.com/snyderb-de/content-list-generator" class="hbtn hbtn-ghost" target="_blank" rel="noopener">GitHub Repo</a>
+          <a href="https://github.com/snyderb-de/content-list-toolkit/releases/latest" class="hbtn hbtn-ghost" target="_blank" rel="noopener">⬇ Latest Release</a>
+          <a href="https://github.com/snyderb-de/content-list-toolkit" class="hbtn hbtn-ghost" target="_blank" rel="noopener">GitHub Repo</a>
           <button id="theme-toggle" class="hbtn hbtn-theme">Theme: Light</button>
         </div>
       </div>
@@ -192,30 +192,20 @@
     </div>
     <div class="pb">
       <div class="dl-grid">
-        <a href="https://github.com/snyderb-de/content-list-generator/releases/latest/download/content-list-generator.exe" class="dl-card">
+        <a href="https://github.com/snyderb-de/content-list-toolkit/releases/latest/download/content-list-generator.exe" class="dl-card">
           <div class="dl-platform">Windows GUI · amd64</div>
           <div class="dl-title">.exe — Wails native</div>
           <div class="dl-meta">v0.2.2+ routes GUI builds correctly. Unsigned builds may still show SmartScreen.</div>
         </a>
-        <a href="https://github.com/snyderb-de/content-list-generator/releases/latest/download/content-list-generator-windows-portable.zip" class="dl-card">
-          <div class="dl-platform">Windows · portable</div>
-          <div class="dl-title">.zip — no install</div>
-          <div class="dl-meta">PyInstaller bundle. Run from USB or any folder. Confirmed working.</div>
-        </a>
-        <a href="https://github.com/snyderb-de/content-list-generator/releases/latest/download/content-list-generator-gui-darwin-universal.zip" class="dl-card">
+        <a href="https://github.com/snyderb-de/content-list-toolkit/releases/latest/download/content-list-generator-gui-darwin-universal.zip" class="dl-card">
           <div class="dl-platform">macOS · universal</div>
           <div class="dl-title">.app — Wails GUI</div>
           <div class="dl-meta">arm64 + amd64. Gatekeeper prompts on first launch — right-click → Open.</div>
         </a>
-        <a href="https://github.com/snyderb-de/content-list-generator/releases/latest/download/content-list-generator-linux-amd64" class="dl-card">
+        <a href="https://github.com/snyderb-de/content-list-toolkit/releases/latest/download/content-list-generator-linux-amd64" class="dl-card">
           <div class="dl-platform">Linux · amd64</div>
           <div class="dl-title">TUI binary</div>
           <div class="dl-meta">Bubble Tea terminal UI. <code>chmod +x</code> then run.</div>
-        </a>
-        <a href="https://github.com/snyderb-de/content-list-generator/releases/latest/download/content-list-generator-windows-python.zip" class="dl-card">
-          <div class="dl-platform">Windows · Python source</div>
-          <div class="dl-title">.zip — BYO Python</div>
-          <div class="dl-meta">For managed Windows fleets with Python 3.12 + customtkinter pre-installed.</div>
         </a>
       </div>
     </div>
@@ -235,7 +225,7 @@
             <span class="tid">P0-01</span>
             <div>
               <div class="t-title">Verify v0.2.5 builds on target machines</div>
-              <div class="t-note">Smoke test Windows Wails .exe, macOS .app, Linux binary, Windows portable zip, and Windows Python source bundle on their real target hosts.</div>
+              <div class="t-note">Smoke test Windows Wails .exe, macOS .app, and Linux binary on their real target hosts.</div>
             </div>
             <div class="imp"><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span></div>
           </div>
@@ -244,7 +234,7 @@
             <span class="tid">P0-02</span>
             <div>
               <div class="t-title">Capture GUI screenshots</div>
-              <div class="t-note">Mac .app, Wails Windows GUI, Python customtkinter GUI, Bubble Tea TUI. Add to README, user manual, and dashboard hero.</div>
+              <div class="t-note">Mac .app, Wails Windows GUI, Bubble Tea TUI. Add to README, user manual, and dashboard hero.</div>
             </div>
             <div class="imp"><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span></span></div>
           </div>
@@ -258,14 +248,6 @@
             <div class="imp"><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span></span></div>
           </div>
 
-          <div class="todo">
-            <span class="tid">P2-01</span>
-            <div>
-              <div class="t-title">Windows-Python release hygiene</div>
-              <div class="t-note">Publisher now uploads only <code>content-list-generator-windows-python.zip</code>; loose staging files stay out of GitHub Releases.</div>
-            </div>
-            <div class="imp"><span class="on"></span><span class="on"></span><span class="on"></span><span></span><span></span></div>
-          </div>
 
           <div class="todo">
             <span class="tid">P2-02</span>
@@ -348,7 +330,7 @@
           <div class="phase-body">
             <div class="ptasks">
               <div class="ptask"><span class="wid">R-101</span>Go runtime (main.go, core.go, scan_*.go) with Bubble Tea TUI</div>
-              <div class="ptask"><span class="wid">R-102</span>Python runtime (content_list_generator.py + content_list_core.py) with customtkinter GUI</div>
+              <div class="ptask"><span class="wid">R-102</span>Python runtime (content_list_generator.py + content_list_core.py) with customtkinter GUI — retired 2026-09-16, superseded by the Go app</div>
               <div class="ptask"><span class="wid">R-103</span>Cross-language parity tests in <code>testing/content-scan/</code> + <code>testing/email-copy/</code></div>
             </div>
           </div>
@@ -425,7 +407,7 @@
           <div class="phase-body">
             <div class="ptasks">
               <div class="ptask"><span class="wid">R-501</span>License decision (evaluate GPL vs MIT vs Apache)</div>
-              <div class="ptask"><span class="wid">R-502</span>Replace <code>PLACEHOLDER_GITHUB_URL</code> in <code>python/content_list_generator.py</code></div>
+              <div class="ptask"><span class="wid">R-502</span>Replace <code>PLACEHOLDER_GITHUB_URL</code> — done; the placeholder and its file are gone</div>
               <div class="ptask"><span class="wid">R-503</span>Full user manual with screenshots</div>
               <div class="ptask"><span class="wid">R-504</span>Repo ownership transfer or publishing handoff to <code>dpa-snyder</code></div>
               <div class="ptask"><span class="wid">R-505</span>End-to-end verification: Win11, Win10, macOS arm64+amd64, Ubuntu, Fedora</div>
@@ -468,7 +450,7 @@
           <div class="done-item"><span class="dcheck">✓</span><span class="did">D-012</span><span class="dtext">Debug doc <code>docs/debug/windows-launch-failure.md</code> tracking the silent .exe exit investigation</span></div>
           <div class="done-item"><span class="dcheck">✓</span><span class="did">D-011</span><span class="dtext">Tag v0.2.1 with <code>-webview2 download</code> flag (default in Wails 2.12, no-op; investigation continues)</span></div>
           <div class="done-item"><span class="dcheck">✓</span><span class="did">D-010</span><span class="dtext">v0.2.0 published with full multi-platform artifact set — first end-to-end tag → release pipeline test</span></div>
-          <div class="done-item"><span class="dcheck">✓</span><span class="did">D-009</span><span class="dtext">CI build matrix green across mac, linux, Windows GUI amd64+arm64, Windows portable, Windows python source</span></div>
+          <div class="done-item"><span class="dcheck">✓</span><span class="did">D-009</span><span class="dtext">CI build matrix green across mac, linux, and Windows GUI amd64+arm64</span></div>
           <div class="done-item"><span class="dcheck">✓</span><span class="did">D-008</span><span class="dtext">App icon set generated from <code>build/icon.svg</code> — appicon.png + icon.icns + multi-resolution icon.ico</span></div>
           <div class="done-item"><span class="dcheck">✓</span><span class="did">D-007</span><span class="dtext">Branch protection enabled on <code>main</code>, PR-driven workflow established</span></div>
           <div class="done-item"><span class="dcheck">✓</span><span class="did">D-006</span><span class="dtext">Python deploy strategy — <code>requirements.txt</code> exact pins + runtime drift banner in GUI</span></div>
@@ -492,7 +474,7 @@
           </div>
           <div class="decision">
             <div class="dq">Final public GitHub URL?</div>
-            <div class="dd">Currently <strong>snyderb-de/content-list-generator</strong>. Placeholder URLs in code (<code>python/content_list_generator.py</code>) need replacement before v1.0.</div>
+            <div class="dd">Currently <strong>snyderb-de/content-list-toolkit</strong>. Placeholder URLs in code have been replaced with the real repo URL; still confirm the final public URL before v1.0.</div>
           </div>
           <div class="decision">
             <div class="dq">Repo ownership transfer?</div>
@@ -521,40 +503,40 @@
           <div class="rc-title">📘 User Manual</div>
           <div class="rc-desc">Step-by-step guide — scan modes, hash algorithms, email copy, clone compare</div>
         </a>
-        <a href="https://github.com/snyderb-de/content-list-generator/releases/latest" class="res-card" target="_blank" rel="noopener">
+        <a href="https://github.com/snyderb-de/content-list-toolkit/releases/latest" class="res-card" target="_blank" rel="noopener">
           <div class="rc-label">Downloads</div>
           <div class="rc-title">Latest Release</div>
-          <div class="rc-desc">All platform binaries — macOS .app, Windows .exe, Linux binary, portable zip</div>
+          <div class="rc-desc">All platform binaries — macOS .app, Windows .exe, Linux binary</div>
         </a>
-        <a href="https://github.com/snyderb-de/content-list-generator/blob/main/README.md" class="res-card" target="_blank" rel="noopener">
+        <a href="https://github.com/snyderb-de/content-list-toolkit/blob/main/README.md" class="res-card" target="_blank" rel="noopener">
           <div class="rc-label">Overview</div>
           <div class="rc-title">README.md</div>
           <div class="rc-desc">Project overview, runtime paths, build commands, release strategy</div>
         </a>
-        <a href="https://github.com/snyderb-de/content-list-generator/blob/main/TODO.md" class="res-card" target="_blank" rel="noopener">
+        <a href="https://github.com/snyderb-de/content-list-toolkit/blob/main/TODO.md" class="res-card" target="_blank" rel="noopener">
           <div class="rc-label">Project</div>
           <div class="rc-title">TODO.md</div>
           <div class="rc-desc">Active tasks with priority levels + backlog</div>
         </a>
-        <a href="https://github.com/snyderb-de/content-list-generator/blob/main/docs/windows-build-checklist.md" class="res-card" target="_blank" rel="noopener">
+        <a href="https://github.com/snyderb-de/content-list-toolkit/blob/main/docs/windows-build-checklist.md" class="res-card" target="_blank" rel="noopener">
           <div class="rc-label">Developer</div>
           <div class="rc-title">Windows Build Checklist</div>
           <div class="rc-desc">Step-by-step for building Windows artifacts on a clean machine</div>
         </a>
-        <a href="https://github.com/snyderb-de/content-list-generator/blob/main/docs/github-setup-guide.md" class="res-card" target="_blank" rel="noopener">
+        <a href="https://github.com/snyderb-de/content-list-toolkit/blob/main/docs/github-setup-guide.md" class="res-card" target="_blank" rel="noopener">
           <div class="rc-label">Developer</div>
           <div class="rc-title">GitHub Setup Guide</div>
           <div class="rc-desc">Branch protection, Dependabot vs Renovate, CODEOWNERS, Actions primer</div>
         </a>
-        <a href="https://github.com/snyderb-de/content-list-generator/blob/main/docs/debug/windows-launch-failure.md" class="res-card" target="_blank" rel="noopener">
+        <a href="https://github.com/snyderb-de/content-list-toolkit/blob/main/docs/debug/windows-launch-failure.md" class="res-card" target="_blank" rel="noopener">
           <div class="rc-label">Debug</div>
           <div class="rc-title">Windows Launch Failure</div>
           <div class="rc-desc">Active investigation: .exe silently exits on Win11</div>
         </a>
-        <a href="https://github.com/snyderb-de/content-list-generator" class="res-card" target="_blank" rel="noopener">
+        <a href="https://github.com/snyderb-de/content-list-toolkit" class="res-card" target="_blank" rel="noopener">
           <div class="rc-label">Source</div>
           <div class="rc-title">GitHub Repository</div>
-          <div class="rc-desc">snyderb-de/content-list-generator — source, issues, commits</div>
+          <div class="rc-desc">snyderb-de/content-list-toolkit — source, issues, commits</div>
         </a>
       </div>
     </div>
@@ -563,8 +545,8 @@
 </main>
 
 <footer>
-  Content List Generator — Project Dashboard &middot;
-  <a href="https://github.com/snyderb-de/content-list-generator" target="_blank" rel="noopener">snyderb-de/content-list-generator</a>
+  Content List Toolkit — Project Dashboard &middot;
+  <a href="https://github.com/snyderb-de/content-list-toolkit" target="_blank" rel="noopener">snyderb-de/content-list-toolkit</a>
 </footer>
 
 <script>
@@ -594,7 +576,7 @@
     if (body) body.style.display = body.style.display === 'block' ? 'none' : 'block';
   };
 
-  var REPO = 'snyderb-de/content-list-generator';
+  var REPO = 'snyderb-de/content-list-toolkit';
   var BASE = 'https://api.github.com/repos/' + REPO;
   var LANG_COLORS = {
     Go: '#00ADD8', Python: '#3572a5', TypeScript: '#3178c6', JavaScript: '#f1e05a',
@@ -735,7 +717,7 @@
     issueEl.textContent = '';
     var msg = document.createElement('div'); msg.className = 'muted';
     var link = document.createElement('a');
-    link.href = 'https://github.com/snyderb-de/content-list-generator/issues';
+    link.href = 'https://github.com/snyderb-de/content-list-toolkit/issues';
     link.target = '_blank'; link.rel = 'noopener';
     link.textContent = 'View on GitHub';
     msg.textContent = 'API unavailable. '; msg.appendChild(link);
