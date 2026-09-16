@@ -432,3 +432,67 @@ func TestOrdinaryCellsHaveNoFieldLimitIssue(t *testing.T) {
 		t.Fatalf("a short cell should not be flagged, got %+v", result.Issues)
 	}
 }
+
+// Ordinary spaces are visible, do not break a tab-delimited upload, and must
+// not be reported as invisible characters. This was wrong once: a cell with a
+// leading space produced a blocking "ghost characters" finding whose detail
+// was an empty string.
+func TestOrdinarySpacingIsNotReportedAsGhostCharacters(t *testing.T) {
+	for _, tc := range []struct {
+		name  string
+		input string
+	}{
+		{name: "leading space", input: "  aerial photographs; landscapes; city plans"},
+		{name: "trailing space", input: "aerial photographs; landscapes; city plans  "},
+		{name: "repeated interior spaces", input: "aerial  photographs; landscapes; city plans"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			result := checkTagCell(tc.input)
+			if hasIssue(result, tagIssueGhostCharacters) {
+				t.Fatalf("plain spaces are not ghost characters, got %+v", result.Issues)
+			}
+			if !hasIssue(result, tagIssueWhitespace) {
+				t.Fatalf("expected a whitespace issue, got %+v", result.Issues)
+			}
+			if result.OriginalBlocksUpload() {
+				t.Fatalf("plain spaces do not break a tab-delimited upload, got %+v", result.Issues)
+			}
+			for _, issue := range result.Issues {
+				if issue.Detail == "" {
+					t.Fatalf("issue %q has an empty detail, which says nothing in a report", issue.Kind)
+				}
+			}
+		})
+	}
+}
+
+// Every issue this module can raise has to say something useful.
+func TestNoIssueEverHasAnEmptyDetail(t *testing.T) {
+	for _, input := range []string{
+		"  aerial photographs; landscapes; city plans",
+		"aerial\u00A0photographs;landscapes",
+		"landscapes; Landscapes; city plans",
+		"aerial photographs;; landscapes; city plans;",
+		"a; b; c; d; e; f",
+		"only one tag",
+		"aerial photographs; Bru\uFFFDssel; city plans",
+		strings.Repeat("a", accessTagsFieldLimit+10),
+	} {
+		for _, issue := range checkTagCell(input).Issues {
+			if strings.TrimSpace(issue.Detail) == "" {
+				t.Fatalf("input %q produced issue %q with no detail", input, issue.Kind)
+			}
+		}
+	}
+}
+
+// An invisible character still reads as blocking even alongside plain spaces.
+func TestGhostCharactersStillBlockWhenMixedWithOrdinarySpaces(t *testing.T) {
+	result := checkTagCell("  aerial\u00A0photographs; landscapes; city plans  ")
+	if !hasIssue(result, tagIssueGhostCharacters) {
+		t.Fatalf("expected a ghost-character issue, got %+v", result.Issues)
+	}
+	if !result.OriginalBlocksUpload() {
+		t.Fatal("a no-break space blocks the upload regardless of surrounding spaces")
+	}
+}

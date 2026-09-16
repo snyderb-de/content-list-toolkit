@@ -86,6 +86,12 @@ type tagTextNormalization struct {
 	Original string
 	Cleaned  string
 	Changes  map[string]int // character name -> times it was found
+	// SpacingAdjusted records ordinary ASCII spacing that Excel's TRIM would
+	// also have tidied: leading, trailing, or repeated spaces. It is tracked
+	// apart from Changes because a plain space is visible, does not break a
+	// tab-delimited upload, and saying "ghost characters" about one would be
+	// both alarming and wrong.
+	SpacingAdjusted bool
 }
 
 // Changed reports whether normalization altered the text at all.
@@ -137,7 +143,9 @@ func normalizeTagText(s string) tagTextNormalization {
 		b.WriteRune(r)
 	}
 
-	result.Cleaned = squeezeSpaces(b.String())
+	converted := b.String()
+	result.Cleaned = squeezeSpaces(converted)
+	result.SpacingAdjusted = result.Cleaned != converted
 	return result
 }
 
@@ -172,6 +180,7 @@ const (
 	tagIssueDuplicateTag    tagIssueKind = "duplicate-tag"
 	tagIssueDamagedText     tagIssueKind = "damaged-text"
 	tagIssueFieldLimit      tagIssueKind = "field-limit"
+	tagIssueWhitespace      tagIssueKind = "whitespace"
 )
 
 // accessTagsFieldLimit is the width of [Tags] in the CONTENTdm Access
@@ -213,7 +222,7 @@ func issueSeverity(kind tagIssueKind) tagIssueSeverity {
 // damaged by a bad encoding round trip all need a person.
 func repairedByCleaning(kind tagIssueKind) bool {
 	switch kind {
-	case tagIssueGhostCharacters, tagIssueSeparator, tagIssueEmptyTag:
+	case tagIssueGhostCharacters, tagIssueSeparator, tagIssueEmptyTag, tagIssueWhitespace:
 		return true
 	default:
 		return false
@@ -265,8 +274,11 @@ func checkTagCell(s string) TagCheckResult {
 	normalized := normalizeTagText(s)
 	result := TagCheckResult{Original: s}
 
-	if normalized.Changed() {
+	if len(normalized.Changes) > 0 {
 		result.Issues = append(result.Issues, newTagIssue(tagIssueGhostCharacters, normalized.ChangeSummary()))
+	}
+	if normalized.SpacingAdjusted {
+		result.Issues = append(result.Issues, newTagIssue(tagIssueWhitespace, "leading, trailing, or repeated spaces tidied"))
 	}
 	if strings.ContainsRune(normalized.Cleaned, replacementChar) {
 		result.Issues = append(result.Issues, newTagIssue(tagIssueDamagedText,
