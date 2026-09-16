@@ -1,5 +1,34 @@
 # TODO
 
+## Retiring the Python runtime
+
+Decided 2026-09-16. The Python app existed to give Windows a GUI before Wails
+could build one. The Go app is now a strict superset — Python had content list,
+email copy, and about; Go has those plus Clone Compare, the User Manual, and the
+Getty Tag check — so the second implementation, the pinned `customtkinter` and
+`blake3` versions, the duplicated `deps_check.py`, and the cross-language parity
+fixtures all cost maintenance for nothing.
+
+Documented in `README.md` and `docs/windows-build-checklist.md`. The code is
+still in the tree so existing deployments have somewhere to migrate from.
+
+Removal checklist, not yet started:
+
+- [ ] Confirm no admin-deployed machine is still running the `.bat` launcher
+- [ ] Stop publishing `content-list-generator-windows-portable.zip` and
+      `content-list-generator-windows-python.zip`; drop the `windows-portable`
+      and `windows-python` jobs from `.github/workflows/release.yml`
+- [ ] Remove the download cards for both from `project-dashboard/index.html`
+- [ ] Delete `python/`, `deploy/windows/`, `requirements.txt`,
+      `requirements-build.txt`, `run-python-gui.{sh,bat}`,
+      `scripts/package_windows_python_bundle.sh`,
+      `scripts/package_windows_portable.ps1`
+- [ ] Drop the Python steps from `scripts/dev_check.sh` and remove
+      `scripts/parity_check.sh` along with the shared fixtures it drives
+- [ ] Remove the `pip` ecosystem from `.github/dependabot.yml`
+- [ ] Drop `PYTHON_VERSION` from `.github/workflows/release.yml`
+- [ ] Update `testing/README.md` and the `testing/*/` runners that invoke Python
+
 ## Recently Shipped
 
 ### v0.2.7 (2026-06-12)

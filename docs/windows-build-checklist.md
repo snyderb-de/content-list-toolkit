@@ -36,7 +36,14 @@ Open PowerShell as your normal user (NOT admin, unless noted).
   npm --version
   ```
 
-### [ ] 4. Install Python 3.14
+### [ ] 4. Install Python 3.14 — RETIRED, skip this step
+The Python runtime is retired. Python is only needed if you are still building
+the legacy portable bundle in Phase 4, which is itself retired. A Wails GUI
+build needs no Python at all.
+
+<details>
+<summary>Legacy steps, kept until the retired runtime is removed</summary>
+
 - Download from https://www.python.org/downloads/windows/
 - During install, CHECK the box "Add python.exe to PATH"
 - Open a NEW PowerShell window and verify:
@@ -44,6 +51,7 @@ Open PowerShell as your normal user (NOT admin, unless noted).
   python --version
   pip --version
   ```
+</details>
 
 ### [ ] 5. Verify WebView2 runtime present
 - Win11 has it by default. Win10 may need it.
@@ -140,7 +148,14 @@ Copy-Item "build\bin\content-list-generator.exe" "releases\windows-go\content-li
 
 ---
 
-## Phase 4 — Build the portable Python bundle (PyInstaller)
+## Phase 4 — Build the portable Python bundle (PyInstaller) — RETIRED
+
+The Python runtime is retired, and so is this bundle. The Wails `.exe` from
+Phase 3 needs no installer and runs from any folder including a USB drive,
+which is the only thing this bundle provided. Skip to Phase 5.
+
+<details>
+<summary>Legacy steps, kept until the retired runtime is removed</summary>
 
 ### [ ] 1. Run the packager
 ```powershell
@@ -158,6 +173,8 @@ ls releases\windows-portable\
 - Unzip the .zip to a temp folder
 - Double-click `Start Content List Toolkit.cmd`
 - Window opens, no Python install required on the host
+
+</details>
 
 ---
 
