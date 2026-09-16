@@ -173,18 +173,19 @@ func squeezeSpaces(s string) string {
 type tagIssueKind string
 
 const (
-	tagIssueGhostCharacters tagIssueKind = "ghost-characters"
-	tagIssueSeparator       tagIssueKind = "separator"
-	tagIssueTagCount        tagIssueKind = "tag-count"
-	tagIssueEmptyTag        tagIssueKind = "empty-tag"
-	tagIssueDuplicateTag    tagIssueKind = "duplicate-tag"
-	tagIssueDamagedText     tagIssueKind = "damaged-text"
-	tagIssueFieldLimit      tagIssueKind = "field-limit"
-	tagIssueWhitespace      tagIssueKind = "whitespace"
-	tagIssueUnknownTerm     tagIssueKind = "unknown-term"
-	tagIssueTermCase        tagIssueKind = "term-case"
-	tagIssueNotChecked      tagIssueKind = "not-checked"
-	tagIssueUnbalanced      tagIssueKind = "unbalanced-brackets"
+	tagIssueGhostCharacters    tagIssueKind = "ghost-characters"
+	tagIssueSeparator          tagIssueKind = "separator"
+	tagIssueTagCount           tagIssueKind = "tag-count"
+	tagIssueEmptyTag           tagIssueKind = "empty-tag"
+	tagIssueDuplicateTag       tagIssueKind = "duplicate-tag"
+	tagIssueDamagedText        tagIssueKind = "damaged-text"
+	tagIssueFieldLimit         tagIssueKind = "field-limit"
+	tagIssueWhitespace         tagIssueKind = "whitespace"
+	tagIssueUnknownTerm        tagIssueKind = "unknown-term"
+	tagIssueTermCase           tagIssueKind = "term-case"
+	tagIssueNotChecked         tagIssueKind = "not-checked"
+	tagIssueUnbalanced         tagIssueKind = "unbalanced-brackets"
+	tagIssueQualifierUnchecked tagIssueKind = "qualifier-unchecked"
 )
 
 // accessTagsFieldLimit is the width of [Tags] in the CONTENTdm Access

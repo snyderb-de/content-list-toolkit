@@ -109,6 +109,12 @@ type gettyTermMatch struct {
 	// PreferredLabel is Getty's own spelling. When it differs from Term only
 	// by case or punctuation, the sheet is worth correcting toward Getty.
 	PreferredLabel string `json:"preferredLabel,omitempty"`
+	// QualifierIgnored marks a match made only after dropping a parenthetical
+	// qualifier, because the source could not check it. Getty writes
+	// "counters (furniture)"; the relational archive stores the term as bare
+	// "counters" and keeps the qualifier somewhere the export does not carry.
+	// Such a match confirms the term but says nothing about the qualifier.
+	QualifierIgnored bool `json:"qualifierIgnored,omitempty"`
 }
 
 // ExactLabel reports whether the sheet spelling matches Getty's preferred
@@ -116,6 +122,25 @@ type gettyTermMatch struct {
 // worth normalizing.
 func (m gettyTermMatch) ExactLabel() bool {
 	return m.Found && m.PreferredLabel != "" && m.Term == m.PreferredLabel
+}
+
+// splitQualifier separates "counters (furniture)" into its term and qualifier.
+// A term without a trailing parenthetical comes back unchanged.
+func splitQualifier(term string) (base, qualifier string) {
+	trimmed := strings.TrimSpace(term)
+	if !strings.HasSuffix(trimmed, ")") {
+		return trimmed, ""
+	}
+	open := strings.LastIndex(trimmed, "(")
+	if open <= 0 {
+		return trimmed, ""
+	}
+	base = strings.TrimSpace(trimmed[:open])
+	qualifier = strings.TrimSpace(trimmed[open+1 : len(trimmed)-1])
+	if base == "" || qualifier == "" {
+		return trimmed, ""
+	}
+	return base, qualifier
 }
 
 // gettyVocabulary is the seam between the checker and where terms are verified,

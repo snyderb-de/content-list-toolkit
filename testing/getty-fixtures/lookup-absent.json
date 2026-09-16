@@ -1,0 +1,8 @@
+{
+  "head" : {
+    "vars" : [ "s", "matched", "label" ]
+  },
+  "results" : {
+    "bindings" : [ ]
+  }
+}

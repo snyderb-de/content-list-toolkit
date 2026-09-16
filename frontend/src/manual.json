@@ -300,6 +300,10 @@
             [
               "Not checked",
               "Getty could not be reached for that term. This does not mean the term is wrong."
+            ],
+            [
+              "Bracketed part unchecked",
+              "The term was confirmed, but the offline list stores terms without their bracketed part, so only the first half could be checked. The live check confirms the whole term."
             ]
           ]
         },

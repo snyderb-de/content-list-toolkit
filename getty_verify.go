@@ -29,6 +29,8 @@ type TagTermVerdict struct {
 	// Suggestions are near matches offered when the term was not found, so the
 	// screen can propose a replacement instead of leaving a dead end.
 	Suggestions []string `json:"suggestions,omitempty"`
+	// QualifierIgnored marks a term confirmed only without its bracketed part.
+	QualifierIgnored bool `json:"qualifierIgnored,omitempty"`
 }
 
 // CaseDiffers reports a term that exists but is spelled with different case
@@ -47,7 +49,7 @@ func verifyTags(ctx context.Context, vocabulary gettyVocabulary, result *TagChec
 		return
 	}
 
-	var caseDiffers []string
+	var caseDiffers, qualifierIgnored []string
 	unchecked := 0
 
 	for _, tag := range result.Tags {
@@ -62,6 +64,7 @@ func verifyTags(ctx context.Context, vocabulary gettyVocabulary, result *TagChec
 			verdict.Found = match.Found
 			verdict.SubjectID = match.SubjectID
 			verdict.PreferredLabel = match.PreferredLabel
+			verdict.QualifierIgnored = match.QualifierIgnored
 
 			if !match.Found {
 				// One issue per unknown term rather than one listing them all,
@@ -70,6 +73,8 @@ func verifyTags(ctx context.Context, vocabulary gettyVocabulary, result *TagChec
 				verdict.Suggestions = suggestFor(ctx, vocabulary, tag)
 				result.Issues = append(result.Issues, newTagIssue(tagIssueUnknownTerm,
 					describeUnknownTerm(tag, vocabulary.SourceName(), verdict.Suggestions)))
+			} else if match.QualifierIgnored {
+				qualifierIgnored = append(qualifierIgnored, tag)
 			} else if verdict.CaseDiffers() {
 				caseDiffers = append(caseDiffers,
 					fmt.Sprintf("%q is spelled %q", tag, match.PreferredLabel))
@@ -81,6 +86,12 @@ func verifyTags(ctx context.Context, vocabulary gettyVocabulary, result *TagChec
 	if len(caseDiffers) > 0 {
 		result.Issues = append(result.Issues, newTagIssue(tagIssueTermCase,
 			strings.Join(caseDiffers, "; ")))
+	}
+	if len(qualifierIgnored) > 0 {
+		result.Issues = append(result.Issues, newTagIssue(tagIssueQualifierUnchecked,
+			fmt.Sprintf("%s confirmed, but the bracketed part could not be checked against %s: %s",
+				pluralize(len(qualifierIgnored), "term", "terms"),
+				vocabulary.SourceName(), strings.Join(quoteAll(qualifierIgnored), ", "))))
 	}
 	if unchecked > 0 {
 		result.Issues = append(result.Issues, newTagIssue(tagIssueNotChecked,

@@ -20,6 +20,18 @@ regard to case and written one per line, quoted where they contain a comma.
 
 169,307 terms.
 
+## A limitation of this format
+
+Getty writes qualified terms as `counters (furniture)`. The relational archive
+stores the term as bare `counters` and keeps the qualifier in data this export
+does not carry, so the extracted list holds no qualified spellings at all.
+
+Comparing exactly against this list would reject `counters (furniture)`, a tag
+taken verbatim from a real export and confirmed valid by the live endpoint. The
+application therefore falls back to the base term when a qualified one is
+absent, and reports that the bracketed part went unchecked — it confirms the
+term, not the qualifier.
+
 ## Why it is dated, and what that means
 
 Getty froze these relational archives in January 2026 and has said they will not

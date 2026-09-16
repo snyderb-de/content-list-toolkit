@@ -102,6 +102,7 @@ export namespace main {
 	    preferredLabel?: string;
 	    error?: string;
 	    suggestions?: string[];
+	    qualifierIgnored?: boolean;
 	
 	    static createFrom(source: any = {}) {
 	        return new TagTermVerdict(source);
@@ -116,6 +117,7 @@ export namespace main {
 	        this.preferredLabel = source["preferredLabel"];
 	        this.error = source["error"];
 	        this.suggestions = source["suggestions"];
+	        this.qualifierIgnored = source["qualifierIgnored"];
 	    }
 	}
 	export class TagIssue {

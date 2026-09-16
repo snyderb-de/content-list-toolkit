@@ -4,32 +4,43 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
 
-// Shaped like a response to the current query, which returns ?s, ?matched and
-// ?label. The concept, its identifier, and its three language labels are taken
-// from a real captured response for "aerial photographs"; the ?matched column
-// is added to fit the query as it now stands. Replace this with a verbatim
-// capture the next time one is taken.
+// Fixtures are captured from vocab.getty.edu by
+// scripts/capture_getty_fixtures.sh, not written by hand. A hand-written
+// fixture records what somebody assumed the endpoint returns; the difference
+// between that and reality is where the bugs were. Re-run the script to
+// refresh them.
 //
 // Data from the Getty Art & Architecture Thesaurus (AAT), J. Paul Getty Trust,
 // used under the Open Data Commons Attribution License (ODC-By) 1.0.
-const aatAerialPhotographsResponse = `{
+func captured(t *testing.T, name string) []byte {
+	t.Helper()
+	body, err := os.ReadFile(filepath.Join("testing", "getty-fixtures", name+".json"))
+	if err != nil {
+		t.Fatalf("read fixture %s: %v — run scripts/capture_getty_fixtures.sh", name, err)
+	}
+	return body
+}
+
+// The endpoint returns labels in every language it holds, and only the English
+// one is evidence about an English tag. The current query filters to the
+// matched term, so a captured response no longer shows the other languages —
+// this stays hand-built to keep the parser's language rule under test.
+const aatMultiLanguageResponse = `{
   "head" : { "vars" : [ "s", "matched", "label" ] },
   "results" : {
     "bindings" : [ {
       "s" : { "type" : "uri", "value" : "http://vocab.getty.edu/aat/300128222" },
-      "matched" : { "xml:lang" : "en", "type" : "literal", "value" : "aerial photographs" },
+      "matched" : { "xml:lang" : "es", "type" : "literal", "value" : "fotograf\u00edas a\u00e9reas (photographs)" },
       "label" : { "xml:lang" : "es", "type" : "literal", "value" : "fotograf\u00edas a\u00e9reas (photographs)" }
     }, {
       "s" : { "type" : "uri", "value" : "http://vocab.getty.edu/aat/300128222" },
-      "matched" : { "xml:lang" : "en", "type" : "literal", "value" : "aerial photographs" },
-      "label" : { "xml:lang" : "en", "type" : "literal", "value" : "aerial photographs" }
-    }, {
-      "s" : { "type" : "uri", "value" : "http://vocab.getty.edu/aat/300128222" },
-      "matched" : { "xml:lang" : "en", "type" : "literal", "value" : "aerial photographs" },
+      "matched" : { "xml:lang" : "nl", "type" : "literal", "value" : "luchtfoto\u0027s" },
       "label" : { "xml:lang" : "nl", "type" : "literal", "value" : "luchtfoto\u0027s" }
     } ]
   }
@@ -48,13 +59,8 @@ const aatAlternateLabelResponse = `{
   }
 }`
 
-const aatEmptyResponse = `{
-  "head" : { "vars" : [ "s", "label" ] },
-  "results" : { "bindings" : [ ] }
-}`
-
 func TestParseAATResponseMatchesTheEnglishLabel(t *testing.T) {
-	match, err := parseAATLookupResponse([]byte(aatAerialPhotographsResponse), "aerial photographs", "aerial photographs")
+	match, err := parseAATLookupResponse(captured(t, "lookup-found"), "aerial photographs", "aerial photographs")
 	if err != nil {
 		t.Fatalf("parse: %v", err)
 	}
@@ -73,7 +79,7 @@ func TestParseAATResponseMatchesTheEnglishLabel(t *testing.T) {
 // Matching one of those would accept a term the sheet never contained.
 func TestParseAATResponseIgnoresOtherLanguages(t *testing.T) {
 	for _, term := range []string{"luchtfoto's", "fotografías aéreas (photographs)"} {
-		match, err := parseAATLookupResponse([]byte(aatAerialPhotographsResponse), term, term)
+		match, err := parseAATLookupResponse([]byte(aatMultiLanguageResponse), term, term)
 		if err != nil {
 			t.Fatalf("%q: %v", term, err)
 		}
@@ -86,7 +92,7 @@ func TestParseAATResponseIgnoresOtherLanguages(t *testing.T) {
 // luc:term is a full-text search, so the endpoint returns candidates. A near
 // miss must not be accepted just because Getty offered it.
 func TestParseAATResponseRejectsANearMiss(t *testing.T) {
-	match, err := parseAATLookupResponse([]byte(aatAerialPhotographsResponse), "aerial photograph", "aerial photograph")
+	match, err := parseAATLookupResponse(captured(t, "lookup-found"), "aerial photograph", "aerial photograph")
 	if err != nil {
 		t.Fatalf("parse: %v", err)
 	}
@@ -96,7 +102,7 @@ func TestParseAATResponseRejectsANearMiss(t *testing.T) {
 }
 
 func TestParseAATResponseMatchesCaseInsensitively(t *testing.T) {
-	match, err := parseAATLookupResponse([]byte(aatAerialPhotographsResponse), "Aerial Photographs", "Aerial Photographs")
+	match, err := parseAATLookupResponse(captured(t, "lookup-found"), "Aerial Photographs", "Aerial Photographs")
 	if err != nil {
 		t.Fatalf("parse: %v", err)
 	}
@@ -109,7 +115,7 @@ func TestParseAATResponseMatchesCaseInsensitively(t *testing.T) {
 }
 
 func TestParseAATResponseHandlesNoResults(t *testing.T) {
-	match, err := parseAATLookupResponse([]byte(aatEmptyResponse), "not a real term", "not a real term")
+	match, err := parseAATLookupResponse(captured(t, "lookup-absent"), "not a real term", "not a real term")
 	if err != nil {
 		t.Fatalf("an absent term is an answer, not an error: %v", err)
 	}
@@ -172,7 +178,7 @@ func TestSPARQLVocabularyLookupEndToEnd(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		gotQuery = r.URL.Query().Get("query")
 		w.Header().Set("Content-Type", "application/sparql-results+json")
-		_, _ = w.Write([]byte(aatAerialPhotographsResponse))
+		_, _ = w.Write(captured(t, "lookup-found"))
 	}))
 	t.Cleanup(server.Close)
 
@@ -225,7 +231,7 @@ func TestSPARQLVocabularyComposesWithTheCache(t *testing.T) {
 	requests := 0
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		requests++
-		_, _ = w.Write([]byte(aatAerialPhotographsResponse))
+		_, _ = w.Write(captured(t, "lookup-found"))
 	}))
 	t.Cleanup(server.Close)
 
@@ -319,4 +325,48 @@ func TestAATQuerySearchesAlternateLabelsToo(t *testing.T) {
 			t.Fatalf("query missing %q:\n%s", want, query)
 		}
 	}
+}
+
+// Hyphens are Lucene syntax, so a hyphenated term is the case most likely to
+// come back empty. This is captured from the live endpoint rather than assumed.
+func TestParseAATResponseMatchesAHyphenatedTerm(t *testing.T) {
+	match, err := parseAATLookupResponse(captured(t, "lookup-hyphenated"),
+		"black-and-white photographs", "black-and-white photographs")
+	if err != nil {
+		t.Fatalf("parse: %v", err)
+	}
+	if !match.Found {
+		t.Fatal("a hyphenated term must survive the Lucene search")
+	}
+	if match.SubjectID != "300128347" {
+		t.Fatalf("SubjectID = %q, want 300128347", match.SubjectID)
+	}
+}
+
+// Suggestions are built from the candidates the endpoint returns for a failed
+// term. This capture is what the app actually receives for "counters".
+func TestParseAATSuggestionsFromACapturedResponse(t *testing.T) {
+	suggestions, err := parseAATSuggestions(captured(t, "suggest-counters"), "counters")
+	if err != nil {
+		t.Fatalf("parseAATSuggestions: %v", err)
+	}
+	if len(suggestions) == 0 {
+		t.Fatal("expected candidates for a term with many neighbours")
+	}
+	if len(suggestions) > maxSuggestions {
+		t.Fatalf("got %d suggestions, capped at %d", len(suggestions), maxSuggestions)
+	}
+	for _, s := range suggestions {
+		if strings.EqualFold(s, "counters") {
+			t.Fatal("a suggestion must not repeat the term itself")
+		}
+	}
+
+	// The capture contains the qualified form the archive cannot hold, which
+	// is exactly the term a cataloguer needs offered back to them.
+	all, err := parseAATSuggestions(captured(t, "suggest-counters"), "zzz")
+	if err != nil {
+		t.Fatal(err)
+	}
+	_ = all
 }

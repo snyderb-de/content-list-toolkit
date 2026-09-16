@@ -131,6 +131,22 @@ func (v *fileVocabulary) Lookup(_ context.Context, term string) (gettyTermMatch,
 	cleaned := normalizeTagText(term).Cleaned
 	spellings, ok := v.terms[strings.ToLower(cleaned)]
 	if !ok {
+		// Getty writes qualified terms as "counters (furniture)". The
+		// relational archive these lists come from stores the term as bare
+		// "counters" and keeps the qualifier in data the export does not
+		// carry, so an exact comparison rejects a tag that is perfectly
+		// correct. Falling back to the base term avoids that false negative;
+		// the match records that the qualifier went unchecked, because it did.
+		if base, qualifier := splitQualifier(cleaned); qualifier != "" {
+			if baseSpellings, baseOK := v.terms[strings.ToLower(base)]; baseOK {
+				return gettyTermMatch{
+					Term:             term,
+					Found:            true,
+					PreferredLabel:   baseSpellings[0],
+					QualifierIgnored: true,
+				}, nil
+			}
+		}
 		return gettyTermMatch{Term: term, Found: false}, nil
 	}
 

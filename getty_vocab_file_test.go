@@ -191,3 +191,94 @@ func TestLiveSourceCarriesNoSnapshotCaution(t *testing.T) {
 		t.Fatalf("a cached live source should not warn either, got %q", note)
 	}
 }
+
+// Getty writes qualified terms as "counters (furniture)". The relational
+// archive these lists come from stores the term as bare "counters" and keeps
+// the qualifier in data the export does not carry, so comparing exactly
+// rejects a tag that is perfectly correct — a false negative on real data,
+// found by checking a real export against the live endpoint.
+func TestFileVocabularyMatchesAQualifiedTermAgainstABareEntry(t *testing.T) {
+	vocabulary, err := readVocabulary(strings.NewReader("counters\naerial photographs\n"), "archive list")
+	if err != nil {
+		t.Fatalf("readVocabulary: %v", err)
+	}
+
+	match, err := vocabulary.Lookup(context.Background(), "counters (furniture)")
+	if err != nil {
+		t.Fatalf("Lookup: %v", err)
+	}
+	if !match.Found {
+		t.Fatal("a qualified term should match the bare entry the archive holds")
+	}
+	if !match.QualifierIgnored {
+		t.Fatal("the match must record that the bracketed part went unchecked")
+	}
+}
+
+// The fallback confirms the term, not the qualifier. It must not be presented
+// as a full match, or a nonsense qualifier would pass silently.
+func TestQualifierFallbackDoesNotClaimAnExactMatch(t *testing.T) {
+	vocabulary, err := readVocabulary(strings.NewReader("counters\n"), "archive list")
+	if err != nil {
+		t.Fatal(err)
+	}
+	match, err := vocabulary.Lookup(context.Background(), "counters (not a real qualifier)")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if match.ExactLabel() {
+		t.Fatal("a qualifier that was never checked cannot be an exact match")
+	}
+	if !match.QualifierIgnored {
+		t.Fatal("expected the qualifier to be marked unchecked")
+	}
+}
+
+// A term with no bracketed part must not go near the fallback.
+func TestQualifierFallbackLeavesPlainTermsAlone(t *testing.T) {
+	vocabulary, err := readVocabulary(strings.NewReader("counters\n"), "archive list")
+	if err != nil {
+		t.Fatal(err)
+	}
+	match, err := vocabulary.Lookup(context.Background(), "invented term")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if match.Found || match.QualifierIgnored {
+		t.Fatalf("an absent plain term must stay absent: %+v", match)
+	}
+}
+
+func TestSplitQualifier(t *testing.T) {
+	for _, tc := range []struct{ in, base, qualifier string }{
+		{in: "counters (furniture)", base: "counters", qualifier: "furniture"},
+		{in: "cafeterias (eating and drinking spaces)", base: "cafeterias", qualifier: "eating and drinking spaces"},
+		{in: "counters", base: "counters", qualifier: ""},
+		{in: "counters (furniture", base: "counters (furniture", qualifier: ""},
+		{in: "(furniture)", base: "(furniture)", qualifier: ""},
+		{in: "counters ()", base: "counters ()", qualifier: ""},
+	} {
+		base, qualifier := splitQualifier(tc.in)
+		if base != tc.base || qualifier != tc.qualifier {
+			t.Fatalf("splitQualifier(%q) = (%q, %q), want (%q, %q)", tc.in, base, qualifier, tc.base, tc.qualifier)
+		}
+	}
+}
+
+// The bundled list is built from that archive, so the real case has to work.
+func TestBuiltinListMatchesQualifiedTermsFromRealData(t *testing.T) {
+	vocabulary, err := builtinVocabulary()
+	if err != nil {
+		t.Fatal(err)
+	}
+	match, err := vocabulary.Lookup(context.Background(), "counters (furniture)")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !match.Found {
+		t.Fatal("a real tag from a real export must not be reported as absent")
+	}
+	if !match.QualifierIgnored {
+		t.Fatal("the bundled list holds the bare term, so the qualifier went unchecked")
+	}
+}
