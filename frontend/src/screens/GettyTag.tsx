@@ -85,6 +85,7 @@ export default function GettyTag() {
   const [edits, setEdits] = useState<Record<number, string>>({})
   const [saving, setSaving] = useState(false)
   const [savedPath, setSavedPath] = useState('')
+  const [pass, setPass] = useState(0)
 
   useEffect(() => {
     GetGettyDefaults()
@@ -139,6 +140,7 @@ export default function GettyTag() {
       setResult(r)
       setEdits({})
       setSavedPath('')
+      setPass(0)
       setPhase('done')
     } catch (e: any) {
       setErr(String(e))
@@ -152,6 +154,7 @@ export default function GettyTag() {
     setErr('')
     setEdits({})
     setSavedPath('')
+    setPass(0)
   }
 
   const editRow = (row: number, tags: string) =>
@@ -180,6 +183,9 @@ export default function GettyTag() {
     setSaving(true)
     setErr('')
     try {
+      // Every edit made so far is re-sent, not just the newest. Each save
+      // rebuilds the cleaned copy from the untouched source, so sending only
+      // the latest batch would silently drop every earlier correction.
       const saved = await SaveGettyTagEdits(
         {
           sheetPath,
@@ -190,9 +196,36 @@ export default function GettyTag() {
         } as main.GettyCheckOptions,
         pending,
       )
-      setResult({ ...result, report: saved.report, cleanedPath: saved.cleanedPath } as main.GettyCheckResult)
+      setResult({
+        ...result,
+        report: saved.report,
+        cleanedPath: saved.cleanedPath,
+      } as main.GettyCheckResult)
       setSavedPath(saved.cleanedPath)
+      setPass((p) => p + 1)
+    } catch (e: any) {
+      setErr(String(e))
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  // Re-check without saving, for when the sheet was corrected in Excel while
+  // this screen was open.
+  const recheck = async () => {
+    setSaving(true)
+    setErr('')
+    try {
+      const r = await CheckGettyTags({
+        sheetPath,
+        source,
+        vocabularyPath: vocabPath,
+        writeCleaned: true,
+        writeReport,
+      } as main.GettyCheckOptions)
+      setResult(r)
       setEdits({})
+      setPass((p) => p + 1)
     } catch (e: any) {
       setErr(String(e))
     } finally {
@@ -339,19 +372,20 @@ export default function GettyTag() {
   if (!result) return null
   const report = result.report
   const rows = report.rows ?? []
-  const blocking = rows.filter((r) => r.result.issues?.some((i) => i.severity === 'blocks-upload')).length
-  const needsReview = rows.filter((r) => r.result.issues?.some((i) => !i.repaired)).length
+  const blocking = rows.filter((r) => (r.result.issues ?? []).some((i) => i.severity === 'blocks-upload')).length
+  const needsReview = rows.filter((r) => (r.result.issues ?? []).some((i) => !i.repaired)).length
   const repaired = rows.filter((r) => r.result.cleaned !== r.result.original).length
   const cleanedPath = result.cleanedPath ?? ''
   const reportPath = result.reportPath ?? ''
+  const editCount = Object.keys(edits).length
 
   return (
     <div>
       <div className="screen-header">
-        <h2 className="screen-title">Check Complete</h2>
+        <h2 className="screen-title">{pass > 0 ? `Re-checked (pass ${pass + 1})` : 'Check Complete'}</h2>
         <p className={`screen-subtitle ${rows.length === 0 ? 'success-text' : ''}`}>
           {rows.length === 0
-            ? `All ${report.totalRows} rows are ready to upload.`
+            ? `Nothing left to fix — all ${report.totalRows} rows are ready to upload.`
             : `${rows.length} of ${report.totalRows} rows need attention.`}
         </p>
       </div>
@@ -390,6 +424,8 @@ export default function GettyTag() {
           <span className="stat-row-value">{report.emptyCells}</span>
         </div>
 
+        {err && <p className="danger-text" style={{ marginTop: 12 }}>{err}</p>}
+
         <div className="result-actions">
           {cleanedPath && (
             <button className="btn btn-primary" onClick={() => OpenPath(cleanedPath)}>
@@ -410,40 +446,51 @@ export default function GettyTag() {
           <div className="findings-header">
             <p className="card-title" style={{ margin: 0 }}>Findings by row</p>
             <div className="findings-actions">
-              {savedPath && Object.keys(edits).length === 0 && (
-                <span className="success-text">Saved to {savedPath.split('/').pop()}</span>
-              )}
-              {Object.keys(edits).length > 0 && (
+              {editCount > 0 && (
                 <span className="info-text">
-                  {Object.keys(edits).length} row{Object.keys(edits).length === 1 ? '' : 's'} edited
+                  {editCount} row{editCount === 1 ? '' : 's'} edited
                 </span>
               )}
-              <button
-                className="btn btn-primary btn-sm"
-                onClick={save}
-                disabled={saving || Object.keys(edits).length === 0}
-              >
-                {saving ? 'Saving…' : 'Save to Cleaned Copy'}
+              {editCount === 0 && savedPath && (
+                <span className="success-text">Saved to {savedPath.split('/').pop()}</span>
+              )}
+              <button className="btn btn-outline btn-sm" onClick={recheck} disabled={saving}>
+                {saving ? 'Working…' : 'Re-check'}
+              </button>
+              <button className="btn btn-primary btn-sm" onClick={save} disabled={saving || editCount === 0}>
+                {saving ? 'Working…' : 'Apply Fixes & Re-check'}
               </button>
             </div>
           </div>
-          <div className="info-text">
-            Edits are written to the cleaned copy beside the sheet. The original export is
+          <div className="info-text" style={{ marginBottom: 4 }}>
+            Fix what you can here, then apply and re-check. Repeat until nothing is left.
+            Edits are written to the cleaned copy beside the sheet — the original export is
             never modified.
           </div>
+
           <div className="diff-table-wrap">
             <table className="diff-table getty-findings">
               <thead>
                 <tr>
                   <th style={{ width: 56 }}>Row</th>
-                  <th style={{ width: '38%' }}>Tags</th>
-                  <th>Findings</th>
+                  <th style={{ width: '40%' }}>Tags</th>
+                  <th>What to do</th>
                 </tr>
               </thead>
               <tbody>
                 {rows.map((row) => {
                   const status = rowStatus(row)
-                  const changed = row.result.cleaned !== row.result.original
+                  const current = edits[row.number] ?? row.result.cleaned
+                  const issues = row.result.issues ?? []
+                  // Term-level findings are grouped with their own replacements
+                  // below, so they are not repeated in the row-level list.
+                  const rowIssues = issues.filter(
+                    (i) => i.kind !== 'unknown-term' && i.kind !== 'term-case',
+                  )
+                  const termFindings = (row.result.terms ?? []).filter(
+                    (t) => t.checked && (!t.found || (t.preferredLabel && t.preferredLabel !== t.term)),
+                  )
+
                   return (
                     <tr key={row.number}>
                       <td>
@@ -458,13 +505,13 @@ export default function GettyTag() {
                         <div className="current-file tag-before">{row.result.original}</div>
                         <input
                           className="text-input monospace"
-                          value={edits[row.number] ?? row.result.cleaned}
+                          value={current}
                           onChange={(e) => editRow(row.number, e.target.value)}
                           spellCheck={false}
                         />
                       </td>
                       <td>
-                        {(row.result.issues ?? []).map((issue, i) => (
+                        {rowIssues.map((issue, i) => (
                           <div key={i} className={`finding finding-${findingTone(issue)}`}>
                             <span className="finding-prefix">{TONE_PREFIX[findingTone(issue)]}</span>
                             <span className="finding-detail">
@@ -472,29 +519,50 @@ export default function GettyTag() {
                             </span>
                           </div>
                         ))}
-                        {(row.result.terms ?? [])
-                          .filter((term) => term.checked && !term.found && (term.suggestions?.length ?? 0) > 0)
-                          .map((term) => (
-                            <div key={term.term} className="suggestion-row">
-                              <span className="suggestion-label">Replace “{term.term}” with</span>
-                              {(term.suggestions ?? []).map((s) => (
-                                <button
-                                  key={s}
-                                  className="suggestion-chip"
-                                  onClick={() =>
-                                    applySuggestion(
-                                      row.number,
-                                      edits[row.number] ?? row.result.cleaned,
-                                      term.term,
-                                      s,
-                                    )
-                                  }
-                                >
-                                  {s}
-                                </button>
-                              ))}
+
+                        {termFindings.map((term) => {
+                          const unknown = !term.found
+                          const options = unknown
+                            ? term.suggestions ?? []
+                            : term.preferredLabel
+                              ? [term.preferredLabel]
+                              : []
+                          return (
+                            <div key={term.term} className="term-finding">
+                              <div className={`finding ${unknown ? 'finding-error' : 'finding-review'}`}>
+                                <span className="finding-prefix">
+                                  {unknown ? 'Must Fix:' : 'Review:'}
+                                </span>
+                                <span className="finding-detail">
+                                  <strong>{term.term}</strong>{' '}
+                                  {unknown
+                                    ? 'is not a term in the vocabulary'
+                                    : `is spelled “${term.preferredLabel}” in the vocabulary`}
+                                </span>
+                              </div>
+                              {options.length > 0 ? (
+                                <div className="suggestion-row">
+                                  <span className="suggestion-label">Replace with</span>
+                                  {options.map((option) => (
+                                    <button
+                                      key={option}
+                                      className="suggestion-chip"
+                                      onClick={() => applySuggestion(row.number, current, term.term, option)}
+                                    >
+                                      {option}
+                                    </button>
+                                  ))}
+                                </div>
+                              ) : (
+                                <div className="suggestion-row">
+                                  <span className="suggestion-label">
+                                    No near matches — edit the tag above directly.
+                                  </span>
+                                </div>
+                              )}
                             </div>
-                          ))}
+                          )
+                        })}
                       </td>
                     </tr>
                   )

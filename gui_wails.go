@@ -13,14 +13,24 @@ import (
 //go:embed all:frontend/dist
 var assets embed.FS
 
+// Window size defaults, shared with the View menu's reset item.
+const (
+	defaultWindowWidth  = 1100
+	defaultWindowHeight = 720
+)
+
 func launchGUI(startDir string) error {
 	app := newApp(startDir)
 	return wails.Run(&options.App{
-		Title:            "Content List Toolkit",
-		Width:            1100,
-		Height:           720,
-		MinWidth:         800,
-		MinHeight:        600,
+		Title:     "Content List Toolkit",
+		Width:     defaultWindowWidth,
+		Height:    defaultWindowHeight,
+		MinWidth:  800,
+		MinHeight: 600,
+		// MaxWidth and MaxHeight are deliberately left at zero. Wails reads a
+		// zero as unbounded, and any value here would cap both maximise and
+		// full screen.
+		Menu:             buildAppMenu(app),
 		BackgroundColour: &options.RGBA{R: 27, G: 38, B: 54, A: 1},
 		AssetServer: &assetserver.Options{
 			Assets: assets,

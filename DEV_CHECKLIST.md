@@ -5,6 +5,10 @@
 - [y] A1 Sidebar nav — all 4 items visible, active highlight works
 - [n] A2 Dark mode toggle — switches theme, persists on reload - no toggle exists.
 - [y] A3 Window min-size (try shrinking to ~800×600)
+- [ ] A4 View menu: Toggle Full Screen works and comes back out (macOS: Ctrl+Cmd+F)
+- [ ] A5 View menu: Zoom / Maximise fills the screen; Reset Window Size restores 1100×720 centred
+- [ ] A6 macOS: Cmd+C / Cmd+V work in the Tags edit field (needs the Edit menu)
+- [ ] A7 Windows and Linux: title-bar maximise button works, and the View menu items match
 
 ## Content List
 
@@ -50,6 +54,9 @@
 - [ ] G13 The Tags cell is editable; typing enables Save to Cleaned Copy
 - [ ] G14 Save writes the cleaned copy, leaves the source untouched, and the findings refresh to what was actually saved
 - [ ] G15 Saving an edit that introduces a new problem (e.g. two tags) reports it immediately rather than accepting it
+- [ ] G16 Apply Fixes & Re-check updates the findings in place; repeating until empty ends with "Nothing left to fix"
+- [ ] G17 A second Apply keeps the first round of edits — corrections do not reappear after the second save
+- [ ] G18 Re-check picks up changes made to the sheet in Excel while the screen was open
 
 ## About
 
