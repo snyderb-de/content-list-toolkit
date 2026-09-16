@@ -72,7 +72,7 @@ Two distinct release tracks with different update policies:
 - Deps frozen into the bundle at build time
 - Users redownload the bundle to update
 - Windows has an in-app updater that checks a release folder (see `update.go`)
-- Dependabot ignores major bumps for npm + gomod, but still surfaces security advisories
+- Dependabot raises major bumps in their own grouped PR, separate from minor and patch. Majors were ignored until 2026-09-16, which is how the frontend reached five Vite majors and three TypeScript majors behind while every dependency PR looked green — a major needs reading before merging, which argues for a separate pile rather than silence
 
 The Python-derived artifacts — the PyInstaller portable zip and the Windows
 Python source bundle — are retired along with the runtime that produced them.
