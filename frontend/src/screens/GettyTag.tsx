@@ -4,6 +4,8 @@ import {
   CheckGettyTags,
   GetGettyDefaults,
   OpenPath,
+  DownloadGettyVocabulary,
+  PickFolder,
   PickSheet,
   RevealPath,
   SaveGettyTagEdits,
@@ -87,12 +89,15 @@ export default function GettyTag() {
   const [saving, setSaving] = useState(false)
   const [savedPath, setSavedPath] = useState('')
   const [pass, setPass] = useState(0)
+  const [downloading, setDownloading] = useState(false)
+  const [downloadNote, setDownloadNote] = useState('')
 
   useEffect(() => {
     GetGettyDefaults()
       .then((d) => {
         if (d.source) setSource(d.source as Source)
         if (d.vocabularyPath) setVocabPath(d.vocabularyPath)
+        if (d.lastSheet) setSheetPath(d.lastSheet)
       })
       .catch(() => {})
   }, [])
@@ -118,6 +123,29 @@ export default function GettyTag() {
     if (p) {
       setVocabPath(p)
       SaveGettyVocabulary('file', p).catch(() => {})
+    }
+  }
+
+  // Getty serves its archives from a different host than the SPARQL endpoint,
+  // so this can work on a network where the live check does not.
+  const downloadList = async () => {
+    const dir = await PickFolder('Where should the term list be saved?')
+    if (!dir) return
+    setDownloading(true)
+    setDownloadNote('')
+    setErr('')
+    try {
+      const r = await DownloadGettyVocabulary(dir)
+      setVocabPath(r.path)
+      setSource('file')
+      SaveGettyVocabulary('file', r.path).catch(() => {})
+      setDownloadNote(
+        `${r.terms.toLocaleString()} English terms from ${r.archive}, published ${r.published}.`,
+      )
+    } catch (e: any) {
+      setErr(String(e))
+    } finally {
+      setDownloading(false)
     }
   }
 
@@ -305,6 +333,13 @@ export default function GettyTag() {
                   placeholder="AAT term list, one term per line"
                 />
                 <button className="btn btn-outline btn-sm" onClick={chooseVocabulary}>Browse</button>
+              </div>
+              <button className="btn btn-outline btn-sm" onClick={downloadList} disabled={downloading}>
+                {downloading ? 'Downloading from Getty…' : 'Download list from Getty'}
+              </button>
+              <div className="info-text" style={{ marginTop: 8 }}>
+                {downloadNote ||
+                  'Downloads from aatdownloads.getty.edu, a different host than the live check uses — it may work where the live check is blocked. The archives are Getty\u2019s January 2026 snapshot and are no longer refreshed, so the list is dated, and the date is written into its filename.'}
               </div>
             </div>
           )}

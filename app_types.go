@@ -20,6 +20,9 @@ type ScanOptions struct {
 	// choice of where to verify terms.
 	GettySource         string `json:"gettySource,omitempty"`
 	GettyVocabularyPath string `json:"gettyVocabularyPath,omitempty"`
+	// GettyLastSheet is the export checked last, so the picker opens where the
+	// work is rather than at the home directory every time.
+	GettyLastSheet string `json:"gettyLastSheet,omitempty"`
 }
 
 type AgencyTemplateFields struct {
@@ -63,6 +66,9 @@ type AppSettings struct {
 	// choice of where to verify terms.
 	GettySource         string `json:"gettySource,omitempty"`
 	GettyVocabularyPath string `json:"gettyVocabularyPath,omitempty"`
+	// GettyLastSheet is the export checked last, so the picker opens where the
+	// work is rather than at the home directory every time.
+	GettyLastSheet string `json:"gettyLastSheet,omitempty"`
 }
 
 // defaultAppSettings is the baseline used whenever settings are missing or

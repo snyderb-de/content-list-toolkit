@@ -36,6 +36,7 @@ const (
 // GettyCheckOptions is what the screen sends when the user presses Check.
 type GettyCheckOptions struct {
 	SheetPath      string                `json:"sheetPath"`
+	LastSheet      string                `json:"lastSheet,omitempty"`
 	Source         gettyVocabularySource `json:"source"`
 	VocabularyPath string                `json:"vocabularyPath"`
 	WriteCleaned   bool                  `json:"writeCleaned"`
@@ -55,9 +56,18 @@ type GettyCheckResult struct {
 
 // PickSheet opens a file dialog filtered to the exports this check accepts.
 func (a *App) PickSheet(title string) string {
+	// Open where the last sheet was checked. Collection exports live together,
+	// so the next one is almost always beside the last one.
+	startIn := a.startDir
+	if settings, err := a.loadSettings(); err == nil && settings.GettyLastSheet != "" {
+		if dir := filepath.Dir(settings.GettyLastSheet); dirExists(dir) {
+			startIn = dir
+		}
+	}
+
 	path, err := wailsRuntime.OpenFileDialog(a.ctx, wailsRuntime.OpenDialogOptions{
 		Title:            title,
-		DefaultDirectory: a.startDir,
+		DefaultDirectory: startIn,
 		Filters: []wailsRuntime.FileFilter{
 			{DisplayName: "Access exports (*.xlsx, *.csv, *.txt)", Pattern: "*.xlsx;*.xlsm;*.csv;*.txt;*.tsv;*.tab"},
 			{DisplayName: "All files", Pattern: "*.*"},
@@ -106,7 +116,24 @@ func (a *App) GetGettyDefaults() GettyCheckOptions {
 		options.Source = gettyVocabularySource(settings.GettySource)
 	}
 	options.VocabularyPath = settings.GettyVocabularyPath
+	options.LastSheet = settings.GettyLastSheet
 	return options
+}
+
+func dirExists(path string) bool {
+	info, err := os.Stat(path)
+	return err == nil && info.IsDir()
+}
+
+// rememberSheet records the export just checked, so the picker and the screen
+// both reopen where the work is.
+func (a *App) rememberSheet(path string) {
+	settings, err := a.loadSettings()
+	if err != nil {
+		settings = defaultAppSettings()
+	}
+	settings.GettyLastSheet = path
+	_ = a.writeSettings(settings)
 }
 
 // CheckGettyTags runs the whole check and writes whichever outputs were asked
@@ -140,6 +167,7 @@ func (a *App) CheckGettyTags(options GettyCheckOptions) (GettyCheckResult, error
 	if err != nil {
 		return GettyCheckResult{}, err
 	}
+	a.rememberSheet(options.SheetPath)
 
 	result := GettyCheckResult{
 		Report:  report,

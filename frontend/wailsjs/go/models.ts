@@ -74,6 +74,7 @@ export namespace main {
 	}
 	export class GettyCheckOptions {
 	    sheetPath: string;
+	    lastSheet?: string;
 	    source: string;
 	    vocabularyPath: string;
 	    writeCleaned: boolean;
@@ -86,6 +87,7 @@ export namespace main {
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.sheetPath = source["sheetPath"];
+	        this.lastSheet = source["lastSheet"];
 	        this.source = source["source"];
 	        this.vocabularyPath = source["vocabularyPath"];
 	        this.writeCleaned = source["writeCleaned"];
@@ -204,6 +206,24 @@ export namespace main {
 		    return a;
 		}
 	}
+	export class TagChange {
+	    row: number;
+	    before: string;
+	    after: string;
+	    byHand: boolean;
+	
+	    static createFrom(source: any = {}) {
+	        return new TagChange(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.row = source["row"];
+	        this.before = source["before"];
+	        this.after = source["after"];
+	        this.byHand = source["byHand"];
+	    }
+	}
 	export class TagSheetReport {
 	    path: string;
 	    format: string;
@@ -213,6 +233,8 @@ export namespace main {
 	    totalRows: number;
 	    emptyCells: number;
 	    vocabularySource?: string;
+	    sourcePath?: string;
+	    changes?: TagChange[];
 	    rows: TagRow[];
 	
 	    static createFrom(source: any = {}) {
@@ -229,6 +251,8 @@ export namespace main {
 	        this.totalRows = source["totalRows"];
 	        this.emptyCells = source["emptyCells"];
 	        this.vocabularySource = source["vocabularySource"];
+	        this.sourcePath = source["sourcePath"];
+	        this.changes = this.convertValues(source["changes"], TagChange);
 	        this.rows = this.convertValues(source["rows"], TagRow);
 	    }
 	
@@ -287,6 +311,26 @@ export namespace main {
 		    }
 		    return a;
 		}
+	}
+	export class GettyDownloadResult {
+	    path: string;
+	    terms: number;
+	    archive: string;
+	    published: string;
+	    elapsed: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new GettyDownloadResult(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.path = source["path"];
+	        this.terms = source["terms"];
+	        this.archive = source["archive"];
+	        this.published = source["published"];
+	        this.elapsed = source["elapsed"];
+	    }
 	}
 	export class GettyReachability {
 	    reachable: boolean;
@@ -391,6 +435,7 @@ export namespace main {
 	    releaseFolder: string;
 	    gettySource?: string;
 	    gettyVocabularyPath?: string;
+	    gettyLastSheet?: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new ScanOptions(source);
@@ -415,6 +460,7 @@ export namespace main {
 	        this.releaseFolder = source["releaseFolder"];
 	        this.gettySource = source["gettySource"];
 	        this.gettyVocabularyPath = source["gettyVocabularyPath"];
+	        this.gettyLastSheet = source["gettyLastSheet"];
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {
@@ -435,6 +481,7 @@ export namespace main {
 		    return a;
 		}
 	}
+	
 	
 	
 	

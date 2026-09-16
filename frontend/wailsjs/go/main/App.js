@@ -30,6 +30,10 @@ export function CheckOutputExists(arg1) {
   return window['go']['main']['App']['CheckOutputExists'](arg1);
 }
 
+export function DownloadGettyVocabulary(arg1) {
+  return window['go']['main']['App']['DownloadGettyVocabulary'](arg1);
+}
+
 export function GetAppVersion() {
   return window['go']['main']['App']['GetAppVersion']();
 }

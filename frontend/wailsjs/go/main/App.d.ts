@@ -16,6 +16,8 @@ export function CheckGettyTags(arg1:main.GettyCheckOptions):Promise<main.GettyCh
 
 export function CheckOutputExists(arg1:main.ScanOptions):Promise<boolean>;
 
+export function DownloadGettyVocabulary(arg1:string):Promise<main.GettyDownloadResult>;
+
 export function GetAppVersion():Promise<string>;
 
 export function GetGettyDefaults():Promise<main.GettyCheckOptions>;
