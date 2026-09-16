@@ -15,7 +15,7 @@ import { main } from '../../wailsjs/go/models'
 import Toggle from '../components/Toggle'
 
 type Phase = 'idle' | 'checking' | 'done' | 'error'
-type Source = 'live' | 'file' | 'none'
+type Source = 'live' | 'builtin' | 'file' | 'none'
 
 // A finding reads as one of three things, matching the written report: already
 // fixed, needs correcting, or a judgement call. Anything the vocabulary could
@@ -306,7 +306,8 @@ export default function GettyTag() {
               onChange={(e) => pickSource(e.target.value as Source)}
             >
               <option value="live">Getty, live — authoritative</option>
-              <option value="file">A term list on this machine — works offline</option>
+              <option value="builtin">Built-in list — works offline, no setup</option>
+              <option value="file">A term list on this machine</option>
               <option value="none">Do not verify terms — only clean the text</option>
             </select>
           </div>
@@ -319,6 +320,15 @@ export default function GettyTag() {
                   {reach.reachable ? `● Getty is reachable — responded in ${reach.latencyMs} ms` : '● Getty is not reachable'}
                 </span>
               )}
+            </div>
+          )}
+
+          {source === 'builtin' && (
+            <div className="info-text">
+              169,307 English terms from Getty\u2019s January 2026 archive, shipped inside the
+              application. Getty has frozen that archive and revises the thesaurus separately, so
+              a term this list accepts may since have been renamed — the live check is the current
+              authority.
             </div>
           )}
 

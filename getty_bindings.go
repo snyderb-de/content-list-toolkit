@@ -31,6 +31,9 @@ const (
 	gettySourceLive gettyVocabularySource = "live"
 	// gettySourceFile uses an exported term list, which works offline.
 	gettySourceFile gettyVocabularySource = "file"
+	// gettySourceBuiltin uses the list shipped inside the application, which
+	// needs no network and no file to be chosen.
+	gettySourceBuiltin gettyVocabularySource = "builtin"
 )
 
 // GettyCheckOptions is what the screen sends when the user presses Check.
@@ -204,6 +207,12 @@ func (a *App) buildVocabulary(options GettyCheckOptions) (gettyVocabulary, error
 		return nil, nil
 	case gettySourceLive:
 		return newCachedVocabulary(newSPARQLVocabulary(nil, "")), nil
+	case gettySourceBuiltin:
+		list, err := builtinVocabulary()
+		if err != nil {
+			return nil, err
+		}
+		return newCachedVocabulary(list), nil
 	case gettySourceFile:
 		if options.VocabularyPath == "" {
 			return nil, fmt.Errorf("choose a term list, or switch to checking against Getty directly")

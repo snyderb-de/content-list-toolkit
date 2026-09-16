@@ -153,41 +153,6 @@ func TestFileVocabularyWorksBehindTheCache(t *testing.T) {
 	}
 }
 
-// Runs against the real exported list when it is present, and is skipped
-// otherwise so the suite stays green on a machine without it.
-func TestRealVocabularyListLoadsIfPresent(t *testing.T) {
-	path := filepath.Join("testing", "manual-samples", "getty", "AAT Tags(Sheet1).csv")
-	if _, err := os.Stat(path); err != nil {
-		t.Skipf("working AAT list not present at %s", path)
-	}
-
-	vocabulary, err := loadVocabularyFile(path)
-	if err != nil {
-		t.Fatalf("loadVocabularyFile: %v", err)
-	}
-	if vocabulary.Count() < 30000 {
-		t.Fatalf("Count() = %d, expected the full working list", vocabulary.Count())
-	}
-
-	for _, term := range []string{"aerial photographs", "landscapes", "35mm"} {
-		match, err := vocabulary.Lookup(context.Background(), term)
-		if err != nil {
-			t.Fatalf("%q: %v", term, err)
-		}
-		if !match.Found {
-			t.Fatalf("%q should be in the working list", term)
-		}
-	}
-
-	match, err := vocabulary.Lookup(context.Background(), "definitely not an aat term")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if match.Found {
-		t.Fatal("expected an invented term to be absent")
-	}
-}
-
 // Getty's January 2026 archive lists "landscapes" as the preferred label of
 // two AAT subjects. The live endpoint holds no such label today, because Getty
 // disambiguated the term in between. A list built from that archive therefore

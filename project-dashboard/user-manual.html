@@ -313,6 +313,7 @@
       <a class="nav-link" href="#scan">1. Generate content list</a>
       <a class="nav-link" href="#email">2. Copy email files</a>
       <a class="nav-link" href="#clone">3. Clone compare</a>
+      <a class="nav-link" href="#getty">4. Getty tag check</a>
 
       <div class="nav-group-label">Reference</div>
       <a class="nav-link" href="#output">Understanding output</a>
@@ -321,6 +322,7 @@
       <a class="nav-link" href="#filters">Filters &amp; exclusions</a>
       <a class="nav-link" href="#email-types">Email file types</a>
       <a class="nav-link" href="#verdicts">Clone verdicts</a>
+      <a class="nav-link" href="#getty-findings">Getty findings</a>
       <a class="nav-link" href="#updates">Updates</a>
       <a class="nav-link" href="#troubleshooting">Troubleshooting</a>
       <a class="nav-link" href="#faq">FAQ</a>
@@ -371,9 +373,10 @@
             so multi-million-row scans do not run out of memory.
           </p>
           <p>
-            Two additional workflows live alongside the scan: copy every email-related file
-            under a tree into a curated destination, and compare two drives' content lists
-            to verify a clone.
+            Three additional workflows live alongside the scan: copy every email-related file
+            under a tree into a curated destination, compare two drives' content lists to
+            verify a clone, and check the Getty tags on a CONTENTdm export before it is
+            uploaded.
           </p>
         </div>
       </div>
@@ -535,6 +538,72 @@
             Use this when a tool re-saved every PDF without changing rendered content — the verdict becomes <code>Metadata Clone</code> instead of <code>Not a Clone</code>.
           </p>
           <p style="margin-top:8px">Soft compare only runs on <code>.pdf</code> files. Other file types fall through to strict hash equality.</p>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ── Getty tag check ────────────────────────────────────── -->
+    <section class="section" id="getty">
+      <div class="section-header">
+        <p class="eyebrow">Workflow 4</p>
+        <h2>Getty tag check</h2>
+      </div>
+      <div class="cards">
+        <div class="card">
+          <p>
+            Checks the <code>Tags</code> column of a CONTENTdm export before you upload it. It does two jobs: it removes the invisible characters
+            that stop a tab-delimited file loading, and it checks every term against the Getty Art &amp; Architecture Thesaurus. It writes a corrected
+            copy and a report, and never changes the file you point it at.
+          </p>
+          <ol class="steps-list" style="margin-top:12px">
+            <li><strong>Export the Access <code>Main</code> table</strong> to Excel, as the CONTENTdm process already has you do.</li>
+            <li><strong>Open Getty Tags</strong> and browse to the export. <code>.xlsx</code>, <code>.csv</code>, and tab-delimited <code>.txt</code> all work — including the <code>.txt</code> you are about to upload.</li>
+            <li><strong>Choose where terms are verified.</strong> See the table below.</li>
+            <li><strong>Click Check Tags.</strong> Rows with nothing wrong are not listed; a clean sheet says so.</li>
+            <li><strong>Fix what it found.</strong> Edit a tag directly, or click a suggested replacement.</li>
+            <li><strong>Apply Fixes &amp; Re-check.</strong> Repeat until nothing is left, then upload the cleaned copy.</li>
+          </ol>
+        </div>
+
+        <div class="card">
+          <h3>What it writes</h3>
+          <p>Both files land beside the export. The export itself is never modified — it is the record of what Access held.</p>
+          <table style="margin-top:10px">
+            <tbody>
+              <tr><td><code>&lt;name&gt;-tags-cleaned.xlsx</code></td><td>A copy with the Tags column corrected. Every other column is untouched.</td></tr>
+              <tr><td><code>&lt;name&gt;-tags-report.txt</code></td><td>What was found, what was changed, and what still needs a person.</td></tr>
+            </tbody>
+          </table>
+          <p style="margin-top:10px">Use <strong>Show in Folder</strong> to find them. A sheet with nothing to correct gets no cleaned copy — an identical file would only raise the question of which one to upload.</p>
+        </div>
+
+        <div class="card">
+          <h3>Where terms are verified</h3>
+          <p>Three choices, and they are not equivalent. Pick the first one your network allows.</p>
+          <table style="margin-top:10px">
+            <thead><tr><th>Option</th><th>Needs</th><th>Use when</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Getty, live</strong></td><td><code>vocab.getty.edu</code> on port 443</td><td>Always, when it is reachable. It is the only current source.</td></tr>
+              <tr><td><strong>Built-in list</strong></td><td>Nothing</td><td>Offline, or the live check is blocked. 169,307 English terms ship inside the app.</td></tr>
+              <tr><td><strong>A term list on this machine</strong></td><td>A file you supply</td><td>You keep your own curated list, or you downloaded a newer one.</td></tr>
+              <tr><td><strong>Do not verify terms</strong></td><td>Nothing</td><td>You only want the invisible characters cleaned.</td></tr>
+            </tbody>
+          </table>
+          <div class="note" style="margin-top:12px">
+            <strong>The offline lists are dated.</strong> Getty froze the downloadable archives in January 2026 but keeps revising the thesaurus, so a
+            list can accept a term Getty has since renamed. A real example: the January archive lists <code>landscapes</code> as a valid term; Getty no
+            longer holds it, having split it into qualified forms. The app says so wherever an answer comes from a dated list. The live check is the authority.
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Getting a fresher list</h3>
+          <p>
+            <strong>Download list from Getty</strong> fetches Getty's current archive and extracts an English term list, saving it where you choose and
+            selecting it. It downloads from <code>aatdownloads.getty.edu</code>, which is a different machine from the one the live check uses — so on
+            some networks this works when the live check does not. The download is about 73&nbsp;MB and the publication date is written into the filename.
+          </p>
         </div>
       </div>
     </section>
@@ -722,6 +791,59 @@ my-folder-content-list-2026-05-20T13-45-02.xlsx   (if XLSX enabled)</code></pre>
           <div class="note" style="margin-top:12px">
             <strong>Tip:</strong> if you got a verdict you didn't expect, sort the diff CSV by the <code>Difference Type</code> column to see what changed.
           </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ── Getty findings ─────────────────────────────────────── -->
+    <section class="section" id="getty-findings">
+      <div class="section-header">
+        <p class="eyebrow">Reference</p>
+        <h2>Getty findings, and what to do about each</h2>
+      </div>
+      <div class="cards">
+        <div class="card">
+          <p>Every finding leads with what it wants from you.</p>
+          <table style="margin-top:10px">
+            <thead><tr><th>Prefix</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Fixed</strong></td><td>Already corrected in the cleaned copy. Nothing to do.</td></tr>
+              <tr><td><strong>Must Fix</strong></td><td>Correct it before uploading.</td></tr>
+              <tr><td><strong>Review</strong></td><td>A judgement call. It will upload either way.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <h3>What it looks for</h3>
+          <table style="margin-top:10px">
+            <thead><tr><th>Finding</th><th>What it means</th></tr></thead>
+            <tbody>
+              <tr><td>Invisible characters</td><td>A no-break space, zero-width space, tab, or similar, pasted in along with the term. These are what stop a tab-delimited upload. Fixed automatically.</td></tr>
+              <tr><td>Separator</td><td>A semicolon without its following space, or a space before it. Fixed automatically.</td></tr>
+              <tr><td>Spacing</td><td>Leading, trailing, or repeated spaces. Fixed automatically.</td></tr>
+              <tr><td>Empty tag</td><td>Two semicolons together, or a trailing one. The empty entry is dropped.</td></tr>
+              <tr><td>Not in AAT</td><td>Getty has no such term. Suggested replacements appear beside it where there are any.</td></tr>
+              <tr><td>Spelling case</td><td>The term exists but Getty spells it differently. AAT treats case as meaningful — <code>acacia</code> the wood is not <code>Acacia</code> the genus.</td></tr>
+              <tr><td>Unclosed bracket</td><td>A qualified term that lost its closing bracket, such as <code>counters (furniture</code>. No vocabulary will ever match it.</td></tr>
+              <tr><td>Duplicate</td><td>The same term twice in one cell, ignoring case.</td></tr>
+              <tr><td>Tag count</td><td>Fewer than 3 or more than 5 terms.</td></tr>
+              <tr><td>Too long</td><td>The cell is at or over 255 characters, the width of the Access <code>Tags</code> field. Access truncates at entry by character count rather than at a separator, so the last term arrives cut mid-word while looking complete.</td></tr>
+              <tr><td>Damaged text</td><td>A replacement character from an earlier encoding error. The original character cannot be recovered, so it is reported rather than guessed at.</td></tr>
+              <tr><td>Not checked</td><td>The vocabulary could not be reached for that term. This is not the same as the term being wrong, and is never reported as though it were.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <h3>If Getty cannot be reached</h3>
+          <p>
+            The indicator beside the live option turns red before you run anything, and names the cause — a blocked host, a DNS failure, or a proxy
+            intercepting the connection. Cleaning and every structural check still work; only term verification stops. Terms are then reported as
+            <strong>not checked</strong>, never as wrong, because sending someone to re-verify metadata that was correct is worse than saying nothing.
+          </p>
+          <p style="margin-top:8px">Switch to the built-in list and the check runs with no network at all.</p>
         </div>
       </div>
     </section>
