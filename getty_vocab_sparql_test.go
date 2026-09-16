@@ -8,46 +8,42 @@ import (
 	"testing"
 )
 
-// Captured verbatim from vocab.getty.edu for the term "aerial photographs".
-// Note that the same concept comes back three times, once per language.
+// Shaped like a response to the current query, which returns ?s, ?matched and
+// ?label. The concept, its identifier, and its three language labels are taken
+// from a real captured response for "aerial photographs"; the ?matched column
+// is added to fit the query as it now stands. Replace this with a verbatim
+// capture the next time one is taken.
 //
 // Data from the Getty Art & Architecture Thesaurus (AAT), J. Paul Getty Trust,
 // used under the Open Data Commons Attribution License (ODC-By) 1.0.
 const aatAerialPhotographsResponse = `{
-  "head" : {
-    "vars" : [ "s", "label" ]
-  },
+  "head" : { "vars" : [ "s", "matched", "label" ] },
   "results" : {
     "bindings" : [ {
-      "s" : {
-        "type" : "uri",
-        "value" : "http://vocab.getty.edu/aat/300128222"
-      },
-      "label" : {
-        "xml:lang" : "es",
-        "type" : "literal",
-        "value" : "fotografías aéreas (photographs)"
-      }
+      "s" : { "type" : "uri", "value" : "http://vocab.getty.edu/aat/300128222" },
+      "matched" : { "xml:lang" : "en", "type" : "literal", "value" : "aerial photographs" },
+      "label" : { "xml:lang" : "es", "type" : "literal", "value" : "fotograf\u00edas a\u00e9reas (photographs)" }
     }, {
-      "s" : {
-        "type" : "uri",
-        "value" : "http://vocab.getty.edu/aat/300128222"
-      },
-      "label" : {
-        "xml:lang" : "en",
-        "type" : "literal",
-        "value" : "aerial photographs"
-      }
+      "s" : { "type" : "uri", "value" : "http://vocab.getty.edu/aat/300128222" },
+      "matched" : { "xml:lang" : "en", "type" : "literal", "value" : "aerial photographs" },
+      "label" : { "xml:lang" : "en", "type" : "literal", "value" : "aerial photographs" }
     }, {
-      "s" : {
-        "type" : "uri",
-        "value" : "http://vocab.getty.edu/aat/300128222"
-      },
-      "label" : {
-        "xml:lang" : "nl",
-        "type" : "literal",
-        "value" : "luchtfoto's"
-      }
+      "s" : { "type" : "uri", "value" : "http://vocab.getty.edu/aat/300128222" },
+      "matched" : { "xml:lang" : "en", "type" : "literal", "value" : "aerial photographs" },
+      "label" : { "xml:lang" : "nl", "type" : "literal", "value" : "luchtfoto\u0027s" }
+    } ]
+  }
+}`
+
+// A term matched through an alternate spelling: what the cataloguer typed is
+// not what Getty prefers, but it is still a real AAT term.
+const aatAlternateLabelResponse = `{
+  "head" : { "vars" : [ "s", "matched", "label" ] },
+  "results" : {
+    "bindings" : [ {
+      "s" : { "type" : "uri", "value" : "http://vocab.getty.edu/aat/300046300" },
+      "matched" : { "xml:lang" : "en", "type" : "literal", "value" : "photos" },
+      "label" : { "xml:lang" : "en", "type" : "literal", "value" : "photographs" }
     } ]
   }
 }`
@@ -252,7 +248,7 @@ func TestSPARQLVocabularyComposesWithTheCache(t *testing.T) {
 func TestAATQueryFiltersServerSideSoTheLimitCannotHideAMatch(t *testing.T) {
 	query := buildAATLookupQuery("black-and-white photographs")
 
-	if !strings.Contains(query, "FILTER(lcase(str(?label))") {
+	if !strings.Contains(query, "FILTER(lcase(str(?matched))") {
 		t.Fatalf("query must compare labels server-side, got:\n%s", query)
 	}
 	if !strings.Contains(query, `"black-and-white photographs"`) {
@@ -289,5 +285,38 @@ func TestAATQueryEscapesTheTermInBothPositions(t *testing.T) {
 	query := buildAATLookupQuery(`a"b`)
 	if strings.Count(query, `\"`) != 2 {
 		t.Fatalf("both occurrences of the term must be escaped, got:\n%s", query)
+	}
+}
+
+// A legitimate AAT variant is not a mistake. Reporting it as absent would send
+// a cataloguer to correct something already correct, so it counts as found and
+// carries Getty's preferred spelling for the report to suggest.
+func TestParseAATResponseAcceptsAnAlternateLabel(t *testing.T) {
+	match, err := parseAATLookupResponse([]byte(aatAlternateLabelResponse), "photos", "photos")
+	if err != nil {
+		t.Fatalf("parse: %v", err)
+	}
+	if !match.Found {
+		t.Fatal("an alternate label is still an AAT term")
+	}
+	if match.SubjectID != "300046300" {
+		t.Fatalf("SubjectID = %q", match.SubjectID)
+	}
+	if match.PreferredLabel != "photographs" {
+		t.Fatalf("PreferredLabel = %q, want Getty's preferred spelling", match.PreferredLabel)
+	}
+	if match.ExactLabel() {
+		t.Fatal("the term and the preferred spelling differ, so this is not an exact match")
+	}
+}
+
+// Both label properties have to be searched, or a valid variant is reported as
+// absent from the vocabulary — the worst answer this module can give.
+func TestAATQuerySearchesAlternateLabelsToo(t *testing.T) {
+	query := buildAATLookupQuery("photos")
+	for _, want := range []string{"xl:prefLabel/xl:literalForm ?matched", "xl:altLabel/xl:literalForm ?matched", "UNION"} {
+		if !strings.Contains(query, want) {
+			t.Fatalf("query missing %q:\n%s", want, query)
+		}
 	}
 }

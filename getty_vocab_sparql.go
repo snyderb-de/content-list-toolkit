@@ -99,32 +99,34 @@ func (v *sparqlVocabulary) Lookup(ctx context.Context, term string) (gettyTermMa
 	return parseAATLookupResponse(body, term, cleaned)
 }
 
-// buildAATLookupQuery finds concepts whose preferred label equals the term.
+// buildAATLookupQuery finds concepts whose preferred or alternate label
+// equals the term, and asks for the preferred label alongside.
 //
-// luc:term is a full-text search and saturates easily: a search for
-// "black-and-white photographs" returns candidates until the row limit is
-// reached. Selecting candidates and comparing them in Go would therefore drop
-// the true match whenever it fell outside the returned window, reporting a
-// perfectly good term as absent.
+// Alternate labels count as found. A cataloguer who writes a legitimate AAT
+// variant has not made a mistake, and reporting it as absent from the
+// vocabulary would send them to correct something that is already correct.
+// Because the preferred spelling comes back in the same answer, a variant can
+// be reported as "this is the term, Getty spells it this way" instead.
 //
-// Filtering inside the query fixes that, because LIMIT applies to the filtered
-// result sequence rather than to the candidates scanned. Only genuine matches
-// consume rows, and a handful of rows is always enough.
-//
-// The language is deliberately not filtered here. A SPARQL langMatches that
-// excluded untagged literals would fail silently, producing false absences
-// that look identical to real ones, so labels come back in every language and
-// Go decides which count.
+// luc:term is a full-text search and saturates the row limit on ordinary
+// terms, so the equality test belongs in the query where LIMIT cannot discard
+// the true match. The language test does not: a SPARQL langMatches that
+// excluded untagged literals would fail silently, and its absences would look
+// exactly like real ones, so labels come back in every language and Go decides
+// which count.
 func buildAATLookupQuery(term string) string {
 	return fmt.Sprintf(`PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
 PREFIX xl: <http://www.w3.org/2008/05/skos-xl#>
 PREFIX luc: <http://www.ontotext.com/owlim/lucene#>
-SELECT ?s ?label WHERE {
+SELECT ?s ?matched ?label WHERE {
   ?s luc:term %s ;
      skos:inScheme <%s> ;
      xl:prefLabel/xl:literalForm ?label .
-  FILTER(lcase(str(?label)) = %s)
-} LIMIT 25`, sparqlStringLiteral(term), aatScheme, sparqlStringLiteral(strings.ToLower(term)))
+  { ?s xl:prefLabel/xl:literalForm ?matched }
+  UNION
+  { ?s xl:altLabel/xl:literalForm ?matched }
+  FILTER(lcase(str(?matched)) = %s)
+} LIMIT 60`, sparqlStringLiteral(term), aatScheme, sparqlStringLiteral(strings.ToLower(term)))
 }
 
 // sparqlStringLiteral quotes a term for inclusion in a query.
@@ -158,10 +160,14 @@ type sparqlBinding struct {
 
 // parseAATLookupResponse decides whether the term is really in the vocabulary.
 //
-// A concept is a match only when one of its English preferred labels equals the
-// sheet's term, compared without regard to case. Labels in other languages are
-// carried in the same response and are ignored: the Spanish label for aerial
-// photographs is not evidence that the English term was spelled correctly.
+// A concept counts when the label that matched is English or untagged. The
+// preferred label is reported separately, so a term matched through an
+// alternate spelling comes back with Getty's preferred form attached and the
+// screen can say which it is rather than calling it wrong.
+//
+// Labels in other languages ride along in the same response and are ignored:
+// the Spanish label for aerial photographs is not evidence that the English
+// term was spelled correctly.
 func parseAATLookupResponse(body []byte, originalTerm, cleanedTerm string) (gettyTermMatch, error) {
 	var results sparqlResults
 	if err := json.Unmarshal(body, &results); err != nil {
@@ -169,23 +175,29 @@ func parseAATLookupResponse(body []byte, originalTerm, cleanedTerm string) (gett
 	}
 
 	want := strings.ToLower(cleanedTerm)
+	match := gettyTermMatch{Term: originalTerm}
+
 	for _, binding := range results.Results.Bindings {
-		label, ok := binding["label"]
-		if !ok || !isEnglishLabel(label.Language) {
+		matched, ok := binding["matched"]
+		if !ok || !isEnglishLabel(matched.Language) {
 			continue
 		}
-		if strings.ToLower(normalizeTagText(label.Value).Cleaned) != want {
+		if strings.ToLower(normalizeTagText(matched.Value).Cleaned) != want {
 			continue
 		}
-		return gettyTermMatch{
-			Term:           originalTerm,
-			Found:          true,
-			SubjectID:      aatSubjectID(binding["s"].Value),
-			PreferredLabel: label.Value,
-		}, nil
+
+		match.Found = true
+		match.SubjectID = aatSubjectID(binding["s"].Value)
+
+		// Several rows carry the same concept, one per language of its
+		// preferred label. Keep the English one.
+		if label, ok := binding["label"]; ok && isEnglishLabel(label.Language) {
+			match.PreferredLabel = label.Value
+			return match, nil
+		}
 	}
 
-	return gettyTermMatch{Term: originalTerm, Found: false}, nil
+	return match, nil
 }
 
 // isEnglishLabel accepts English labels and untagged ones. Getty tags labels
