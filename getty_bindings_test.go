@@ -14,7 +14,7 @@ import (
 func TestCheckGettyTagsWritesBothOutputs(t *testing.T) {
 	path := writeXLSX(t, [][]string{
 		mainTableHeader,
-		rowWithTags("aerial photographs; landscapes; city plans"),
+		rowWithTags("aerial\u00A0photographs; landscapes; city plans"),
 		rowWithTags("aerial photographs; landscapes"),
 	})
 
@@ -178,4 +178,148 @@ func TestBuildVocabularySelectsTheRightSource(t *testing.T) {
 	if _, err := app.buildVocabulary(GettyCheckOptions{Source: "nonsense"}); err == nil {
 		t.Fatal("expected an error for an unknown source")
 	}
+}
+
+// Editing writes to the cleaned copy. The export is the record of what Access
+// held, and editing it in place destroys the only thing a correction can be
+// checked against.
+func TestSaveGettyTagEditsNeverTouchesTheSource(t *testing.T) {
+	path := writeXLSX(t, [][]string{
+		mainTableHeader,
+		rowWithTags("landscapes; invented term; city plans"),
+	})
+	before, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("read source: %v", err)
+	}
+
+	app := newApp("")
+	result, err := app.SaveGettyTagEdits(
+		GettyCheckOptions{SheetPath: path, Source: gettySourceNone},
+		[]GettyTagEdit{{Row: 2, Tags: "coastal landscapes; aerial photographs; city plans"}},
+	)
+	if err != nil {
+		t.Fatalf("SaveGettyTagEdits: %v", err)
+	}
+
+	after, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("re-read source: %v", err)
+	}
+	if string(before) != string(after) {
+		t.Fatal("the source file was modified")
+	}
+	if result.CleanedPath != gettyCleanedPath(path) {
+		t.Fatalf("CleanedPath = %q", result.CleanedPath)
+	}
+}
+
+func TestSaveGettyTagEditsAppliesTheEdit(t *testing.T) {
+	path := writeXLSX(t, [][]string{
+		mainTableHeader,
+		rowWithTags("landscapes; invented term; city plans"),
+		rowWithTags("aerial photographs; landscapes; city plans"),
+	})
+
+	app := newApp("")
+	result, err := app.SaveGettyTagEdits(
+		GettyCheckOptions{SheetPath: path, Source: gettySourceNone},
+		[]GettyTagEdit{{Row: 2, Tags: "coastal landscapes; aerial photographs; city plans"}},
+	)
+	if err != nil {
+		t.Fatalf("SaveGettyTagEdits: %v", err)
+	}
+
+	rows, err := readXLSXRowsForTest(t, result.CleanedPath)
+	if err != nil {
+		t.Fatalf("read cleaned: %v", err)
+	}
+	want := "coastal landscapes; aerial photographs; city plans"
+	if got := rows[1][len(mainTableHeader)-1]; got != want {
+		t.Fatalf("edited row = %q, want %q", got, want)
+	}
+	// The untouched row keeps what it had.
+	if got := rows[2][len(mainTableHeader)-1]; got != "aerial photographs; landscapes; city plans" {
+		t.Fatalf("untouched row changed: %q", got)
+	}
+}
+
+// A term pasted from the Getty website arrives with the same invisible
+// characters as anything else pasted from the Getty website.
+func TestSaveGettyTagEditsCleansWhatWasTyped(t *testing.T) {
+	path := writeXLSX(t, [][]string{
+		mainTableHeader,
+		rowWithTags("landscapes; invented term; city plans"),
+	})
+
+	app := newApp("")
+	result, err := app.SaveGettyTagEdits(
+		GettyCheckOptions{SheetPath: path, Source: gettySourceNone},
+		[]GettyTagEdit{{Row: 2, Tags: "\uFEFFcoastal\u00A0landscapes;aerial photographs ; city plans  "}},
+	)
+	if err != nil {
+		t.Fatalf("SaveGettyTagEdits: %v", err)
+	}
+
+	rows, err := readXLSXRowsForTest(t, result.CleanedPath)
+	if err != nil {
+		t.Fatalf("read cleaned: %v", err)
+	}
+	want := "coastal landscapes; aerial photographs; city plans"
+	if got := rows[1][len(mainTableHeader)-1]; got != want {
+		t.Fatalf("edited row = %q, want %q", got, want)
+	}
+}
+
+// An edit can introduce a problem as easily as fix one, so the saved file is
+// re-checked and the fresh report returned.
+func TestSaveGettyTagEditsReportsWhatWasActuallySaved(t *testing.T) {
+	path := writeXLSX(t, [][]string{
+		mainTableHeader,
+		rowWithTags("aerial photographs; landscapes; city plans"),
+	})
+
+	app := newApp("")
+	result, err := app.SaveGettyTagEdits(
+		GettyCheckOptions{SheetPath: path, Source: gettySourceNone},
+		[]GettyTagEdit{{Row: 2, Tags: "only one tag"}},
+	)
+	if err != nil {
+		t.Fatalf("SaveGettyTagEdits: %v", err)
+	}
+	if len(result.Report.Rows) != 1 {
+		t.Fatalf("expected the re-check to flag the edit, got %+v", result.Report.Rows)
+	}
+	if !hasIssue(result.Report.Rows[0].Result, tagIssueTagCount) {
+		t.Fatalf("expected a tag-count finding on the saved file, got %+v", result.Report.Rows[0].Result.Issues)
+	}
+}
+
+func TestSaveGettyTagEditsIgnoresBlankEdits(t *testing.T) {
+	path := writeXLSX(t, [][]string{
+		mainTableHeader,
+		rowWithTags("aerial photographs; landscapes; city plans"),
+	})
+
+	app := newApp("")
+	result, err := app.SaveGettyTagEdits(
+		GettyCheckOptions{SheetPath: path, Source: gettySourceNone},
+		[]GettyTagEdit{{Row: 2, Tags: "   "}},
+	)
+	if err != nil {
+		t.Fatalf("SaveGettyTagEdits: %v", err)
+	}
+	rows, err := readXLSXRowsForTest(t, result.CleanedPath)
+	if err != nil {
+		t.Fatalf("read cleaned: %v", err)
+	}
+	if got := rows[1][len(mainTableHeader)-1]; got != "aerial photographs; landscapes; city plans" {
+		t.Fatalf("a blank edit must not erase the cell, got %q", got)
+	}
+}
+
+func readXLSXRowsForTest(t *testing.T, path string) ([][]string, error) {
+	t.Helper()
+	rows, _, err := readXLSXRows(path)
+	return rows, err
 }

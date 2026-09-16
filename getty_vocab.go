@@ -131,6 +131,37 @@ type gettyVocabulary interface {
 	SourceName() string
 }
 
+// gettySuggester is an optional capability. A source that can propose near
+// matches for a term it does not hold implements it; one that cannot is still
+// a perfectly good vocabulary, so this is separate from gettyVocabulary rather
+// than part of it.
+//
+// Suggestions exist because "not an AAT term" on its own sends someone to the
+// Getty website to search by hand. The candidates are already in the response
+// the lookup makes, so proposing them costs almost nothing and turns a dead end
+// into a choice.
+type gettySuggester interface {
+	Suggest(ctx context.Context, term string) ([]string, error)
+}
+
+// maxSuggestions keeps the list to something a person will actually read.
+const maxSuggestions = 6
+
+// suggestFor asks a vocabulary for near matches when it supports them, and
+// returns nothing when it does not. A failure to suggest is never worth
+// surfacing: the finding stands on its own without them.
+func suggestFor(ctx context.Context, vocabulary gettyVocabulary, term string) []string {
+	suggester, ok := vocabulary.(gettySuggester)
+	if !ok {
+		return nil
+	}
+	suggestions, err := suggester.Suggest(ctx, term)
+	if err != nil {
+		return nil
+	}
+	return suggestions
+}
+
 // cachedVocabulary memoizes lookups for the lifetime of one scan.
 //
 // A collection sheet repeats the same handful of AAT terms across hundreds of
@@ -141,13 +172,46 @@ type gettyVocabulary interface {
 type cachedVocabulary struct {
 	inner gettyVocabulary
 
-	mu      sync.Mutex
-	entries map[string]gettyTermMatch
-	lookups int
+	mu          sync.Mutex
+	entries     map[string]gettyTermMatch
+	suggestions map[string][]string
+	lookups     int
 }
 
 func newCachedVocabulary(inner gettyVocabulary) *cachedVocabulary {
-	return &cachedVocabulary{inner: inner, entries: map[string]gettyTermMatch{}}
+	return &cachedVocabulary{
+		inner:       inner,
+		entries:     map[string]gettyTermMatch{},
+		suggestions: map[string][]string{},
+	}
+}
+
+// Suggest passes through to the wrapped source when it can suggest, caching
+// the answer. The same unknown term usually appears on many rows, and asking
+// Getty about it once is the whole point of the cache.
+func (c *cachedVocabulary) Suggest(ctx context.Context, term string) ([]string, error) {
+	suggester, ok := c.inner.(gettySuggester)
+	if !ok {
+		return nil, nil
+	}
+
+	key := cacheKey(term)
+	c.mu.Lock()
+	cached, hit := c.suggestions[key]
+	c.mu.Unlock()
+	if hit {
+		return cached, nil
+	}
+
+	found, err := suggester.Suggest(ctx, term)
+	if err != nil {
+		return nil, err
+	}
+
+	c.mu.Lock()
+	c.suggestions[key] = found
+	c.mu.Unlock()
+	return found, nil
 }
 
 func (c *cachedVocabulary) SourceName() string { return c.inner.SourceName() }

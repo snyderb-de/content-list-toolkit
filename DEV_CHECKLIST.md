@@ -46,6 +46,10 @@
 - [ ] G9 A sheet with no problems writes no cleaned copy and says so
 - [ ] G10 Pointing it at `CONTENTdm template.accdb` explains to export the Main table first
 - [ ] G11 With the network off, the live source shows red and the run still completes with terms unchecked
+- [ ] G12 An unknown term offers suggestion buttons; clicking one replaces only that term and leaves the rest of the cell alone
+- [ ] G13 The Tags cell is editable; typing enables Save to Cleaned Copy
+- [ ] G14 Save writes the cleaned copy, leaves the source untouched, and the findings refresh to what was actually saved
+- [ ] G15 Saving an edit that introduces a new problem (e.g. two tags) reports it immediately rather than accepting it
 
 ## About
 

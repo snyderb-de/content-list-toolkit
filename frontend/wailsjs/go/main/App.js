@@ -62,6 +62,10 @@ export function ResumeCloneWithDriveB(arg1) {
   return window['go']['main']['App']['ResumeCloneWithDriveB'](arg1);
 }
 
+export function SaveGettyTagEdits(arg1, arg2) {
+  return window['go']['main']['App']['SaveGettyTagEdits'](arg1, arg2);
+}
+
 export function SaveGettyVocabulary(arg1, arg2) {
   return window['go']['main']['App']['SaveGettyVocabulary'](arg1, arg2);
 }

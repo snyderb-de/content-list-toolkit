@@ -5,6 +5,7 @@ import {
   GetGettyDefaults,
   OpenPath,
   PickSheet,
+  SaveGettyTagEdits,
   SaveGettyVocabulary,
 } from '../../wailsjs/go/main/App'
 import { main } from '../../wailsjs/go/models'
@@ -79,6 +80,12 @@ export default function GettyTag() {
   const [result, setResult] = useState<main.GettyCheckResult | null>(null)
   const [err, setErr] = useState('')
 
+  // Edits are held by row until saved, so nothing is written to disk while
+  // someone is still deciding.
+  const [edits, setEdits] = useState<Record<number, string>>({})
+  const [saving, setSaving] = useState(false)
+  const [savedPath, setSavedPath] = useState('')
+
   useEffect(() => {
     GetGettyDefaults()
       .then((d) => {
@@ -130,6 +137,8 @@ export default function GettyTag() {
         writeReport,
       } as main.GettyCheckOptions)
       setResult(r)
+      setEdits({})
+      setSavedPath('')
       setPhase('done')
     } catch (e: any) {
       setErr(String(e))
@@ -141,6 +150,54 @@ export default function GettyTag() {
     setPhase('idle')
     setResult(null)
     setErr('')
+    setEdits({})
+    setSavedPath('')
+  }
+
+  const editRow = (row: number, tags: string) =>
+    setEdits((current) => ({ ...current, [row]: tags }))
+
+  // A suggestion replaces only the term it belongs to, leaving the rest of the
+  // cell alone — the other tags in the row are usually fine.
+  const applySuggestion = (row: number, current: string, term: string, replacement: string) => {
+    const next = current
+      .split(';')
+      .map((t) => t.trim())
+      .filter((t) => t !== '')
+      .map((t) => (t.toLowerCase() === term.toLowerCase() ? replacement : t))
+      .join('; ')
+    editRow(row, next)
+  }
+
+  const save = async () => {
+    if (!result) return
+    const pending = Object.entries(edits).map(([row, tags]) => ({
+      row: Number(row),
+      tags,
+    })) as main.GettyTagEdit[]
+    if (pending.length === 0) return
+
+    setSaving(true)
+    setErr('')
+    try {
+      const saved = await SaveGettyTagEdits(
+        {
+          sheetPath,
+          source,
+          vocabularyPath: vocabPath,
+          writeCleaned: true,
+          writeReport,
+        } as main.GettyCheckOptions,
+        pending,
+      )
+      setResult({ ...result, report: saved.report, cleanedPath: saved.cleanedPath } as main.GettyCheckResult)
+      setSavedPath(saved.cleanedPath)
+      setEdits({})
+    } catch (e: any) {
+      setErr(String(e))
+    } finally {
+      setSaving(false)
+    }
   }
 
   // ── Form ──────────────────────────────────────────────────
@@ -350,7 +407,30 @@ export default function GettyTag() {
 
       {rows.length > 0 && (
         <div className="card">
-          <p className="card-title">Findings by row</p>
+          <div className="findings-header">
+            <p className="card-title" style={{ margin: 0 }}>Findings by row</p>
+            <div className="findings-actions">
+              {savedPath && Object.keys(edits).length === 0 && (
+                <span className="success-text">Saved to {savedPath.split('/').pop()}</span>
+              )}
+              {Object.keys(edits).length > 0 && (
+                <span className="info-text">
+                  {Object.keys(edits).length} row{Object.keys(edits).length === 1 ? '' : 's'} edited
+                </span>
+              )}
+              <button
+                className="btn btn-primary btn-sm"
+                onClick={save}
+                disabled={saving || Object.keys(edits).length === 0}
+              >
+                {saving ? 'Saving…' : 'Save to Cleaned Copy'}
+              </button>
+            </div>
+          </div>
+          <div className="info-text">
+            Edits are written to the cleaned copy beside the sheet. The original export is
+            never modified.
+          </div>
           <div className="diff-table-wrap">
             <table className="diff-table getty-findings">
               <thead>
@@ -376,7 +456,12 @@ export default function GettyTag() {
                       </td>
                       <td>
                         <div className="current-file tag-before">{row.result.original}</div>
-                        {changed && <div className="current-file tag-after">{row.result.cleaned}</div>}
+                        <input
+                          className="text-input monospace"
+                          value={edits[row.number] ?? row.result.cleaned}
+                          onChange={(e) => editRow(row.number, e.target.value)}
+                          spellCheck={false}
+                        />
                       </td>
                       <td>
                         {(row.result.issues ?? []).map((issue, i) => (
@@ -387,6 +472,29 @@ export default function GettyTag() {
                             </span>
                           </div>
                         ))}
+                        {(row.result.terms ?? [])
+                          .filter((term) => term.checked && !term.found && (term.suggestions?.length ?? 0) > 0)
+                          .map((term) => (
+                            <div key={term.term} className="suggestion-row">
+                              <span className="suggestion-label">Replace “{term.term}” with</span>
+                              {(term.suggestions ?? []).map((s) => (
+                                <button
+                                  key={s}
+                                  className="suggestion-chip"
+                                  onClick={() =>
+                                    applySuggestion(
+                                      row.number,
+                                      edits[row.number] ?? row.result.cleaned,
+                                      term.term,
+                                      s,
+                                    )
+                                  }
+                                >
+                                  {s}
+                                </button>
+                              ))}
+                            </div>
+                          ))}
                       </td>
                     </tr>
                   )

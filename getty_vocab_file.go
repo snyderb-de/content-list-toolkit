@@ -7,7 +7,9 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
+	"unicode"
 )
 
 // A vocabulary list exported from the working AAT Tags sheet is the offline
@@ -132,4 +134,78 @@ func (v *fileVocabulary) Lookup(_ context.Context, term string) (gettyTermMatch,
 		Found:          true,
 		PreferredLabel: preferred,
 	}, nil
+}
+
+// Suggest proposes terms from the list that share a significant word with the
+// one that was not found.
+//
+// Matching on whole words rather than raw substrings keeps the suggestions
+// recognisable: searching "landscapes" should offer "coastal landscapes", not
+// every term that happens to contain the letters.
+func (v *fileVocabulary) Suggest(_ context.Context, term string) ([]string, error) {
+	cleaned := strings.ToLower(normalizeTagText(term).Cleaned)
+	if cleaned == "" {
+		return nil, nil
+	}
+
+	words := significantWords(cleaned)
+	if len(words) == 0 {
+		return nil, nil
+	}
+
+	var suggestions []string
+	for _, spellings := range v.terms {
+		for _, spelling := range spellings {
+			candidate := strings.ToLower(spelling)
+			if candidate == cleaned {
+				continue
+			}
+			if !containsAnyWord(candidate, words) {
+				continue
+			}
+			suggestions = append(suggestions, spelling)
+			break
+		}
+	}
+
+	// Map iteration is unordered, so sort for a stable list, then take the
+	// shortest few: a shorter term sharing the word is usually the closer one.
+	sort.Slice(suggestions, func(i, j int) bool {
+		if len(suggestions[i]) != len(suggestions[j]) {
+			return len(suggestions[i]) < len(suggestions[j])
+		}
+		return suggestions[i] < suggestions[j]
+	})
+	if len(suggestions) > maxSuggestions {
+		suggestions = suggestions[:maxSuggestions]
+	}
+	return suggestions, nil
+}
+
+// significantWords drops the short connecting words that would match almost
+// everything in a vocabulary of thirty thousand terms.
+func significantWords(term string) []string {
+	var words []string
+	for _, word := range strings.FieldsFunc(term, func(r rune) bool {
+		return !unicode.IsLetter(r) && !unicode.IsDigit(r)
+	}) {
+		if len(word) >= 4 {
+			words = append(words, word)
+		}
+	}
+	return words
+}
+
+func containsAnyWord(candidate string, words []string) bool {
+	fields := strings.FieldsFunc(candidate, func(r rune) bool {
+		return !unicode.IsLetter(r) && !unicode.IsDigit(r)
+	})
+	for _, field := range fields {
+		for _, word := range words {
+			if field == word {
+				return true
+			}
+		}
+	}
+	return false
 }

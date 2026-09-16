@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	wailsRuntime "github.com/wailsapp/wails/v2/pkg/runtime"
@@ -150,7 +151,7 @@ func (a *App) CheckGettyTags(options GettyCheckOptions) (GettyCheckResult, error
 	// identical file would only invite confusion about which one to upload.
 	if options.WriteCleaned && report.RepairedRows() > 0 {
 		cleanedPath := gettyCleanedPath(options.SheetPath)
-		if err := writeCleanedSheet(report, cleanedPath); err != nil {
+		if err := writeCleanedSheet(report, nil, cleanedPath); err != nil {
 			return result, fmt.Errorf("checked the sheet, but could not write the cleaned copy: %w", err)
 		}
 		result.CleanedPath = cleanedPath
@@ -187,4 +188,83 @@ func (a *App) buildVocabulary(options GettyCheckOptions) (gettyVocabulary, error
 	default:
 		return nil, fmt.Errorf("unknown vocabulary source %q", options.Source)
 	}
+}
+
+// GettyTagEdit is one row corrected by hand on the screen.
+type GettyTagEdit struct {
+	Row  int    `json:"row"`
+	Tags string `json:"tags"`
+}
+
+// GettySaveResult reports where the corrected sheet was written and what it
+// still contains, so the screen can show the result of saving rather than
+// claiming success blindly.
+type GettySaveResult struct {
+	CleanedPath string         `json:"cleanedPath"`
+	Report      TagSheetReport `json:"report"`
+	Summary     string         `json:"summary"`
+}
+
+// SaveGettyTagEdits writes the cleaned copy with hand corrections applied.
+//
+// It writes to the cleaned copy, never to the source. The export is the record
+// of what Access held, and a tool that edits it in place destroys the only
+// thing a correction can be checked against.
+//
+// The sheet is re-checked afterwards and the fresh report returned, so the
+// screen shows what the saved file actually contains rather than what the
+// edits were expected to achieve.
+func (a *App) SaveGettyTagEdits(options GettyCheckOptions, edits []GettyTagEdit) (GettySaveResult, error) {
+	if options.SheetPath == "" {
+		return GettySaveResult{}, fmt.Errorf("choose an exported sheet to check")
+	}
+
+	vocabulary, err := a.buildVocabulary(options)
+	if err != nil {
+		return GettySaveResult{}, err
+	}
+
+	ctx := a.ctx
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	report, err := checkTagSheetWithVocabulary(ctx, options.SheetPath, vocabulary)
+	if err != nil {
+		return GettySaveResult{}, err
+	}
+
+	byRow := make(map[int]string, len(edits))
+	for _, edit := range edits {
+		if strings.TrimSpace(edit.Tags) == "" {
+			continue
+		}
+		byRow[edit.Row] = edit.Tags
+	}
+
+	cleanedPath := gettyCleanedPath(options.SheetPath)
+	if err := writeCleanedSheet(report, byRow, cleanedPath); err != nil {
+		return GettySaveResult{}, fmt.Errorf("could not write the cleaned copy: %w", err)
+	}
+
+	// Re-check what was actually written. An edit can introduce a new problem
+	// just as easily as it fixes one, and saying so immediately is better than
+	// letting it reach CONTENTdm.
+	saved, err := checkTagSheetWithVocabulary(ctx, cleanedPath, vocabulary)
+	if err != nil {
+		return GettySaveResult{CleanedPath: cleanedPath}, fmt.Errorf("wrote %s but could not re-check it: %w",
+			filepath.Base(cleanedPath), err)
+	}
+
+	if options.WriteReport {
+		if err := writeGettyTagReport(gettyReportPath(options.SheetPath), saved); err != nil {
+			return GettySaveResult{CleanedPath: cleanedPath, Report: saved}, fmt.Errorf("wrote the sheet but could not write the report: %w", err)
+		}
+	}
+
+	return GettySaveResult{
+		CleanedPath: cleanedPath,
+		Report:      saved,
+		Summary:     saved.Summary(),
+	}, nil
 }

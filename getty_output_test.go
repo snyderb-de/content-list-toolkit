@@ -52,7 +52,7 @@ func TestWriteCleanedSheetLeavesTheSourceUntouched(t *testing.T) {
 	if err != nil {
 		t.Fatalf("checkTagSheet: %v", err)
 	}
-	if err := writeCleanedSheet(report, gettyCleanedPath(path)); err != nil {
+	if err := writeCleanedSheet(report, nil, gettyCleanedPath(path)); err != nil {
 		t.Fatalf("writeCleanedSheet: %v", err)
 	}
 
@@ -77,7 +77,7 @@ func TestCleanedXLSXCarriesTheCorrectedTags(t *testing.T) {
 		t.Fatalf("checkTagSheet: %v", err)
 	}
 	cleanedPath := gettyCleanedPath(path)
-	if err := writeCleanedSheet(report, cleanedPath); err != nil {
+	if err := writeCleanedSheet(report, nil, cleanedPath); err != nil {
 		t.Fatalf("writeCleanedSheet: %v", err)
 	}
 
@@ -118,7 +118,7 @@ func TestCleanedOutputPassesASecondCheck(t *testing.T) {
 		t.Fatalf("checkTagSheet: %v", err)
 	}
 	cleanedPath := gettyCleanedPath(path)
-	if err := writeCleanedSheet(report, cleanedPath); err != nil {
+	if err := writeCleanedSheet(report, nil, cleanedPath); err != nil {
 		t.Fatalf("writeCleanedSheet: %v", err)
 	}
 
@@ -141,7 +141,7 @@ func TestCleanedCSVKeepsEveryOtherColumn(t *testing.T) {
 		t.Fatalf("checkTagSheet: %v", err)
 	}
 	cleanedPath := gettyCleanedPath(path)
-	if err := writeCleanedSheet(report, cleanedPath); err != nil {
+	if err := writeCleanedSheet(report, nil, cleanedPath); err != nil {
 		t.Fatalf("writeCleanedSheet: %v", err)
 	}
 
@@ -167,7 +167,7 @@ func TestCleanedTabDelimitedRoundTrips(t *testing.T) {
 		t.Fatalf("checkTagSheet: %v", err)
 	}
 	cleanedPath := gettyCleanedPath(path)
-	if err := writeCleanedSheet(report, cleanedPath); err != nil {
+	if err := writeCleanedSheet(report, nil, cleanedPath); err != nil {
 		t.Fatalf("writeCleanedSheet: %v", err)
 	}
 

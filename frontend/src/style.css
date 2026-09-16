@@ -1151,3 +1151,56 @@ textarea.text-input {
 
 .tag-before { color: var(--text-muted); }
 .tag-after  { color: var(--success); }
+
+/* ─── Getty suggestions and editing ──────────────────────────
+   A term the vocabulary rejects is a dead end without somewhere to go, so the
+   near matches are offered as buttons that replace just that term. */
+.findings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.findings-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.suggestion-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.suggestion-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: var(--font-ui, inherit);
+}
+
+.suggestion-chip {
+  padding: 2px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  font-size: 11px;
+  font-family: var(--font-ui, inherit);
+  cursor: pointer;
+}
+
+.suggestion-chip:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.getty-findings .text-input {
+  margin-top: 4px;
+  font-size: 11.5px;
+  padding: 5px 8px;
+}

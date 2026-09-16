@@ -194,3 +194,78 @@ func TestCheckTagSheetWithoutVocabularyRecordsNoSource(t *testing.T) {
 		t.Fatalf("structure is clean, so nothing should be reported: %+v", report.Rows)
 	}
 }
+
+// "Not an AAT term" on its own sends someone to the Getty website to search by
+// hand. The candidates are already in reach, so the finding proposes them.
+func TestVerifyTagsSuggestsNearMatches(t *testing.T) {
+	vocabulary, err := readVocabulary(strings.NewReader(
+		"coastal landscapes\nwooded landscapes\nlandscapes (visual works)\naerial photographs\n"), "test list")
+	if err != nil {
+		t.Fatalf("readVocabulary: %v", err)
+	}
+
+	result := checkTagCell("landscapes; aerial photographs; city plans")
+	verifyTags(context.Background(), vocabulary, &result)
+
+	var unknown *TagTermVerdict
+	for i := range result.Terms {
+		if result.Terms[i].Term == "landscapes" {
+			unknown = &result.Terms[i]
+		}
+	}
+	if unknown == nil {
+		t.Fatal("expected a verdict for the unknown term")
+	}
+	if len(unknown.Suggestions) == 0 {
+		t.Fatal("expected suggestions for a term sharing a word with the list")
+	}
+	for _, s := range unknown.Suggestions {
+		if strings.EqualFold(s, "landscapes") {
+			t.Fatalf("a suggestion must not repeat the term itself: %q", s)
+		}
+		if !strings.Contains(strings.ToLower(s), "landscape") {
+			t.Fatalf("suggestion %q does not share a word with the term", s)
+		}
+	}
+}
+
+// One finding per unknown term, so each can carry its own suggestions and the
+// screen can offer a replacement for that specific term.
+func TestVerifyTagsReportsEachUnknownTermSeparately(t *testing.T) {
+	vocabulary := verifyVocabulary(t)
+	result := checkTagCell("invented one; invented two; aerial photographs")
+	verifyTags(context.Background(), vocabulary, &result)
+
+	unknown := 0
+	for _, issue := range result.Issues {
+		if issue.Kind == tagIssueUnknownTerm {
+			unknown++
+		}
+	}
+	if unknown != 2 {
+		t.Fatalf("expected 2 unknown-term findings, got %d: %+v", unknown, result.Issues)
+	}
+}
+
+func TestDescribeUnknownTermNamesTheSourceAndTheAlternatives(t *testing.T) {
+	withSuggestions := describeUnknownTerm("landscapes", "Getty AAT", []string{"coastal landscapes", "wooded landscapes"})
+	for _, want := range []string{`"landscapes"`, "Getty AAT", "did you mean", `"coastal landscapes"`} {
+		if !strings.Contains(withSuggestions, want) {
+			t.Fatalf("detail missing %q: %s", want, withSuggestions)
+		}
+	}
+
+	// With nothing to propose, the finding must not trail off into an empty
+	// question.
+	bare := describeUnknownTerm("landscapes", "Getty AAT", nil)
+	if strings.Contains(bare, "did you mean") {
+		t.Fatalf("no suggestions should mean no question: %s", bare)
+	}
+}
+
+// A source that cannot suggest is still a perfectly good vocabulary.
+func TestSuggestForToleratesASourceWithoutSuggestions(t *testing.T) {
+	if got := suggestFor(context.Background(), newFakeVocabulary(nil), "landscapes"); got != nil {
+		t.Fatalf("expected no suggestions, got %v", got)
+	}
+}

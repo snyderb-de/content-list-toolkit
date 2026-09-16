@@ -26,6 +26,9 @@ type TagTermVerdict struct {
 	PreferredLabel string `json:"preferredLabel,omitempty"`
 	// Error carries why the term could not be checked, when Checked is false.
 	Error string `json:"error,omitempty"`
+	// Suggestions are near matches offered when the term was not found, so the
+	// screen can propose a replacement instead of leaving a dead end.
+	Suggestions []string `json:"suggestions,omitempty"`
 }
 
 // CaseDiffers reports a term that exists but is spelled with different case
@@ -44,7 +47,7 @@ func verifyTags(ctx context.Context, vocabulary gettyVocabulary, result *TagChec
 		return
 	}
 
-	var unknown, caseDiffers []string
+	var caseDiffers []string
 	unchecked := 0
 
 	for _, tag := range result.Tags {
@@ -59,8 +62,14 @@ func verifyTags(ctx context.Context, vocabulary gettyVocabulary, result *TagChec
 			verdict.Found = match.Found
 			verdict.SubjectID = match.SubjectID
 			verdict.PreferredLabel = match.PreferredLabel
+
 			if !match.Found {
-				unknown = append(unknown, tag)
+				// One issue per unknown term rather than one listing them all,
+				// so each carries its own suggestions and the screen can offer
+				// a replacement for the specific term.
+				verdict.Suggestions = suggestFor(ctx, vocabulary, tag)
+				result.Issues = append(result.Issues, newTagIssue(tagIssueUnknownTerm,
+					describeUnknownTerm(tag, vocabulary.SourceName(), verdict.Suggestions)))
 			} else if verdict.CaseDiffers() {
 				caseDiffers = append(caseDiffers,
 					fmt.Sprintf("%q is spelled %q", tag, match.PreferredLabel))
@@ -69,10 +78,6 @@ func verifyTags(ctx context.Context, vocabulary gettyVocabulary, result *TagChec
 		result.Terms = append(result.Terms, verdict)
 	}
 
-	if len(unknown) > 0 {
-		result.Issues = append(result.Issues, newTagIssue(tagIssueUnknownTerm,
-			fmt.Sprintf("not found in %s: %s", vocabulary.SourceName(), strings.Join(quoteAll(unknown), ", "))))
-	}
 	if len(caseDiffers) > 0 {
 		result.Issues = append(result.Issues, newTagIssue(tagIssueTermCase,
 			strings.Join(caseDiffers, "; ")))
@@ -82,6 +87,17 @@ func verifyTags(ctx context.Context, vocabulary gettyVocabulary, result *TagChec
 			fmt.Sprintf("%s could not be checked against the vocabulary",
 				pluralize(unchecked, "term", "terms"))))
 	}
+}
+
+// describeUnknownTerm names the term, the source that was asked, and what to
+// use instead when the vocabulary can propose something. "Not an AAT term" on
+// its own sends someone to the Getty website to search by hand.
+func describeUnknownTerm(term, source string, suggestions []string) string {
+	detail := fmt.Sprintf("%q is not in %s", term, source)
+	if len(suggestions) == 0 {
+		return detail
+	}
+	return fmt.Sprintf("%s — did you mean %s?", detail, strings.Join(quoteAll(suggestions), ", "))
 }
 
 func quoteAll(values []string) []string {

@@ -33,12 +33,20 @@ func gettyReportPath(sourcePath string) string {
 //
 // Only cells the check actually changed are rewritten, so a sheet with two bad
 // rows out of four thousand comes back byte-identical everywhere else.
-func writeCleanedSheet(report TagSheetReport, destination string) error {
+//
+// edits are corrections a person made by hand, and they win over the automatic
+// cleaning for the rows they name. They are run through the same cleaning first:
+// a term pasted from the Getty website arrives with the same invisible
+// characters as anything else pasted from the Getty website.
+func writeCleanedSheet(report TagSheetReport, edits map[int]string, destination string) error {
 	corrections := map[int]string{}
 	for _, row := range report.Rows {
 		if row.Result.Changed() {
 			corrections[row.Number] = row.Result.Cleaned
 		}
+	}
+	for number, value := range edits {
+		corrections[number] = checkTagCell(value).Cleaned
 	}
 
 	switch report.Format {
