@@ -158,7 +158,7 @@ func buildGettyTagReport(report TagSheetReport) string {
 		// "would have failed to upload" total can actually be traced to rows.
 		heading := fmt.Sprintf("Row %d", row.Number)
 		if row.Result.OriginalBlocksUpload() {
-			heading += " ⚠ would have stopped the upload"
+			heading += "  (would have stopped the upload)"
 		}
 		lines = append(lines, heading)
 		lines = append(lines, fmt.Sprintf("  was: %s", row.Result.Original))
@@ -166,8 +166,8 @@ func buildGettyTagReport(report TagSheetReport) string {
 			lines = append(lines, fmt.Sprintf("  now: %s", row.Result.Cleaned))
 		}
 		for _, issue := range row.Result.Issues {
-			lines = append(lines, fmt.Sprintf("  %s %s: %s",
-				issueMarker(issue), issue.Kind, issue.Detail))
+			lines = append(lines, fmt.Sprintf("  %-10s %s — %s",
+				issuePrefix(issue), issue.Kind, issue.Detail))
 		}
 		lines = append(lines, "")
 	}
@@ -175,27 +175,33 @@ func buildGettyTagReport(report TagSheetReport) string {
 	lines = append(lines,
 		"Legend",
 		strings.Repeat("─", 38),
-		"  ✓  repaired in the cleaned copy, nothing to do",
-		"  ?  needs a person to decide",
-		"  ⚠  marks a row whose Tags cell would have stopped the upload;",
-		"     it is repaired in the cleaned copy unless a ⚠ appears on the finding itself",
+		"  Fixed:      already corrected in the cleaned copy, nothing to do",
+		"  Must Fix:   correct it before uploading",
+		"  Review:     a judgement call for a person",
 		"",
 	)
 	lines = append(lines, gettyAttribution(report)...)
 	return strings.Join(lines, "\n") + "\n"
 }
 
-// issueMarker distinguishes the three things a reader needs to tell apart at a
-// glance: what was fixed, what would have broken the upload, and what is left
-// for them to decide.
-func issueMarker(issue TagIssue) string {
+// issuePrefix states what the reader has to do about a finding before the
+// detail explains what it is. The same three words appear on the Getty Tag
+// screen, so the report and the app tell one story rather than two similar
+// ones.
+//
+// A term the vocabulary could not confirm counts as Must Fix rather than
+// Review: it is the substantive finding, and burying it alongside judgement
+// calls is how it gets skimmed past.
+func issuePrefix(issue TagIssue) string {
 	switch {
 	case issue.Repaired:
-		return "✓"
+		return "Fixed:"
+	case issue.Kind == tagIssueUnknownTerm, issue.Kind == tagIssueDamagedText:
+		return "Must Fix:"
 	case issue.Severity == severityBlocking:
-		return "⚠"
+		return "Must Fix:"
 	default:
-		return "?"
+		return "Review:"
 	}
 }
 

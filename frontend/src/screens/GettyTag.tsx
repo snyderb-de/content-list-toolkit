@@ -13,18 +13,56 @@ import Toggle from '../components/Toggle'
 type Phase = 'idle' | 'checking' | 'done' | 'error'
 type Source = 'live' | 'file' | 'none'
 
-// Matches the marker scheme in the written report, so the screen and the file
-// tell the same story.
-function issueMarker(issue: main.TagIssue): string {
-  if (issue.repaired) return '✓'
-  if (issue.severity === 'blocks-upload') return '⚠'
-  return '?'
+// A finding reads as one of three things, matching the written report: already
+// fixed, needs correcting, or a judgement call. Anything the vocabulary could
+// not confirm is an error rather than commentary — it is the substantive
+// finding on this screen.
+type FindingTone = 'fixed' | 'error' | 'review'
+
+function findingTone(issue: main.TagIssue): FindingTone {
+  if (issue.repaired) return 'fixed'
+  if (issue.kind === 'unknown-term') return 'error'
+  if (issue.kind === 'damaged-text') return 'error'
+  if (issue.severity === 'blocks-upload') return 'error'
+  return 'review'
 }
 
-function issueClass(issue: main.TagIssue): string {
-  if (issue.repaired) return 'success-text'
-  if (issue.severity === 'blocks-upload') return 'danger-text'
-  return ''
+// The kind is a machine token; the badge says it the way a person would.
+const FINDING_LABELS: Record<string, string> = {
+  'ghost-characters': 'invisible characters',
+  'whitespace': 'spacing',
+  'separator': 'separator',
+  'tag-count': 'tag count',
+  'empty-tag': 'empty tag',
+  'duplicate-tag': 'duplicate',
+  'damaged-text': 'damaged text',
+  'field-limit': 'too long',
+  'unknown-term': 'not in AAT',
+  'term-case': 'spelling case',
+  'not-checked': 'not checked',
+}
+
+function findingLabel(issue: main.TagIssue): string {
+  return FINDING_LABELS[issue.kind] ?? issue.kind
+}
+
+// The prefix states what the reader has to do about it, before the detail
+// explains what it is.
+const TONE_PREFIX: Record<FindingTone, string> = {
+  fixed: 'Fixed:',
+  error: 'Must Fix:',
+  review: 'Review:',
+}
+
+function rowStatus(row: main.TagRow): { text: string; tone: FindingTone } | null {
+  const issues = row.result.issues ?? []
+  if (issues.some((i) => findingTone(i) === 'error')) {
+    return { text: 'Must Fix', tone: 'error' }
+  }
+  if (issues.some((i) => !i.repaired)) {
+    return { text: 'Review', tone: 'review' }
+  }
+  return { text: 'Fixed', tone: 'fixed' }
 }
 
 export default function GettyTag() {
@@ -314,38 +352,52 @@ export default function GettyTag() {
         <div className="card">
           <p className="card-title">Findings by row</p>
           <div className="diff-table-wrap">
-            <table className="diff-table">
+            <table className="diff-table getty-findings">
               <thead>
                 <tr>
-                  <th style={{ width: 70 }}>Row</th>
-                  <th>Tags</th>
+                  <th style={{ width: 56 }}>Row</th>
+                  <th style={{ width: '38%' }}>Tags</th>
                   <th>Findings</th>
                 </tr>
               </thead>
               <tbody>
-                {rows.map((row) => (
-                  <tr key={row.number}>
-                    <td>{row.number}</td>
-                    <td>
-                      <div className="current-file">{row.result.original}</div>
-                      {row.result.cleaned !== row.result.original && (
-                        <div className="current-file success-text">→ {row.result.cleaned}</div>
-                      )}
-                    </td>
-                    <td>
-                      {(row.result.issues ?? []).map((issue, i) => (
-                        <div key={i} className={issueClass(issue)}>
-                          {issueMarker(issue)} {issue.kind}: {issue.detail}
-                        </div>
-                      ))}
-                    </td>
-                  </tr>
-                ))}
+                {rows.map((row) => {
+                  const status = rowStatus(row)
+                  const changed = row.result.cleaned !== row.result.original
+                  return (
+                    <tr key={row.number}>
+                      <td>
+                        {row.number}
+                        {status && (
+                          <span className={`getty-row-status finding-${status.tone}`}>
+                            <span className="finding-badge">{status.text}</span>
+                          </span>
+                        )}
+                      </td>
+                      <td>
+                        <div className="current-file tag-before">{row.result.original}</div>
+                        {changed && <div className="current-file tag-after">{row.result.cleaned}</div>}
+                      </td>
+                      <td>
+                        {(row.result.issues ?? []).map((issue, i) => (
+                          <div key={i} className={`finding finding-${findingTone(issue)}`}>
+                            <span className="finding-prefix">{TONE_PREFIX[findingTone(issue)]}</span>
+                            <span className="finding-detail">
+                              {findingLabel(issue)} — {issue.detail}
+                            </span>
+                          </div>
+                        ))}
+                      </td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           </div>
           <div className="info-text" style={{ marginTop: 12 }}>
-            ✓ repaired in the cleaned copy · ⚠ would have stopped the upload · ? needs a person to decide
+            <span className="success-text">Fixed</span> — already corrected in the cleaned copy ·{' '}
+            <span className="danger-text">Must Fix</span> — correct it before uploading ·{' '}
+            Review — a judgement call.
           </div>
         </div>
       )}

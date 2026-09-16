@@ -202,6 +202,8 @@ func TestReportNamesTheFindingsByRow(t *testing.T) {
 		"Row 3",
 		"ghost-characters",
 		"duplicate-tag",
+		"Fixed:",
+		"Review:",
 		"Legend",
 	} {
 		if !strings.Contains(text, want) {
@@ -287,19 +289,45 @@ func TestWriteGettyTagReportWritesTheFile(t *testing.T) {
 	}
 }
 
-func TestIssueMarkerDistinguishesTheThreeOutcomes(t *testing.T) {
-	repaired := TagIssue{Kind: tagIssueGhostCharacters, Severity: severityBlocking, Repaired: true}
-	blocking := TagIssue{Kind: tagIssueGhostCharacters, Severity: severityBlocking}
-	review := TagIssue{Kind: tagIssueTagCount, Severity: severityReview}
-
-	if got := issueMarker(repaired); got != "✓" {
-		t.Fatalf("repaired marker = %q", got)
-	}
-	if got := issueMarker(blocking); got != "⚠" {
-		t.Fatalf("blocking marker = %q", got)
-	}
-	if got := issueMarker(review); got != "?" {
-		t.Fatalf("review marker = %q", got)
+func TestIssuePrefixStatesWhatToDo(t *testing.T) {
+	for _, tc := range []struct {
+		name  string
+		issue TagIssue
+		want  string
+	}{
+		{
+			name:  "repaired",
+			issue: TagIssue{Kind: tagIssueGhostCharacters, Severity: severityBlocking, Repaired: true},
+			want:  "Fixed:",
+		},
+		{
+			name:  "blocking and unrepaired",
+			issue: TagIssue{Kind: tagIssueGhostCharacters, Severity: severityBlocking},
+			want:  "Must Fix:",
+		},
+		{
+			// Not blocking, but the substantive finding, so it must not be
+			// filed alongside judgement calls.
+			name:  "term absent from the vocabulary",
+			issue: TagIssue{Kind: tagIssueUnknownTerm, Severity: severityReview},
+			want:  "Must Fix:",
+		},
+		{
+			name:  "damaged text",
+			issue: TagIssue{Kind: tagIssueDamagedText, Severity: severityReview},
+			want:  "Must Fix:",
+		},
+		{
+			name:  "judgement call",
+			issue: TagIssue{Kind: tagIssueTagCount, Severity: severityReview},
+			want:  "Review:",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := issuePrefix(tc.issue); got != tc.want {
+				t.Fatalf("issuePrefix = %q, want %q", got, tc.want)
+			}
+		})
 	}
 }
 
@@ -317,10 +345,10 @@ func TestReportNamesWhichRowsWouldHaveBlockedTheUpload(t *testing.T) {
 	}
 	text := buildGettyTagReport(report)
 
-	if !strings.Contains(text, "Row 3 \u26a0 would have stopped the upload") {
+	if !strings.Contains(text, "Row 3  (would have stopped the upload)") {
 		t.Fatalf("the blocking row should be marked:\n%s", text)
 	}
-	if strings.Contains(text, "Row 2 \u26a0") {
+	if strings.Contains(text, "Row 2  (would have stopped") {
 		t.Fatalf("a duplicate tag does not block the upload:\n%s", text)
 	}
 }
