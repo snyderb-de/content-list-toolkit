@@ -1,5 +1,6 @@
 import React from 'react'
 import manual from '../manual.json'
+import { parseInline } from '../manual/inline'
 
 // The manual is content, not markup. It lives in manual.json so the screen and
 // the HTML mirror in project-dashboard/ render the same words — a manual kept
@@ -27,19 +28,13 @@ interface Section {
   blocks: Block[]
 }
 
-const INLINE = /(\*\*[^*]+\*\*|`[^`]+`)/g
-
-// Renders **bold** and `code` as elements rather than as HTML, so a stray
+// Renders the parsed segments as elements rather than as HTML, so a stray
 // angle bracket in the content can never become markup.
 function inline(text: string): React.ReactNode[] {
-  return text.split(INLINE).filter(Boolean).map((part, i) => {
-    if (part.startsWith('**') && part.endsWith('**')) {
-      return <strong key={i}>{part.slice(2, -2)}</strong>
-    }
-    if (part.startsWith('`') && part.endsWith('`')) {
-      return <code key={i}>{part.slice(1, -1)}</code>
-    }
-    return <React.Fragment key={i}>{part}</React.Fragment>
+  return parseInline(text).map((segment, i) => {
+    if (segment.kind === 'bold') return <strong key={i}>{segment.value}</strong>
+    if (segment.kind === 'code') return <code key={i}>{segment.value}</code>
+    return <React.Fragment key={i}>{segment.value}</React.Fragment>
   })
 }
 

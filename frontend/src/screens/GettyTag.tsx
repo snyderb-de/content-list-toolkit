@@ -12,62 +12,18 @@ import {
   SaveGettyVocabulary,
 } from '../../wailsjs/go/main/App'
 import { main } from '../../wailsjs/go/models'
+import {
+  FindingTone,
+  TONE_PREFIX,
+  findingLabel,
+  findingTone,
+  replaceTermInCell,
+  rowStatus,
+} from '../getty/findings'
 import Toggle from '../components/Toggle'
 
 type Phase = 'idle' | 'checking' | 'done' | 'error'
 type Source = 'live' | 'builtin' | 'file' | 'none'
-
-// A finding reads as one of three things, matching the written report: already
-// fixed, needs correcting, or a judgement call. Anything the vocabulary could
-// not confirm is an error rather than commentary — it is the substantive
-// finding on this screen.
-type FindingTone = 'fixed' | 'error' | 'review'
-
-function findingTone(issue: main.TagIssue): FindingTone {
-  if (issue.repaired) return 'fixed'
-  if (issue.kind === 'unknown-term') return 'error'
-  if (issue.kind === 'damaged-text') return 'error'
-  if (issue.severity === 'blocks-upload') return 'error'
-  return 'review'
-}
-
-// The kind is a machine token; the badge says it the way a person would.
-const FINDING_LABELS: Record<string, string> = {
-  'ghost-characters': 'invisible characters',
-  'whitespace': 'spacing',
-  'separator': 'separator',
-  'tag-count': 'tag count',
-  'empty-tag': 'empty tag',
-  'duplicate-tag': 'duplicate',
-  'damaged-text': 'damaged text',
-  'field-limit': 'too long',
-  'unknown-term': 'not in AAT',
-  'term-case': 'spelling case',
-  'not-checked': 'not checked',
-}
-
-function findingLabel(issue: main.TagIssue): string {
-  return FINDING_LABELS[issue.kind] ?? issue.kind
-}
-
-// The prefix states what the reader has to do about it, before the detail
-// explains what it is.
-const TONE_PREFIX: Record<FindingTone, string> = {
-  fixed: 'Fixed:',
-  error: 'Must Fix:',
-  review: 'Review:',
-}
-
-function rowStatus(row: main.TagRow): { text: string; tone: FindingTone } | null {
-  const issues = row.result.issues ?? []
-  if (issues.some((i) => findingTone(i) === 'error')) {
-    return { text: 'Must Fix', tone: 'error' }
-  }
-  if (issues.some((i) => !i.repaired)) {
-    return { text: 'Review', tone: 'review' }
-  }
-  return { text: 'Fixed', tone: 'fixed' }
-}
 
 export default function GettyTag() {
   const [sheetPath, setSheetPath] = useState('')
@@ -191,15 +147,8 @@ export default function GettyTag() {
 
   // A suggestion replaces only the term it belongs to, leaving the rest of the
   // cell alone — the other tags in the row are usually fine.
-  const applySuggestion = (row: number, current: string, term: string, replacement: string) => {
-    const next = current
-      .split(';')
-      .map((t) => t.trim())
-      .filter((t) => t !== '')
-      .map((t) => (t.toLowerCase() === term.toLowerCase() ? replacement : t))
-      .join('; ')
-    editRow(row, next)
-  }
+  const applySuggestion = (row: number, current: string, term: string, replacement: string) =>
+    editRow(row, replaceTermInCell(current, term, replacement))
 
   const save = async () => {
     if (!result) return
