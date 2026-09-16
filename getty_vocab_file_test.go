@@ -187,3 +187,42 @@ func TestRealVocabularyListLoadsIfPresent(t *testing.T) {
 		t.Fatal("expected an invented term to be absent")
 	}
 }
+
+// Getty's January 2026 archive lists "landscapes" as the preferred label of
+// two AAT subjects. The live endpoint holds no such label today, because Getty
+// disambiguated the term in between. A list built from that archive therefore
+// reports the tag as valid when Getty no longer agrees — a false positive,
+// which is the harder failure to notice, since a wrong "not found" gets
+// investigated and a wrong "found" is believed.
+func TestFileVocabularyWarnsThatItIsASnapshot(t *testing.T) {
+	vocabulary := loadSampleVocabulary(t)
+	note := vocabulary.SnapshotNote()
+
+	if note == "" {
+		t.Fatal("a source that cannot be current has to say so")
+	}
+	if !strings.Contains(note, "renamed") || !strings.Contains(note, "live") {
+		t.Fatalf("the caution should explain the risk and name the authority, got %q", note)
+	}
+	if !strings.Contains(note, "sample") {
+		t.Fatalf("the caution should name the list it is about, got %q", note)
+	}
+}
+
+// Wrapping a dated list in a cache must not hide that it is dated.
+func TestCachePassesTheSnapshotCautionThrough(t *testing.T) {
+	cached := newCachedVocabulary(loadSampleVocabulary(t))
+	if snapshotNoteFor(cached) == "" {
+		t.Fatal("the caution was lost behind the cache")
+	}
+}
+
+// A live source is current by definition and must not carry the caution.
+func TestLiveSourceCarriesNoSnapshotCaution(t *testing.T) {
+	if note := snapshotNoteFor(newSPARQLVocabulary(nil, "http://example.invalid")); note != "" {
+		t.Fatalf("the live source should not warn about staleness, got %q", note)
+	}
+	if note := snapshotNoteFor(newCachedVocabulary(newSPARQLVocabulary(nil, "http://example.invalid"))); note != "" {
+		t.Fatalf("a cached live source should not warn either, got %q", note)
+	}
+}

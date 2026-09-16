@@ -339,7 +339,7 @@ export default function GettyTag() {
               </button>
               <div className="info-text" style={{ marginTop: 8 }}>
                 {downloadNote ||
-                  'Downloads from aatdownloads.getty.edu, a different host than the live check uses — it may work where the live check is blocked. The archives are Getty\u2019s January 2026 snapshot and are no longer refreshed, so the list is dated, and the date is written into its filename.'}
+                  'Downloads from aatdownloads.getty.edu, a different host than the live check uses — it may work where the live check is blocked. Getty froze these archives in January 2026 and revises the thesaurus separately, so a term this list accepts may since have been renamed. Treat it as a fallback, not as the authority.'}
               </div>
             </div>
           )}
@@ -455,6 +455,11 @@ export default function GettyTag() {
           <span className="stat-row-label">Vocabulary</span>
           <span className="stat-row-value">{report.vocabularySource || 'not checked — structure only'}</span>
         </div>
+        {report.vocabularyNote && (
+          <div className="info-text danger-text" style={{ marginTop: 8 }}>
+            {report.vocabularyNote}
+          </div>
+        )}
         <div className="stat-row">
           <span className="stat-row-label">Empty Tags cells</span>
           <span className="stat-row-value">{report.emptyCells}</span>

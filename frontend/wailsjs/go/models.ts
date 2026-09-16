@@ -233,6 +233,7 @@ export namespace main {
 	    totalRows: number;
 	    emptyCells: number;
 	    vocabularySource?: string;
+	    vocabularyNote?: string;
 	    sourcePath?: string;
 	    changes?: TagChange[];
 	    rows: TagRow[];
@@ -251,6 +252,7 @@ export namespace main {
 	        this.totalRows = source["totalRows"];
 	        this.emptyCells = source["emptyCells"];
 	        this.vocabularySource = source["vocabularySource"];
+	        this.vocabularyNote = source["vocabularyNote"];
 	        this.sourcePath = source["sourcePath"];
 	        this.changes = this.convertValues(source["changes"], TagChange);
 	        this.rows = this.convertValues(source["rows"], TagRow);

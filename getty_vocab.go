@@ -144,6 +144,31 @@ type gettySuggester interface {
 	Suggest(ctx context.Context, term string) ([]string, error)
 }
 
+// gettySnapshotSource is an optional capability for vocabularies that answer
+// from a fixed copy rather than from Getty itself.
+//
+// This exists because of a case found in practice. Getty's January 2026
+// archive lists "landscapes" as the preferred label of two AAT subjects; the
+// live endpoint holds no such label today, because Getty disambiguated the
+// term in the months between. A list built from the archive therefore reports
+// that tag as valid when Getty no longer agrees.
+//
+// That is a false positive, and it is the harder failure to notice: a wrong
+// "not found" gets investigated, while a wrong "found" is silently believed.
+// Any source that cannot be current has to say so wherever its answers are
+// shown.
+type gettySnapshotSource interface {
+	SnapshotNote() string
+}
+
+// snapshotNoteFor returns a source's caution, or nothing for a live source.
+func snapshotNoteFor(vocabulary gettyVocabulary) string {
+	if note, ok := vocabulary.(gettySnapshotSource); ok {
+		return note.SnapshotNote()
+	}
+	return ""
+}
+
 // maxSuggestions keeps the list to something a person will actually read.
 const maxSuggestions = 6
 
@@ -215,6 +240,10 @@ func (c *cachedVocabulary) Suggest(ctx context.Context, term string) ([]string, 
 }
 
 func (c *cachedVocabulary) SourceName() string { return c.inner.SourceName() }
+
+// SnapshotNote passes the wrapped source's caution through, so wrapping a
+// dated list in a cache does not quietly hide that it is dated.
+func (c *cachedVocabulary) SnapshotNote() string { return snapshotNoteFor(c.inner) }
 
 func (c *cachedVocabulary) Lookup(ctx context.Context, term string) (gettyTermMatch, error) {
 	key := cacheKey(term)

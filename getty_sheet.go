@@ -73,6 +73,10 @@ type TagSheetReport struct {
 	// itself does not hold.
 	VocabularySource string `json:"vocabularySource,omitempty"`
 
+	// VocabularyNote carries a caution from a source that cannot be current,
+	// so a reader can weigh a "found" answer against how old the source is.
+	VocabularyNote string `json:"vocabularyNote,omitempty"`
+
 	// SourcePath is the file the corrections came from, when this report
 	// describes a cleaned copy rather than the original export.
 	SourcePath string `json:"sourcePath,omitempty"`
@@ -169,6 +173,7 @@ func checkTagSheetWithVocabulary(ctx context.Context, path string, vocabulary ge
 	report := TagSheetReport{Path: path, Format: format}
 	if vocabulary != nil {
 		report.VocabularySource = vocabulary.SourceName()
+		report.VocabularyNote = snapshotNoteFor(vocabulary)
 	}
 
 	var rows [][]string

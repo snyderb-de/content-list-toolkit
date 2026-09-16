@@ -148,6 +148,11 @@ func buildGettyTagReport(report TagSheetReport) string {
 		fmt.Sprintf("Tags column: %s", valueOrDefault(report.ColumnLetter, fmt.Sprintf("index %d", report.ColumnIndex))),
 		fmt.Sprintf("Vocabulary: %s", valueOrDefault(report.VocabularySource, "not checked — structure only")),
 		strings.Repeat("━", 38),
+	)
+	if report.VocabularyNote != "" {
+		lines = append(lines, "⚠ "+report.VocabularyNote, "")
+	}
+	lines = append(lines,
 		fmt.Sprintf("Rows checked: %d", report.TotalRows),
 		fmt.Sprintf("Empty Tags cells: %d", report.EmptyCells),
 		fmt.Sprintf("Rows with findings: %d", len(report.Rows)),

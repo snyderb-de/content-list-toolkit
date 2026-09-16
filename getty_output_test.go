@@ -352,3 +352,32 @@ func TestReportNamesWhichRowsWouldHaveBlockedTheUpload(t *testing.T) {
 		t.Fatalf("a duplicate tag does not block the upload:\n%s", text)
 	}
 }
+
+// The caution has to reach the report, which is what somebody reads months
+// later when deciding whether to trust a "found" answer.
+func TestReportCarriesTheSnapshotCaution(t *testing.T) {
+	path := writeXLSX(t, [][]string{
+		mainTableHeader,
+		rowWithTags("aerial photographs; landscapes; city plans"),
+	})
+	report, err := checkTagSheetWithVocabulary(context.Background(), path, newCachedVocabulary(verifyVocabulary(t)))
+	if err != nil {
+		t.Fatalf("checkTagSheetWithVocabulary: %v", err)
+	}
+	text := buildGettyTagReport(report)
+
+	if !strings.Contains(text, "fixed copy") {
+		t.Fatalf("report should carry the snapshot caution:\n%s", text)
+	}
+}
+
+func TestReportOmitsTheCautionForAStructureOnlyRun(t *testing.T) {
+	path := writeXLSX(t, [][]string{mainTableHeader, rowWithTags("a; b; c")})
+	report, err := checkTagSheet(path)
+	if err != nil {
+		t.Fatalf("checkTagSheet: %v", err)
+	}
+	if strings.Contains(buildGettyTagReport(report), "fixed copy") {
+		t.Fatal("a run that consulted no vocabulary must not warn about one")
+	}
+}

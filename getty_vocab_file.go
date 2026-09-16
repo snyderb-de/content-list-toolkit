@@ -108,6 +108,15 @@ func (v *fileVocabulary) SourceName() string {
 	return fmt.Sprintf("%s (%s)", v.name, pluralize(v.count, "term", "terms"))
 }
 
+// SnapshotNote warns that a term list answers for the day it was made.
+//
+// Getty revises the thesaurus continually. A term this list holds may since
+// have been renamed, which makes a "found" answer from here weaker evidence
+// than the same answer from the live service.
+func (v *fileVocabulary) SnapshotNote() string {
+	return fmt.Sprintf("%s is a fixed copy. Getty revises the thesaurus, so a term found here may since have been renamed; the live check is the current authority.", v.name)
+}
+
 // Count reports how many distinct spellings the list holds.
 func (v *fileVocabulary) Count() int { return v.count }
 
