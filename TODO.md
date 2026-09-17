@@ -1,6 +1,6 @@
 # TODO
 
-## E-01 — YouTube Upload (in progress)
+## YouTube Upload (in progress)
 
 New left-hand screen. The operator fills a form or loads a row from a
 spreadsheet, supplies a video file and an ArchivERA URL, and the app uploads to
@@ -15,7 +15,10 @@ Wilmington City Council video rather than a format we invent.
 Landed: OAuth against an operator-supplied client_secret.json, token storage,
 and the resumable upload protocol with progress. 182 tests.
 
-### P0-03 — Start the Google API audit
+Execution order below is set by lead time rather than by size. The audit is
+first because it is the only item whose duration nobody here controls.
+
+### P0 · E-01 — Start the Google API audit
 
 **Blocking, and outside our control.** Google restricts every video uploaded
 through `videos.insert` from an unverified project created after 28 July 2020
@@ -23,26 +26,13 @@ to private, whatever privacy status the request asks for. Removing that needs
 an audit of the Cloud project against Google's Terms of Service.
 
 Until it passes, each uploaded video has to be made public by hand in YouTube
-Studio, which removes much of the point. The audit is a review with a
-turnaround nobody here sets, so it wants starting now and running alongside the
-build rather than after it.
+Studio, which removes much of the point. First in the order because it is a
+review with a turnaround nobody here sets — everything else can be built while
+it runs.
 
 Owner: whoever owns the Google account.
 
-### P0-04 — Supply a client_secret.json
-
-A Google Cloud project with the YouTube Data API enabled and an OAuth client of
-type **Desktop app**. Web application clients will not work for a desktop
-upload and the app says so if one is chosen.
-
-Not urgent for development: the screen and the whole upload path are tested
-against a local fake. It is needed before a real video moves.
-
-The project's channel, its daily allowance, and its audit all belong to the
-organisation. That is why the app reads a credentials file rather than shipping
-one — and why nothing secret is committed to this public repository.
-
-### P0-05 — Provide the client's spreadsheet
+### P0 · E-02 — Provide the client's spreadsheet
 
 Save it to `testing/manual-samples/youtube/`, which is gitignored.
 
@@ -52,19 +42,35 @@ ArchivERA URL to appear in the YouTube description. Reading the real columns
 beats guessing at them — the Access template already proved that, where the
 export's headers turned out to differ from the database's.
 
-### P0-06 — Build the screen
+Second because it blocks E-03 and takes minutes.
 
-Waiting on P0-05 for the description layout. Covers the sidebar entry, the
-form, loading a row from a spreadsheet, the blank template the operator can
-save from the app, a confirmation of exactly what will be sent, upload progress,
-and the resulting video link.
+### P0 · E-03 — Build the screen
 
-### P0-07 — Decide the privacy status to request
+The bulk of the work, and it waits on E-02 for the description layout. Covers
+the sidebar entry, the form, loading a row from a spreadsheet, the blank
+template the operator can save from the app, a confirmation of exactly what
+will be sent, upload progress, and the resulting video link.
 
-Private, unlisted, or public. Worth deciding deliberately rather than
-defaulting: while P0-03 is outstanding every upload is private regardless, so
-the choice only takes effect once the audit passes — which is exactly when a
-wrong default would publish something before anyone intended.
+### P0 · E-04 — Supply a client_secret.json
+
+A Google Cloud project with the YouTube Data API enabled and an OAuth client of
+type **Desktop app**. Web application clients will not work for a desktop
+upload and the app says so if one is chosen.
+
+Fourth because nothing before it needs credentials: the screen and the whole
+upload path are tested against a local fake. It is needed before a real video
+moves.
+
+The project's channel, its daily allowance, and its audit all belong to the
+organisation. That is why the app reads a credentials file rather than shipping
+one — and why nothing secret is committed to this public repository.
+
+### P0 · E-05 — Decide the privacy status to request
+
+Private, unlisted, or public. Last in the order and easy to skip, which is the
+risk: while E-01 is outstanding every upload is private regardless, so the
+choice is inert — and it stops being inert the moment the audit passes, which
+is exactly when a wrong default would publish something before anyone intended.
 
 ## Known limits, for reference
 
