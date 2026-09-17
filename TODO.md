@@ -1,5 +1,79 @@
 # TODO
 
+## E-01 — YouTube Upload (in progress)
+
+New left-hand screen. The operator fills a form or loads a row from a
+spreadsheet, supplies a video file and an ArchivERA URL, and the app uploads to
+YouTube with the record's title, description, Resource ID, and AE link in the
+description.
+
+Decided 2026-09-16: credentials are supplied by the operator, not shipped;
+first version handles one video at a time from either the form or the sheet;
+the description layout follows the client's spreadsheet and the existing
+Wilmington City Council video rather than a format we invent.
+
+Landed: OAuth against an operator-supplied client_secret.json, token storage,
+and the resumable upload protocol with progress. 182 tests.
+
+### P0-03 — Start the Google API audit
+
+**Blocking, and outside our control.** Google restricts every video uploaded
+through `videos.insert` from an unverified project created after 28 July 2020
+to private, whatever privacy status the request asks for. Removing that needs
+an audit of the Cloud project against Google's Terms of Service.
+
+Until it passes, each uploaded video has to be made public by hand in YouTube
+Studio, which removes much of the point. The audit is a review with a
+turnaround nobody here sets, so it wants starting now and running alongside the
+build rather than after it.
+
+Owner: whoever owns the Google account.
+
+### P0-04 — Supply a client_secret.json
+
+A Google Cloud project with the YouTube Data API enabled and an OAuth client of
+type **Desktop app**. Web application clients will not work for a desktop
+upload and the app says so if one is chosen.
+
+Not urgent for development: the screen and the whole upload path are tested
+against a local fake. It is needed before a real video moves.
+
+The project's channel, its daily allowance, and its audit all belong to the
+organisation. That is why the app reads a credentials file rather than shipping
+one — and why nothing secret is committed to this public repository.
+
+### P0-05 — Provide the client's spreadsheet
+
+Save it to `testing/manual-samples/youtube/`, which is gitignored.
+
+It decides the description layout: the client's sheet carries record title,
+description, and item number labelled "Resource ID", and asked for the
+ArchivERA URL to appear in the YouTube description. Reading the real columns
+beats guessing at them — the Access template already proved that, where the
+export's headers turned out to differ from the database's.
+
+### P0-06 — Build the screen
+
+Waiting on P0-05 for the description layout. Covers the sidebar entry, the
+form, loading a row from a spreadsheet, the blank template the operator can
+save from the app, a confirmation of exactly what will be sent, upload progress,
+and the resulting video link.
+
+### P0-07 — Decide the privacy status to request
+
+Private, unlisted, or public. Worth deciding deliberately rather than
+defaulting: while P0-03 is outstanding every upload is private regardless, so
+the choice only takes effect once the audit passes — which is exactly when a
+wrong default would publish something before anyone intended.
+
+## Known limits, for reference
+
+- `videos.insert` has its own daily allowance, documented as 100 uploads a day
+  for a new project, separate from the 10,000-unit pool the other endpoints
+  share. Confirm the real figure in the Cloud console before a large batch.
+- Only the `youtube.upload` scope is requested. It can insert a video and
+  nothing else: not read the channel, not edit or delete what is already there.
+
 ## Open questions from the Getty module
 
 Raised 2026-09-16 while building the tag check. Both are cheap because the

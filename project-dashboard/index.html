@@ -222,6 +222,60 @@
         <div class="todo-list">
 
           <div class="todo">
+            <span class="tid">E-01</span>
+            <div>
+              <div class="t-title">YouTube Upload — epic</div>
+              <div class="t-note">New screen: form or spreadsheet row, a video file and an ArchivERA URL, uploaded to YouTube with the record title, description, Resource ID and AE link. OAuth and the resumable upload protocol have landed; the screen waits on the client's spreadsheet for the description layout.</div>
+            </div>
+            <div class="imp"><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span></div>
+          </div>
+
+          <div class="todo">
+            <span class="tid">P0-03</span>
+            <div>
+              <div class="t-title">Start the Google API audit</div>
+              <div class="t-note"><strong>Blocking, and outside our control.</strong> Google forces every video uploaded from an unverified project created after 28 July 2020 to private, whatever the request asks for. Until the audit passes, each video must be made public by hand in YouTube Studio. The review has a turnaround nobody here sets, so it should run alongside the build.</div>
+            </div>
+            <div class="imp"><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span></div>
+          </div>
+
+          <div class="todo">
+            <span class="tid">P0-04</span>
+            <div>
+              <div class="t-title">Supply a client_secret.json</div>
+              <div class="t-note">Google Cloud project with the YouTube Data API enabled and an OAuth client of type <strong>Desktop app</strong>. The channel, the daily allowance and the audit belong to the organisation, which is why the app reads a credentials file rather than shipping one. Development needs nothing — the upload path is tested against a local fake.</div>
+            </div>
+            <div class="imp"><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span></span></div>
+          </div>
+
+          <div class="todo">
+            <span class="tid">P0-05</span>
+            <div>
+              <div class="t-title">Provide the client's spreadsheet</div>
+              <div class="t-note">Save to <code>testing/manual-samples/youtube/</code>, which is gitignored. It decides the description layout — record title, description, Resource ID, and the ArchivERA URL. Reading the real columns beats guessing; the Access export's headers already turned out to differ from the database's.</div>
+            </div>
+            <div class="imp"><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span></span></div>
+          </div>
+
+          <div class="todo">
+            <span class="tid">P0-06</span>
+            <div>
+              <div class="t-title">Build the YouTube Upload screen</div>
+              <div class="t-note">Waits on P0-05. Sidebar entry, the form, loading a row from a spreadsheet, the blank template the operator can save from the app, a confirmation of exactly what will be sent, upload progress, and the resulting link.</div>
+            </div>
+            <div class="imp"><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span></span></div>
+          </div>
+
+          <div class="todo">
+            <span class="tid">P0-07</span>
+            <div>
+              <div class="t-title">Decide the privacy status to request</div>
+              <div class="t-note">Private, unlisted or public. While P0-03 is outstanding every upload is private regardless, so the choice only takes effect once the audit passes — which is exactly when a wrong default would publish something before anyone intended.</div>
+            </div>
+            <div class="imp"><span class="on"></span><span class="on"></span><span class="on"></span><span></span><span></span></div>
+          </div>
+
+          <div class="todo">
             <span class="tid">P0-01</span>
             <div>
               <div class="t-title">Verify v0.2.5 builds on target machines</div>
