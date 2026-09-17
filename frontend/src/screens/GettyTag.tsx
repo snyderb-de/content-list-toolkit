@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import {
+  BuildAccessFileList,
   CheckGettyReachability,
   CheckGettyTags,
   GetGettyDefaults,
@@ -48,6 +49,10 @@ export default function GettyTag() {
   const [downloading, setDownloading] = useState(false)
   const [downloadNote, setDownloadNote] = useState('')
 
+  const [fileList, setFileList] = useState<main.AccessFileListResult | null>(null)
+  const [buildingList, setBuildingList] = useState(false)
+  const [listErr, setListErr] = useState('')
+
   useEffect(() => {
     GetGettyDefaults()
       .then((d) => {
@@ -79,6 +84,23 @@ export default function GettyTag() {
     if (p) {
       setVocabPath(p)
       SaveGettyVocabulary('file', p).catch(() => {})
+    }
+  }
+
+  // Comes before the tag check in the workflow: the file names have to be in
+  // Access before there is anything to export and check.
+  const buildFileList = async () => {
+    const dir = await PickFolder('Choose the folder holding the images')
+    if (!dir) return
+    setBuildingList(true)
+    setListErr('')
+    setFileList(null)
+    try {
+      setFileList(await BuildAccessFileList(dir))
+    } catch (e: any) {
+      setListErr(String(e))
+    } finally {
+      setBuildingList(false)
     }
   }
 
@@ -225,7 +247,52 @@ export default function GettyTag() {
         </div>
 
         <div className="card">
-          <p className="card-title">Exported sheet</p>
+          <p className="card-title">Step 1 · Access file list</p>
+          <p className="info-text" style={{ marginBottom: 12 }}>
+            Builds the <code>Item Number</code> and <code>File Name (Cdm)</code> columns from a
+            folder of images, ready to paste into Access. Replaces the Command Prompt
+            <code>dir /b</code> step, and fills both columns rather than one.
+          </p>
+          <button className="btn btn-outline" onClick={buildFileList} disabled={buildingList}>
+            {buildingList ? 'Reading folder…' : 'Build File List'}
+          </button>
+          {listErr && <p className="danger-text" style={{ marginTop: 10 }}>{listErr}</p>}
+          {fileList && (
+            <>
+              <div className="stat-row" style={{ marginTop: 12 }}>
+                <span className="stat-row-label">Files listed</span>
+                <span className="stat-row-value success-text">{fileList.files.toLocaleString()}</span>
+              </div>
+              {fileList.skipped > 0 && (
+                <div className="stat-row">
+                  <span className="stat-row-label">Skipped</span>
+                  <span className="stat-row-value">
+                    {fileList.skipped} (folders, hidden and system files)
+                  </span>
+                </div>
+              )}
+              <div className="stat-row">
+                <span className="stat-row-label">First</span>
+                <span className="stat-row-value">{fileList.first}</span>
+              </div>
+              <div className="stat-row">
+                <span className="stat-row-label">Last</span>
+                <span className="stat-row-value">{fileList.last}</span>
+              </div>
+              <div className="result-actions">
+                <button className="btn btn-primary btn-sm" onClick={() => OpenPath(fileList.path)}>
+                  Open File List
+                </button>
+                <button className="btn btn-outline btn-sm" onClick={() => RevealPath(fileList.path)}>
+                  Show in Folder
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+
+        <div className="card">
+          <p className="card-title">Step 2 · Exported sheet</p>
           <div className="field">
             {/* The card title already says what this is; a visible label here
                 repeated it. The accessible name stays on the input. */}

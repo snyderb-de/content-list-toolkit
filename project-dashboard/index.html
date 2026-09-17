@@ -469,6 +469,14 @@
       <div class="pb">
         <div class="decisions">
           <div class="decision">
+            <div class="dq">Check <code>Location(TGN)</code> and <code>Type</code> as well as Tags?</div>
+            <div class="dd">Both are controlled fields the app ignores today. TGN is the same Getty endpoint with a different scheme; <code>Type</code> is the 12-value DCMI Type Vocabulary and needs no network. Cheap to add — the open question is whether either is actually going wrong, since the tag check exists because tags were breaking uploads by hand.</div>
+          </div>
+          <div class="decision">
+            <div class="dq">Clean every free-text field, or only Tags?</div>
+            <div class="dd">The same pasted invisible characters reach <code>Title</code> and <code>Description of Item(s)</code>, and break a tab-delimited upload the same way. Widening the cleaning is small; a whole-row findings view is a different screen. Worth doing if an upload has ever failed on a field other than Tags.</div>
+          </div>
+          <div class="decision">
             <div class="dq">Project license?</div>
             <div class="dd">Default: <strong>undecided</strong>. Candidates: MIT, Apache-2.0, GPL-3.0. Pick before public release.</div>
           </div>

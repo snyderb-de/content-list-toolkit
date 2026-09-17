@@ -200,8 +200,13 @@
           "text": "Use Getty Tags to check the Tags column of a CONTENTdm export before you upload it. It removes the hidden characters that stop a tab-delimited file from loading, and checks every term against the Getty Art & Architecture Thesaurus. Your export is never changed — the app writes a corrected copy beside it."
         },
         {
+          "type": "paragraph",
+          "text": "**Step 1, the Access file list.** Before the export exists, Access needs the file names. Click Build File List and choose the folder holding the images. The app writes a sheet with the `Item Number` and `File Name (Cdm)` columns filled in, ready to paste. This replaces the Command Prompt step in the old instructions, and fills both columns instead of one. Folders, hidden files, and files like `.DS_Store` are left out, and the count of what was skipped is shown so nothing goes missing quietly."
+        },
+        {
           "type": "steps",
           "items": [
+            "Click Build File List, choose the images folder, and paste the two columns into Access.",
             "Export the Access Main table to Excel as you normally would.",
             "Browse to that file. Excel, CSV, and tab-delimited text files all work.",
             "Choose where terms should be checked, using the table below.",

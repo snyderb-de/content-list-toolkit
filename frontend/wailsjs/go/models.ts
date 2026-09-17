@@ -1,5 +1,27 @@
 export namespace main {
 	
+	export class AccessFileListResult {
+	    path: string;
+	    files: number;
+	    skipped: number;
+	    first?: string;
+	    last?: string;
+	    elapsed: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new AccessFileListResult(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.path = source["path"];
+	        this.files = source["files"];
+	        this.skipped = source["skipped"];
+	        this.first = source["first"];
+	        this.last = source["last"];
+	        this.elapsed = source["elapsed"];
+	    }
+	}
 	export class AgencyTemplateFields {
 	    rg: string;
 	    sg: string;

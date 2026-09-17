@@ -1,5 +1,43 @@
 # TODO
 
+## Open questions from the Getty module
+
+Raised 2026-09-16 while building the tag check. Both are cheap because the
+machinery already exists — the vocabulary seam, the cache, the reachability
+probe, the findings UI, and the report all take another field without changing
+shape.
+
+### Check the other two controlled fields?
+
+The CONTENTdm template has two more fields drawn from fixed vocabularies, and
+neither is checked today.
+
+- `Location(TGN)` draws on the Getty Thesaurus of Geographic Names, a different
+  Getty vocabulary on the same SPARQL endpoint. The template ships 64 Delaware
+  places in TGN's hierarchical form, `United States -- Delaware -- Kent County
+  -- Dover`. Checking it is the AAT query with a different scheme.
+- `Type` draws on the DCMI Type Vocabulary — 12 fixed values, from Collection
+  to Text. A closed list of twelve needs no network and cannot go stale.
+
+Open question: is either field actually going wrong in practice? The tag check
+was built because tags were breaking uploads by hand. Nobody has said these two
+are a problem, and a check nobody needs is a check that gets ignored.
+
+### Clean every free-text field, not just Tags?
+
+The invisible characters the tag check removes arrive by copy and paste, and
+`Title`, `Description of Item(s)`, and every other free-text column are pasted
+into the same way. A tab or a newline in any of them breaks a tab-delimited
+upload exactly as it does in Tags.
+
+Widening the cleaning pass is small. The work is in the reporting: findings are
+currently organised per tag within one column, and a whole-row view of eight
+columns is a different screen, not a wider table.
+
+Open question: has an upload ever failed on a field other than Tags? If it has,
+this is the more valuable of the two. If it has not, the tag check may already
+cover the only column people paste Getty terms into.
+
 ## Retiring the Python runtime
 
 Decided 2026-09-16. The Python app existed to give Windows a GUI before Wails
