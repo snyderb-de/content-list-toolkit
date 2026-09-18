@@ -465,14 +465,14 @@
     <p>Blocking is handled as a known state, not an error. A failed lookup is recorded as <strong>“could not be checked”</strong> and never as “this term is wrong” — a false accusation would send a cataloguer to re-verify metadata that was already correct.</p>
     <ul>
       <li><strong>Live check blocked:</strong> the indicator turns red before the run and names the cause — blocked host, DNS failure, or TLS interception. Cleaning, structural checks, and the offline list all continue to work.</li>
-      <li><strong>Everything blocked:</strong> the bundled term list still answers. It ships inside the application — 176,629 English AAT terms, frozen January 2026 — so term checking degrades to a dated source rather than stopping.</li>
+      <li><strong>Everything blocked:</strong> the bundled term list still answers. It ships inside the application — the English AAT terms from the Getty archive that build was made with — so term checking degrades to a dated source rather than stopping.</li>
       <li><strong>Both blocked:</strong> everything except term verification still runs, which is the half that catches the characters that break a CONTENTdm upload.</li>
     </ul>
 
     <div class="note note-caution">
       <h3>Two things worth raising in review</h3>
       <p><strong><code>http://</code> appears inside the request body, and is not a connection.</strong> Inspecting one of these queries — at a proxy, in a TLS-terminating gateway, or in any egress log that records query strings — shows the string <code>http://vocab.getty.edu/aat/</code> inside the SPARQL text. It is not an address and nothing dials it. In RDF a URI is an identifier compared by exact string equality, and Getty minted the AAT identifiers with the <code>http</code> scheme, so the thesaurus literally holds <code>&lt;http://vocab.getty.edu/aat/300128222&gt;</code> as that concept's name. Rewriting it to <code>https</code> would change the name, match nothing, and make every tag report as absent from the vocabulary — a silent, total false negative with no error raised. The same identifiers come back in the responses for the same reason. The connection carrying all of it is HTTPS on 443.</p>
-      <p><strong>The archives are frozen.</strong> Getty stopped refreshing these datasets after January 2026, so a list built from one is a dated snapshot and grows staler over time. The publication date is written into the filename for that reason. The live endpoint is the only current source.</p>
+      <p><strong>Any list built from an archive is a snapshot.</strong> It answers for the day that archive was published and grows staler from there, which is why the publication date is written into the filename. Getty said it stopped refreshing these datasets after January 2026; should it publish again, a rebuilt list follows the newer archive and the date moves with it. The live endpoint is the only current source either way.</p>
     </div>
 
     <div class="note">

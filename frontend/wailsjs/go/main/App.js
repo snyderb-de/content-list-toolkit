@@ -42,6 +42,10 @@ export function GetAppVersion() {
   return window['go']['main']['App']['GetAppVersion']();
 }
 
+export function GetBuiltinVocabularyInfo() {
+  return window['go']['main']['App']['GetBuiltinVocabularyInfo']();
+}
+
 export function GetGettyDefaults() {
   return window['go']['main']['App']['GetGettyDefaults']();
 }

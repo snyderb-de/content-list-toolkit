@@ -340,7 +340,7 @@
         {
           "type": "callout",
           "variant": "warning",
-          "text": "The built-in list and any list you build yourself are fixed copies from January 2026. Getty keeps changing the thesaurus, so a copy can accept a term Getty has since renamed. The app tells you when an answer came from a fixed copy. Use the live check whenever you can reach it."
+          "text": "The built-in list, and any list you build from a Getty archive, answer for the day that archive was published — not for today. Each carries its own date: the built-in one is shown on this screen, and a list you build takes the date of the archive you built it from, written into its filename. Getty keeps changing the thesaurus, so a copy can accept a term Getty has since renamed. The app says when an answer came from a dated copy. Use the live check whenever you can reach it."
         },
         {
           "type": "paragraph",
@@ -459,7 +459,7 @@
         },
         {
           "type": "paragraph",
-          "text": "**Why the built-in list is smaller than the AAT.** Getty counts 503,230 terms across 74,460 concept records. The built-in list holds 176,629. Nothing is missing — the two counts measure different things."
+          "text": "**Why the built-in list is smaller than the AAT.** Getty counts 503,230 terms across 74,460 concept records. The built-in list holds about 176,000 — the Getty Tags screen shows the exact count for your version. Nothing is missing — the two counts measure different things."
         },
         {
           "type": "funnel",
@@ -488,7 +488,7 @@
         },
         {
           "type": "paragraph",
-          "text": "Getty revises the AAT continually and the built-in list is the January 2026 archive, so the counts on Getty’s own pages will have moved on. The live check is not a fixed copy — it queries Getty directly and sees every concept record Getty holds today — but it matches English terms only, on the same assumption."
+          "text": "Getty revises the AAT continually, and the built-in list is whichever Getty archive this version of the app was built with, so the counts here and the ones on Getty’s own pages will drift apart. The live check is not a fixed copy — it queries Getty directly and sees every concept record Getty holds today — but it matches English terms only, on the same assumption."
         }
       ]
     },

@@ -39,6 +39,28 @@ var (
 	embeddedVocabularyErr  error
 )
 
+// BuiltinVocabularyInfo describes the term list compiled into this build.
+//
+// The screen used to carry the count and the date as prose of its own, and
+// both went stale the first time the list was rebuilt — it claimed 169,307
+// terms for a list holding 176,629. They are facts about the build, so the
+// build answers them.
+type BuiltinVocabularyInfo struct {
+	Terms int `json:"terms"`
+	// Date is the publication date of the Getty archive this was extracted
+	// from. It moves whenever the bundled list is rebuilt from a newer one.
+	Date string `json:"date"`
+}
+
+// GetBuiltinVocabularyInfo describes the bundled list for the screen.
+func (a *App) GetBuiltinVocabularyInfo() (BuiltinVocabularyInfo, error) {
+	list, err := builtinVocabulary()
+	if err != nil {
+		return BuiltinVocabularyInfo{}, err
+	}
+	return BuiltinVocabularyInfo{Terms: list.Count(), Date: embeddedVocabularyDate}, nil
+}
+
 // builtinVocabulary returns the bundled term list, building the index the
 // first time it is asked for and reusing it afterwards.
 func builtinVocabulary() (*fileVocabulary, error) {
