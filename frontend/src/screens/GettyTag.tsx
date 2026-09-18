@@ -30,6 +30,14 @@ import Toggle from '../components/Toggle'
 // the app itself still makes no unencrypted connection of its own.
 const gettyDownloadsURL = 'http://aatdownloads.getty.edu/'
 
+// The file's own name, from a path written either way round. Windows paths use
+// backslashes, and splitting on "/" alone printed the whole C:\… path where a
+// filename belonged.
+function baseName(path: string): string {
+  const parts = path.split(/[\\/]/).filter(Boolean)
+  return parts[parts.length - 1] ?? path
+}
+
 type Phase = 'idle' | 'checking' | 'done' | 'error'
 type Source = 'live' | 'builtin' | 'file' | 'none'
 
@@ -531,7 +539,7 @@ export default function GettyTag() {
                 </span>
               )}
               {editCount === 0 && savedPath && (
-                <span className="success-text">Saved to {savedPath.split('/').pop()}</span>
+                <span className="success-text">Saved to {baseName(savedPath)}</span>
               )}
               <button className="btn btn-outline btn-sm" onClick={recheck} disabled={saving}>
                 {saving ? 'Working…' : 'Re-check'}
