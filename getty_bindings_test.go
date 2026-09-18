@@ -443,33 +443,30 @@ func TestSavedReportRecordsTheOriginalText(t *testing.T) {
 	}
 }
 
-// A remembered path can outlive the file it points at. Prefilling one that no
-// longer resolves is worse than prefilling nothing: it looks like a working
-// choice until Check fails.
-func TestGettyDefaultsDropAVanishedSheet(t *testing.T) {
+// The sheet the screen starts with is nobody's old sheet.
+//
+// It used to be prefilled from settings, and the path that turned up was
+// whoever ran the app last — a QA session, a test run — sitting in the field
+// looking like a choice somebody had made. The path is still remembered, but
+// only so the file dialog opens in the right folder.
+func TestGettyDefaultsNeverPrefillASheet(t *testing.T) {
 	isolateUserConfig(t)
 	app := newApp("")
 
 	present := writeXLSX(t, [][]string{mainTableHeader, rowWithTags("a; b; c")})
 	app.rememberSheet(present)
-	if got := app.GetGettyDefaults().LastSheet; got != present {
-		t.Fatalf("LastSheet = %q, want the file that exists", got)
+
+	if got := app.GetGettyDefaults().SheetPath; got != "" {
+		t.Fatalf("SheetPath = %q, want the screen to start empty", got)
 	}
 
-	app.rememberSheet(filepath.Join(t.TempDir(), "gone", "export.xlsx"))
-	if got := app.GetGettyDefaults().LastSheet; got != "" {
-		t.Fatalf("LastSheet = %q, want empty for a path that no longer exists", got)
+	// Remembered all the same, because PickSheet opens where the last one was.
+	settings, err := app.loadSettings()
+	if err != nil {
+		t.Fatal(err)
 	}
-}
-
-// A directory is not a sheet.
-func TestGettyDefaultsRejectADirectoryAsTheLastSheet(t *testing.T) {
-	isolateUserConfig(t)
-	app := newApp("")
-
-	app.rememberSheet(t.TempDir())
-	if got := app.GetGettyDefaults().LastSheet; got != "" {
-		t.Fatalf("LastSheet = %q, want empty for a directory", got)
+	if settings.GettyLastSheet != present {
+		t.Fatalf("GettyLastSheet = %q, want the sheet just checked", settings.GettyLastSheet)
 	}
 }
 

@@ -1,13 +1,11 @@
 import { useEffect, useState } from 'react'
 import {
-  BuildAccessFileList,
   CheckGettyReachability,
   CheckGettyTags,
   GetBuiltinVocabularyInfo,
   GetGettyDefaults,
   ImportGettyVocabulary,
   OpenPath,
-  PickFolder,
   PickGettyArchive,
   PickSheet,
   RecheckGettyReachability,
@@ -16,6 +14,7 @@ import {
   SaveGettyVocabulary,
 } from '../../wailsjs/go/main/App'
 import { main } from '../../wailsjs/go/models'
+import { BrowserOpenURL } from '../../wailsjs/runtime/runtime'
 import {
   FindingTone,
   TONE_PREFIX,
@@ -25,6 +24,11 @@ import {
   rowStatus,
 } from '../getty/findings'
 import Toggle from '../components/Toggle'
+
+// Getty's download centre. Plain HTTP because that host serves nothing else —
+// this opens in the browser, where the person can see what they are visiting;
+// the app itself still makes no unencrypted connection of its own.
+const gettyDownloadsURL = 'http://aatdownloads.getty.edu/'
 
 type Phase = 'idle' | 'checking' | 'done' | 'error'
 type Source = 'live' | 'builtin' | 'file' | 'none'
@@ -52,17 +56,14 @@ export default function GettyTag() {
   const [pass, setPass] = useState(0)
   const [importing, setImporting] = useState(false)
   const [importNote, setImportNote] = useState('')
+  const [importErr, setImportErr] = useState('')
 
-  const [fileList, setFileList] = useState<main.AccessFileListResult | null>(null)
-  const [buildingList, setBuildingList] = useState(false)
-  const [listErr, setListErr] = useState('')
 
   useEffect(() => {
     GetGettyDefaults()
       .then((d) => {
         if (d.source) setSource(d.source as Source)
         if (d.vocabularyPath) setVocabPath(d.vocabularyPath)
-        if (d.lastSheet) setSheetPath(d.lastSheet)
       })
       .catch(() => {})
   }, [])
@@ -112,20 +113,6 @@ export default function GettyTag() {
 
   // Comes before the tag check in the workflow: the file names have to be in
   // Access before there is anything to export and check.
-  const buildFileList = async () => {
-    const dir = await PickFolder('Choose the folder holding the images')
-    if (!dir) return
-    setBuildingList(true)
-    setListErr('')
-    setFileList(null)
-    try {
-      setFileList(await BuildAccessFileList(dir))
-    } catch (e: any) {
-      setListErr(String(e))
-    } finally {
-      setBuildingList(false)
-    }
-  }
 
   // The app does not fetch the archive: Getty serves it over plain HTTP only,
   // and this app makes no unencrypted connections. So the archive is obtained
@@ -136,17 +123,22 @@ export default function GettyTag() {
     if (!archive) return
     setImporting(true)
     setImportNote('')
-    setErr('')
+    setImportErr('')
     try {
       const r = await ImportGettyVocabulary(archive)
       setVocabPath(r.path)
       setSource('file')
       SaveGettyVocabulary('file', r.path).catch(() => {})
+      setImportErr('')
       setImportNote(
         `${r.terms.toLocaleString()} English terms from ${r.archive}, published ${r.published}.`,
       )
     } catch (e: any) {
-      setErr(String(e))
+      // Beside the button that caused it: this screen has no error view of its
+      // own, so a message parked in the check's error state showed nowhere and
+      // a refused archive looked like nothing happening.
+      setImportErr(String(e))
+      setImportNote('')
     } finally {
       setImporting(false)
     }
@@ -272,52 +264,7 @@ export default function GettyTag() {
         </div>
 
         <div className="card">
-          <p className="card-title">Step 1 · Access file list</p>
-          <p className="info-text" style={{ marginBottom: 12 }}>
-            Builds the <code>Item Number</code> and <code>File Name (Cdm)</code> columns from a
-            folder of images, ready to paste into Access. Replaces the Command Prompt{' '}
-            <code>dir /b</code> step, and fills both columns rather than one.
-          </p>
-          <button className="btn btn-outline" onClick={buildFileList} disabled={buildingList}>
-            {buildingList ? 'Reading folder…' : 'Build File List'}
-          </button>
-          {listErr && <p className="danger-text" style={{ marginTop: 10 }}>{listErr}</p>}
-          {fileList && (
-            <>
-              <div className="stat-row" style={{ marginTop: 12 }}>
-                <span className="stat-row-label">Files listed</span>
-                <span className="stat-row-value success-text">{fileList.files.toLocaleString()}</span>
-              </div>
-              {fileList.skipped > 0 && (
-                <div className="stat-row">
-                  <span className="stat-row-label">Skipped</span>
-                  <span className="stat-row-value">
-                    {fileList.skipped} (folders, hidden and system files)
-                  </span>
-                </div>
-              )}
-              <div className="stat-row">
-                <span className="stat-row-label">First</span>
-                <span className="stat-row-value">{fileList.first}</span>
-              </div>
-              <div className="stat-row">
-                <span className="stat-row-label">Last</span>
-                <span className="stat-row-value">{fileList.last}</span>
-              </div>
-              <div className="result-actions">
-                <button className="btn btn-primary btn-sm" onClick={() => OpenPath(fileList.path)}>
-                  Open File List
-                </button>
-                <button className="btn btn-outline btn-sm" onClick={() => RevealPath(fileList.path)}>
-                  Show in Folder
-                </button>
-              </div>
-            </>
-          )}
-        </div>
-
-        <div className="card">
-          <p className="card-title">Step 2 · Exported sheet</p>
+          <p className="card-title">Exported sheet</p>
           <div className="field">
             {/* The card title already says what this is; a visible label here
                 repeated it. The accessible name stays on the input. */}
@@ -325,6 +272,7 @@ export default function GettyTag() {
               <input
                 className="text-input monospace"
                 aria-label="Exported sheet"
+                placeholder="Browse to the sheet exported from Access"
                 value={sheetPath}
                 onChange={(e) => setSheetPath(e.target.value)}
               />
@@ -399,10 +347,31 @@ export default function GettyTag() {
               <button className="btn btn-outline btn-sm" onClick={importList} disabled={importing}>
                 {importing ? 'Reading the archive…' : 'Build list from a Getty archive'}
               </button>
+              {importErr && (
+                <p className="danger-text" style={{ marginTop: 10 }}>{importErr}</p>
+              )}
               <div className="info-text" style={{ marginTop: 8 }}>
                 {importNote ||
-                  'Converts a Getty relational archive (aat_rel_NNNN.zip) you already have into a term list, written beside the archive. The app does not download it: Getty serves those archives over an unencrypted connection, which this app will not make. The list takes the date of the archive you build it from, and Getty keeps revising the thesaurus, so a term it accepts may since have been renamed. Treat it as a fallback, not as the authority.'}
+                  'Converts a Getty relational archive (aat_rel_NNNN.zip) you already have into a term list, written beside the archive. The list takes the date of the archive you build it from, and Getty keeps revising the thesaurus, so a term it accepts may since have been renamed. Treat it as a fallback, not as the authority.'}
               </div>
+              {!importNote && (
+                <div className="info-text" style={{ marginTop: 8 }}>
+                  Get the archive from{' '}
+                  <button
+                    className="btn btn-ghost"
+                    style={{ padding: 0, color: 'var(--accent)', fontWeight: 500, fontSize: 'inherit' }}
+                    onClick={() => BrowserOpenURL(gettyDownloadsURL)}
+                  >
+                    aatdownloads.getty.edu
+                  </button>{' '}
+                  and take only <code>aat_rel_&lt;mmyy&gt;.zip</code>, the relational archive.
+                  Nothing else on that page can be read here — the XML archive and the rest are
+                  different formats, and they are large. That site is served over an unencrypted
+                  connection, so some networks block it and your browser may warn you. The app
+                  never fetches it itself; this link opens your browser, and the download is
+                  between you and Getty.
+                </div>
+              )}
             </div>
           )}
 

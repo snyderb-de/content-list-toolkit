@@ -154,6 +154,10 @@ func extractEnglishTerms(archivePath string) ([]vocabularyTerm, error) {
 	}
 	defer reader.Close()
 
+	if err := checkRelationalArchive(reader, archivePath); err != nil {
+		return nil, err
+	}
+
 	english, err := readEnglishTermIDs(reader)
 	if err != nil {
 		return nil, err
@@ -168,6 +172,30 @@ func extractEnglishTerms(archivePath string) ([]vocabularyTerm, error) {
 // the dialects are not quite equal: where a concept has a preferred term in
 // plain English and another in a dialect, plain English is the one to name as
 // the term to use.
+// checkRelationalArchive rejects an archive that is not the one this reads,
+// naming what it looks like instead.
+//
+// Getty publishes several archives on the same page, and the XML one has a
+// name one character different from the relational one — aat_xml_0126.zip
+// against aat_rel_0126.zip. Picking the wrong one is the easiest mistake here,
+// and "the archive did not contain TERM.out" does not tell anyone which file
+// to go back for.
+func checkRelationalArchive(reader *zip.ReadCloser, archivePath string) error {
+	for _, file := range reader.File {
+		if strings.EqualFold(filepath.Base(file.Name), "TERM.out") {
+			return nil
+		}
+	}
+
+	name := filepath.Base(archivePath)
+	for _, file := range reader.File {
+		if strings.EqualFold(filepath.Ext(file.Name), ".xml") {
+			return fmt.Errorf("%s holds XML files, so it is Getty's XML archive. This reads the relational one — the file named aat_rel_<mmyy>.zip on the same download page", name)
+		}
+	}
+	return fmt.Errorf("%s is not a Getty vocabulary archive: it holds no TERM.out table. The file to use is named aat_rel_<mmyy>.zip", name)
+}
+
 func readEnglishTermIDs(reader *zip.ReadCloser) (map[string]string, error) {
 	file, err := openArchiveFile(reader, "LANGUAGE_RELS.out")
 	if err != nil {
