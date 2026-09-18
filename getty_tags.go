@@ -183,6 +183,7 @@ const (
 	tagIssueWhitespace         tagIssueKind = "whitespace"
 	tagIssueUnknownTerm        tagIssueKind = "unknown-term"
 	tagIssueTermCase           tagIssueKind = "term-case"
+	tagIssueVariantTerm        tagIssueKind = "variant-term"
 	tagIssueNotChecked         tagIssueKind = "not-checked"
 	tagIssueUnbalanced         tagIssueKind = "unbalanced-brackets"
 	tagIssueQualifierUnchecked tagIssueKind = "qualifier-unchecked"

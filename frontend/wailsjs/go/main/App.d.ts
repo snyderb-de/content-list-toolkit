@@ -18,7 +18,7 @@ export function CheckGettyTags(arg1:main.GettyCheckOptions):Promise<main.GettyCh
 
 export function CheckOutputExists(arg1:main.ScanOptions):Promise<boolean>;
 
-export function DownloadGettyVocabulary(arg1:string):Promise<main.GettyDownloadResult>;
+export function EmailExtensions():Promise<Array<string>>;
 
 export function GetAppVersion():Promise<string>;
 
@@ -26,11 +26,17 @@ export function GetGettyDefaults():Promise<main.GettyCheckOptions>;
 
 export function GetScanDefaults():Promise<main.ScanOptions>;
 
+export function ImportGettyVocabulary(arg1:string):Promise<main.GettyImportResult>;
+
 export function OpenPath(arg1:string):Promise<void>;
 
 export function PickFolder(arg1:string):Promise<string>;
 
+export function PickGettyArchive(arg1:string):Promise<string>;
+
 export function PickSheet(arg1:string):Promise<string>;
+
+export function RecheckGettyReachability():Promise<main.GettyReachability>;
 
 export function RestartToApplyUpdate():Promise<void>;
 

@@ -294,9 +294,9 @@ func TestAATQueryEscapesTheTermInBothPositions(t *testing.T) {
 	}
 }
 
-// A legitimate AAT variant is not a mistake. Reporting it as absent would send
-// a cataloguer to correct something already correct, so it counts as found and
-// carries Getty's preferred spelling for the report to suggest.
+// A variant is an AAT term, so reporting it as absent would be wrong; it is
+// also not the term this catalogue accepts, so it comes back marked as a
+// variant, carrying the preferred spelling to put in its place.
 func TestParseAATResponseAcceptsAnAlternateLabel(t *testing.T) {
 	match, err := parseAATLookupResponse([]byte(aatAlternateLabelResponse), "photos", "photos")
 	if err != nil {
@@ -313,6 +313,21 @@ func TestParseAATResponseAcceptsAnAlternateLabel(t *testing.T) {
 	}
 	if match.ExactLabel() {
 		t.Fatal("the term and the preferred spelling differ, so this is not an exact match")
+	}
+	if !match.Variant {
+		t.Fatal("a term matched through an alternate label is a variant")
+	}
+}
+
+// The preferred label matched by its own spelling is the term to use, and must
+// not be reported as something to replace.
+func TestParseAATResponseDoesNotMarkThePreferredLabelAsAVariant(t *testing.T) {
+	match, err := parseAATLookupResponse(captured(t, "lookup-found"), "aerial photographs", "aerial photographs")
+	if err != nil {
+		t.Fatalf("parse: %v", err)
+	}
+	if !match.Found || match.Variant {
+		t.Fatalf("expected the preferred term, got %+v", match)
 	}
 }
 

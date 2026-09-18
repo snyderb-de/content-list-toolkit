@@ -33,6 +33,10 @@
           "text": "Use Content List when you need a spreadsheet of files or folders. The app scans the source folder and writes one row for each item it includes. Turn on verification only when you need a file fingerprint for later checking."
         },
         {
+          "type": "callout",
+          "text": "The source folder and the output folder have to be different, and Start Scan stays switched off until they are. If a file of the same name is already there, the app asks before overwriting it."
+        },
+        {
           "type": "table",
           "headers": [
             "Setting",
@@ -60,16 +64,20 @@
               "Also creates an Excel workbook after the scan finishes."
             ],
             [
-              "Preserve leading zeros",
+              "Preserve leading zeros in XLSX",
               "Keeps numbers such as 001.001 from changing when the workbook opens in Excel."
             ],
             [
-              "Delete CSV after XLSX",
+              "Delete CSV after XLSX created",
               "Keeps only the Excel workbook after it is made successfully."
             ],
             [
-              "Folders only",
-              "Lists folders instead of files. Use Max depth when you only want the top few folder levels."
+              "Folders only (no files)",
+              "Lists folders instead of files. The hash, the Excel options, and the system-file option switch off with it, because they describe files. **Max depth** appears underneath it."
+            ],
+            [
+              "Max depth",
+              "Only shown with Folders only on. How many folder levels to go down. Leave it at 0 for every level."
             ]
           ]
         }
@@ -82,7 +90,7 @@
       "blocks": [
         {
           "type": "paragraph",
-          "text": "Use Agency Template when the spreadsheet must match the area agency headers. Fill in only the values that should be the same for the entire sheet. These fields start blank for every new scan so a value from an earlier job cannot be reused by mistake."
+          "text": "Use Agency Template when the spreadsheet must match the area agency headers. Turn on **Use agency content-list headers** on the Content List screen, and the agency fields appear below it. Fill in only the values that should be the same for the entire sheet. These fields start blank for every new scan so a value from an earlier job cannot be reused by mistake."
         },
         {
           "type": "table",
@@ -105,7 +113,23 @@
             ],
             [
               "Begin Date, End Date",
-              "Use these when one date range applies to the whole sheet."
+              "Use these when one date range applies to the whole sheet. Write them as YYYY or MM/YYYY."
+            ],
+            [
+              "RC Series Name",
+              "The name that goes with the RC Series number."
+            ],
+            [
+              "Confidential",
+              "Blank, No, or Yes. Leave it blank unless the whole sheet is one or the other."
+            ],
+            [
+              "TD Number, Box Number, Disposition Date",
+              "Fill these in when one value covers the whole sheet. Box Number is written as ###.###."
+            ],
+            [
+              "Location ID",
+              "The drive, share, or storage location the whole sheet came from."
             ],
             [
               "Description, Comments",
@@ -125,6 +149,11 @@
           "type": "callout",
           "variant": "warning",
           "text": "RC Series is required for agency-template scans. If it is blank, Start Scan stays disabled."
+        },
+        {
+          "type": "callout",
+          "variant": "warning",
+          "text": "Agency Template and **Folders only** cannot both be on. Turning on the agency headers switches Folders only off, because the agency sheet describes files."
         }
       ]
     },
@@ -144,6 +173,7 @@
             ".dbx",
             ".eml",
             ".emlx",
+            ".emlxpart",
             ".mbox",
             ".mbx",
             ".msg",
@@ -165,7 +195,11 @@
       "blocks": [
         {
           "type": "paragraph",
-          "text": "Use Clone Compare to check whether two drives or folders contain the same files. Choose the same verification setting for both sides. Single drive mode lets you scan Drive A, swap media, then scan Drive B."
+          "text": "Use Clone Compare to check whether two drives or folders contain the same files. Pick the first drive, the clone, and a folder for the results. One Hash Algorithm setting covers both sides. Single drive mode lets you scan the first drive, swap the media over, then scan the second — the app tells you when to eject and what to do next."
+        },
+        {
+          "type": "paragraph",
+          "text": "**Soft compare** matters for PDFs. The same PDF copied by some tools gets a new internal ID, which makes it look changed when nothing you can see has changed. With Soft compare on, those are reported as **Metadata Clone** instead of **Not a Clone**."
         },
         {
           "type": "definitions",
@@ -187,6 +221,55 @@
               "detail": "Files are missing, extra, or different."
             }
           ]
+        },
+        {
+          "type": "paragraph",
+          "text": "**Reading the results.** The verdict above is decided by the counts below it."
+        },
+        {
+          "type": "table",
+          "headers": [
+            "Count",
+            "What it means"
+          ],
+          "rows": [
+            [
+              "Exact Matches",
+              "Same file, same place, same contents."
+            ],
+            [
+              "Moved / Renamed",
+              "The file is on both sides with the same contents, under a different name or in a different folder."
+            ],
+            [
+              "Metadata-only (PDF IDs)",
+              "PDFs that differ only in their internal ID. Counted here only with Soft compare on."
+            ],
+            [
+              "Hash Mismatches",
+              "Same path on both sides, different contents. Worth looking at first."
+            ],
+            [
+              "Missing (no match)",
+              "On the first drive, not on the clone."
+            ],
+            [
+              "Extra (no match)",
+              "On the clone, not on the first drive."
+            ],
+            [
+              "Duplicates on Clone",
+              "The same contents more than once on the clone."
+            ],
+            [
+              "System Excluded",
+              "Files left out on purpose, such as Thumbs.db or .DS_Store."
+            ]
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "While it runs, the differences appear as they are found. The table on screen stops at 5,000 rows so it stays usable; the Diff CSV holds all of them."
         }
       ]
     },
@@ -212,7 +295,7 @@
             "Choose where terms should be checked, using the table below.",
             "Click Check Tags. Rows with nothing wrong are not listed.",
             "Fix what it found. Edit a tag, or click one of the suggested replacements.",
-            "Click Apply Fixes and Re-check. Repeat until nothing is left.",
+            "Click Apply Fixes & Re-check. Repeat until nothing is left.",
             "Upload the cleaned copy, not the original."
           ]
         },
@@ -237,7 +320,7 @@
             [
               "A term list on this machine",
               "A file you choose",
-              "When you keep your own list, or downloaded a newer one."
+              "When you keep your own list, or built one from a Getty archive."
             ],
             [
               "Do not verify terms",
@@ -247,13 +330,58 @@
           ]
         },
         {
+          "type": "paragraph",
+          "text": "Choosing **Getty, live** shows whether Getty can be reached from this computer, in green or red. It checks once, when you pick it. If your network changes — a VPN comes on, or support opens something up — click **Check again**."
+        },
+        {
+          "type": "paragraph",
+          "text": "The app never downloads the Getty archive itself, because Getty serves those archives over a connection that is not encrypted and this app only makes encrypted ones. If you need a fresher list, download the archive yourself, then use **Build list from a Getty archive** — the app reads the file and writes the term list beside it."
+        },
+        {
           "type": "callout",
           "variant": "warning",
-          "text": "The built-in list and any downloaded list are fixed copies from January 2026. Getty keeps changing the thesaurus, so a copy can accept a term Getty has since renamed. The app tells you when an answer came from a fixed copy. Use the live check whenever you can reach it."
+          "text": "The built-in list and any list you build yourself are fixed copies from January 2026. Getty keeps changing the thesaurus, so a copy can accept a term Getty has since renamed. The app tells you when an answer came from a fixed copy. Use the live check whenever you can reach it."
+        },
+        {
+          "type": "paragraph",
+          "text": "**Reading the results.** The numbers across the top summarise the sheet; the table below them lists only the rows with something to say."
+        },
+        {
+          "type": "table",
+          "headers": [
+            "Number at the top",
+            "What it counts"
+          ],
+          "rows": [
+            [
+              "Would have failed upload",
+              "Rows whose Tags cell held something that stops the file loading into CONTENTdm. The app repairs these."
+            ],
+            [
+              "Repaired",
+              "Rows the app corrected for you in the cleaned copy."
+            ],
+            [
+              "Need review",
+              "Rows with something left for you to decide or correct."
+            ],
+            [
+              "Empty Tags cells",
+              "Rows with no tags at all. Not an error, but worth knowing about."
+            ],
+            [
+              "Vocabulary",
+              "Where the terms were checked, and how many terms that source holds."
+            ]
+          ]
         },
         {
           "type": "paragraph",
           "text": "Each finding starts with what it wants from you. **Fixed** means the app already corrected it and there is nothing to do. **Must Fix** means correct it before uploading. **Review** means it is your judgement call and will upload either way."
+        },
+        {
+          "type": "paragraph",
+          "text": "You can edit any tag in the table. **Apply Fixes & Re-check** saves your edits to the cleaned copy and checks it again. **Re-check** reads the sheet fresh without saving anything — use it if you changed the sheet in Excel while this screen was open."
         },
         {
           "type": "table",
@@ -279,8 +407,16 @@
               "Two semicolons together, or one at the end. The empty entry is removed."
             ],
             [
+              "Damaged text",
+              "Letters that arrived scrambled, usually from a file that was saved or converted badly — such as `Ã©` where an `é` belongs. Retype the tag."
+            ],
+            [
               "Not in AAT",
               "Getty has no such term. Suggested replacements appear beside it when there are any."
+            ],
+            [
+              "Not the preferred term",
+              "A real AAT term, but a variant term. Getty has a preferred term for the same concept, and that is the one to use — click it to swap the tag over."
             ],
             [
               "Spelling case",
@@ -320,6 +456,39 @@
             "Use Show in Folder to find both files.",
             "A sheet with nothing to correct does not get a cleaned copy, so there is no doubt about which file to upload."
           ]
+        },
+        {
+          "type": "paragraph",
+          "text": "**Why the built-in list is smaller than the AAT.** Getty counts 503,230 terms across 74,460 concept records. The built-in list holds 176,629. Nothing is missing — the two counts measure different things."
+        },
+        {
+          "type": "funnel",
+          "label": "How the AAT narrows down to the built-in list",
+          "items": [
+            {
+              "label": "All AAT terms",
+              "value": 503230,
+              "note": "Getty’s own count, across every language the AAT holds."
+            },
+            {
+              "label": "English terms",
+              "value": 187988,
+              "note": "The AAT is multilingual: one concept record carries its terms in English, Spanish, Dutch, Chinese, German and more. This app assumes English tags, for now, so only the English terms are kept."
+            },
+            {
+              "label": "Distinct spellings",
+              "value": 176629,
+              "note": "The same spelling can be a term in several concept records — “landscapes” is both the landform and the genre. The list holds it once, because it answers whether the spelling is an AAT term, not which concept record it belongs to."
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "So the drop is other languages first, then spellings that repeat across concept records. Of the 176,629, about 56,000 are preferred terms and about 120,000 are variant terms, each carrying the preferred term it should be replaced with."
+        },
+        {
+          "type": "paragraph",
+          "text": "Getty revises the AAT continually and the built-in list is the January 2026 archive, so the counts on Getty’s own pages will have moved on. The live check is not a fixed copy — it queries Getty directly and sees every concept record Getty holds today — but it matches English terms only, on the same assumption."
         }
       ]
     },
@@ -347,12 +516,12 @@
       "blocks": [
         {
           "type": "paragraph",
-          "text": "On Windows, the app checks the `X:\\Apps` folder for a newer signed `content-list-generator.exe`. Open About if support gives you a different release folder."
+          "text": "On Windows, the app looks in the `X:\\Apps` folder for a newer `content-list-generator.exe` from support. Open About if support gives you a different folder."
         },
         {
           "type": "list",
           "items": [
-            "The app only installs a newer signed executable from the configured release folder.",
+            "It only installs a newer app file from that folder, and only one support has signed.",
             "When an update is ready, restart the app from the update prompt."
           ]
         }

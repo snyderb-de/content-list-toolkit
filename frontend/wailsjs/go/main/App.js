@@ -34,8 +34,8 @@ export function CheckOutputExists(arg1) {
   return window['go']['main']['App']['CheckOutputExists'](arg1);
 }
 
-export function DownloadGettyVocabulary(arg1) {
-  return window['go']['main']['App']['DownloadGettyVocabulary'](arg1);
+export function EmailExtensions() {
+  return window['go']['main']['App']['EmailExtensions']();
 }
 
 export function GetAppVersion() {
@@ -50,6 +50,10 @@ export function GetScanDefaults() {
   return window['go']['main']['App']['GetScanDefaults']();
 }
 
+export function ImportGettyVocabulary(arg1) {
+  return window['go']['main']['App']['ImportGettyVocabulary'](arg1);
+}
+
 export function OpenPath(arg1) {
   return window['go']['main']['App']['OpenPath'](arg1);
 }
@@ -58,8 +62,16 @@ export function PickFolder(arg1) {
   return window['go']['main']['App']['PickFolder'](arg1);
 }
 
+export function PickGettyArchive(arg1) {
+  return window['go']['main']['App']['PickGettyArchive'](arg1);
+}
+
 export function PickSheet(arg1) {
   return window['go']['main']['App']['PickSheet'](arg1);
+}
+
+export function RecheckGettyReachability() {
+  return window['go']['main']['App']['RecheckGettyReachability']();
 }
 
 export function RestartToApplyUpdate() {

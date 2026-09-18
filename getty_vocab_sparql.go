@@ -44,7 +44,7 @@ type sparqlVocabulary struct {
 
 func newSPARQLVocabulary(client *http.Client, endpoint string) *sparqlVocabulary {
 	if client == nil {
-		client = &http.Client{Timeout: gettyLookupTimeout}
+		client = secureHTTPClient(gettyLookupTimeout)
 	}
 	if endpoint == "" {
 		endpoint = gettySPARQLEndpoint
@@ -102,11 +102,12 @@ func (v *sparqlVocabulary) Lookup(ctx context.Context, term string) (gettyTermMa
 // buildAATLookupQuery finds concepts whose preferred or alternate label
 // equals the term, and asks for the preferred label alongside.
 //
-// Alternate labels count as found. A cataloguer who writes a legitimate AAT
-// variant has not made a mistake, and reporting it as absent from the
-// vocabulary would send them to correct something that is already correct.
-// Because the preferred spelling comes back in the same answer, a variant can
-// be reported as "this is the term, Getty spells it this way" instead.
+// Alternate labels are matched rather than ignored, because "not in AAT" is
+// the wrong answer for a term AAT holds. They are not accepted, though: this
+// catalogue takes Getty's preferred term, so a variant is reported as a
+// variant. The preferred spelling comes back in the same answer, which is what
+// lets the report name the term to use instead of sending someone to search
+// the Getty website by hand.
 //
 // luc:term is a full-text search and saturates the row limit on ordinary
 // terms, so the equality test belongs in the query where LIMIT cannot discard
@@ -193,6 +194,13 @@ func parseAATLookupResponse(body []byte, originalTerm, cleanedTerm string) (gett
 		// preferred label. Keep the English one.
 		if label, ok := binding["label"]; ok && isEnglishLabel(label.Language) {
 			match.PreferredLabel = label.Value
+			// The label that matched is the one the sheet wrote; the preferred
+			// label is what Getty calls the concept. Different text means the
+			// tag came in through an alternate label, and this catalogue takes
+			// the preferred term only.
+			match.Variant = !strings.EqualFold(
+				normalizeTagText(matched.Value).Cleaned,
+				normalizeTagText(label.Value).Cleaned)
 			return match, nil
 		}
 	}
@@ -314,9 +322,11 @@ func parseAATSuggestions(body []byte, term string) ([]string, error) {
 		}
 		seen[strings.ToLower(value)] = true
 		suggestions = append(suggestions, value)
-		if len(suggestions) == maxSuggestions {
-			break
-		}
 	}
-	return suggestions, nil
+
+	// Getty returns what its full-text search matched, in its own order, so the
+	// first six are not the closest six. Rank them the same way the offline
+	// list ranks its own candidates.
+	ranked, _ := rankSuggestions(suggestions, term)
+	return ranked, nil
 }

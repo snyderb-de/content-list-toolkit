@@ -1,6 +1,8 @@
 package main
 
 import (
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"strings"
@@ -468,5 +470,41 @@ func TestGettyDefaultsRejectADirectoryAsTheLastSheet(t *testing.T) {
 	app.rememberSheet(t.TempDir())
 	if got := app.GetGettyDefaults().LastSheet; got != "" {
 		t.Fatalf("LastSheet = %q, want empty for a directory", got)
+	}
+}
+
+// Probing is a network call at a host that may be refusing them, so it happens
+// once a session. A screen that reprobed on every visit would turn an
+// indicator into a stream of requests.
+func TestCheckGettyReachabilityProbesOnceAndRechecksOnDemand(t *testing.T) {
+	probes := 0
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		probes++
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{}`))
+	}))
+	defer server.Close()
+
+	app := &App{probeClient: server.Client(), probeURL: server.URL}
+
+	first := app.CheckGettyReachability()
+	if !first.Reachable {
+		t.Fatalf("expected the probe to succeed: %+v", first)
+	}
+	for i := 0; i < 3; i++ {
+		if again := app.CheckGettyReachability(); again.CheckedAt != first.CheckedAt {
+			t.Fatal("a repeated check should return the remembered answer")
+		}
+	}
+	if probes != 1 {
+		t.Fatalf("server saw %d probes, want 1", probes)
+	}
+
+	// The network changes, and the person at the screen is the one who knows.
+	if rechecked := app.RecheckGettyReachability(); rechecked.CheckedAt == first.CheckedAt {
+		t.Fatal("a recheck should produce a new answer")
+	}
+	if probes != 2 {
+		t.Fatalf("server saw %d probes after a recheck, want 2", probes)
 	}
 }

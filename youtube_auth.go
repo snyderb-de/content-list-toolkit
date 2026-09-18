@@ -173,5 +173,5 @@ func (a *App) youtubeClientFor(ctx context.Context, config *oauth2.Config) (*htt
 	if refreshed.AccessToken != token.AccessToken {
 		_ = a.saveYouTubeToken(refreshed)
 	}
-	return &httpDoer{client: oauth2.NewClient(ctx, source)}, nil
+	return &httpDoer{client: secureClient(oauth2.NewClient(ctx, source))}, nil
 }

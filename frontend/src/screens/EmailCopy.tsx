@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { CancelEmailCopy, OpenPath, RevealPath, StartEmailCopy } from '../../wailsjs/go/main/App'
+import { CancelEmailCopy, EmailExtensions, OpenPath, RevealPath, StartEmailCopy } from '../../wailsjs/go/main/App'
 import { EventsOff, EventsOn } from '../../wailsjs/runtime/runtime'
 import FolderPicker from '../components/FolderPicker'
 import ProgressBar from '../components/ProgressBar'
@@ -15,6 +15,7 @@ function fmtSecs(s: number) {
 }
 
 export default function EmailCopy() {
+  const [extensions, setExtensions] = useState<string[]>([])
   const [source, setSource] = useState('')
   const [dest, setDest]     = useState('')
   const [phase, setPhase]   = useState<Phase>('idle')
@@ -29,6 +30,10 @@ export default function EmailCopy() {
       EventsOff('email:error')
       EventsOff('email:canceled')
     }
+  }, [])
+
+  useEffect(() => {
+    EmailExtensions().then(setExtensions).catch(() => setExtensions([]))
   }, [])
 
   const start = async () => {
@@ -81,7 +86,7 @@ export default function EmailCopy() {
           <FolderPicker label="Destination Folder" value={dest}   onChange={setDest} />
 
           <div className="info-text" style={{ marginTop: 12, marginBottom: 16 }}>
-            Copies .dbx, .eml, .emlx, .mbox, .mbx, .msg, .olk14msgsource, .olk15message, .ost, .pst, .rge, .tbb, .wdseml files and writes a manifest CSV.
+            Copies {extensions.length > 0 ? extensions.join(', ') : 'recognized email'} files and writes a manifest CSV.
           </div>
 
           <button className="btn btn-primary btn-lg" onClick={start} disabled={!source || !dest}>

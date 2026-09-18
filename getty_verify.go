@@ -31,12 +31,22 @@ type TagTermVerdict struct {
 	Suggestions []string `json:"suggestions,omitempty"`
 	// QualifierIgnored marks a term confirmed only without its bracketed part.
 	QualifierIgnored bool `json:"qualifierIgnored,omitempty"`
+	// Variant marks a term the vocabulary holds as an alternate label. The
+	// term is real, but the catalogue takes the preferred term, so
+	// PreferredLabel is the replacement rather than a remark about spelling.
+	Variant bool `json:"variant,omitempty"`
 }
 
-// CaseDiffers reports a term that exists but is spelled with different case
-// than the vocabulary uses.
-func (v TagTermVerdict) CaseDiffers() bool {
+// NeedsPreferredTerm reports a term that must be replaced by Getty's preferred
+// spelling: a variant, or the right term written with the wrong case.
+func (v TagTermVerdict) NeedsPreferredTerm() bool {
 	return v.Found && v.PreferredLabel != "" && v.Term != v.PreferredLabel
+}
+
+// CaseDiffers narrows that to the case-only difference, which reads
+// differently in a report: same term, different capitals.
+func (v TagTermVerdict) CaseDiffers() bool {
+	return v.NeedsPreferredTerm() && !v.Variant
 }
 
 // verifyTags looks up every term in a checked cell and records what came back.
@@ -49,7 +59,7 @@ func verifyTags(ctx context.Context, vocabulary gettyVocabulary, result *TagChec
 		return
 	}
 
-	var caseDiffers, qualifierIgnored []string
+	var caseDiffers, variants, qualifierIgnored []string
 	unchecked := 0
 
 	for _, tag := range result.Tags {
@@ -65,6 +75,7 @@ func verifyTags(ctx context.Context, vocabulary gettyVocabulary, result *TagChec
 			verdict.SubjectID = match.SubjectID
 			verdict.PreferredLabel = match.PreferredLabel
 			verdict.QualifierIgnored = match.QualifierIgnored
+			verdict.Variant = match.Variant
 
 			if !match.Found {
 				// One issue per unknown term rather than one listing them all,
@@ -72,7 +83,13 @@ func verifyTags(ctx context.Context, vocabulary gettyVocabulary, result *TagChec
 				// a replacement for the specific term.
 				verdict.Suggestions = suggestFor(ctx, vocabulary, tag)
 				result.Issues = append(result.Issues, newTagIssue(tagIssueUnknownTerm,
-					describeUnknownTerm(tag, vocabulary.SourceName(), verdict.Suggestions)))
+					describeUnknownTerm(tag, listNameFor(vocabulary), verdict.Suggestions)))
+			} else if verdict.Variant {
+				// A variant is a correction to make, not a remark: the sheet
+				// takes Getty's preferred term, and the replacement is known,
+				// so it is reported with the term to use in its place.
+				variants = append(variants,
+					fmt.Sprintf("%q is a variant of %q", tag, match.PreferredLabel))
 			} else if match.QualifierIgnored {
 				qualifierIgnored = append(qualifierIgnored, tag)
 			} else if verdict.CaseDiffers() {
@@ -83,6 +100,10 @@ func verifyTags(ctx context.Context, vocabulary gettyVocabulary, result *TagChec
 		result.Terms = append(result.Terms, verdict)
 	}
 
+	if len(variants) > 0 {
+		result.Issues = append(result.Issues, newTagIssue(tagIssueVariantTerm,
+			fmt.Sprintf("%s; use the preferred term", strings.Join(variants, "; "))))
+	}
 	if len(caseDiffers) > 0 {
 		result.Issues = append(result.Issues, newTagIssue(tagIssueTermCase,
 			strings.Join(caseDiffers, "; ")))

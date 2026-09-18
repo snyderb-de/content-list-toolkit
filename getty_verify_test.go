@@ -75,6 +75,79 @@ func TestVerifyTagsReportsCaseDisagreement(t *testing.T) {
 	}
 }
 
+// A variant is the case this catalogue cares about most: the term exists, so
+// "not in AAT" would be wrong, but the sheet takes the preferred term, so
+// accepting it silently would be wrong too.
+func TestVerifyTagsReportsAVariantWithTheTermToUseInstead(t *testing.T) {
+	vocabulary, err := readVocabulary(strings.NewReader(
+		"photographs\nphotos,photographs\n"), "test list")
+	if err != nil {
+		t.Fatalf("readVocabulary: %v", err)
+	}
+
+	result := checkTagCell("photos")
+	verifyTags(context.Background(), vocabulary, &result)
+
+	verdict := result.Terms[0]
+	if !verdict.Found || !verdict.Variant {
+		t.Fatalf("expected a found variant, got %+v", verdict)
+	}
+	if verdict.PreferredLabel != "photographs" {
+		t.Fatalf("PreferredLabel = %q, want the term to use instead", verdict.PreferredLabel)
+	}
+	if verdict.CaseDiffers() {
+		t.Fatal("a variant is a different term, not a capitalisation difference")
+	}
+
+	if !hasIssue(result, tagIssueVariantTerm) {
+		t.Fatalf("expected a variant-term issue, got %+v", result.Issues)
+	}
+	if hasIssue(result, tagIssueUnknownTerm) {
+		t.Fatal("a variant is in the vocabulary, so it is not an unknown term")
+	}
+	for _, issue := range result.Issues {
+		if issue.Kind != tagIssueVariantTerm {
+			continue
+		}
+		for _, want := range []string{`"photos"`, `"photographs"`, "preferred term"} {
+			if !strings.Contains(issue.Detail, want) {
+				t.Fatalf("detail %q should contain %q", issue.Detail, want)
+			}
+		}
+	}
+}
+
+// The preferred term itself is what the catalogue wants, so it passes with
+// nothing said about it.
+func TestVerifyTagsAcceptsThePreferredTermOfAConceptThatHasVariants(t *testing.T) {
+	vocabulary, err := readVocabulary(strings.NewReader(
+		"photographs\nphotos,photographs\nlandscapes\ncity plans\n"), "test list")
+	if err != nil {
+		t.Fatalf("readVocabulary: %v", err)
+	}
+
+	result := checkTagCell("photographs; landscapes; city plans")
+	verifyTags(context.Background(), vocabulary, &result)
+
+	if !result.OK() {
+		t.Fatalf("expected no issues, got %+v", result.Issues)
+	}
+	if result.Terms[0].Variant {
+		t.Fatal("the preferred term is not a variant of itself")
+	}
+}
+
+// A list written before the second column existed says nothing about which of
+// its terms are variants. It must keep loading, and keep accepting its terms.
+func TestVerifyTagsAcceptsATermFromAListWithoutPreferredColumns(t *testing.T) {
+	result := checkTagCell("landscapes; aerial photographs; city plans")
+	verifyTags(context.Background(), verifyVocabulary(t), &result)
+
+	if !result.OK() {
+		t.Fatalf("expected no issues, got %+v", result.Issues)
+	}
+}
+
 // The distinction the whole design rests on: a lookup that failed is not a
 // term that is wrong.
 func TestVerifyTagsSeparatesFailedLookupsFromAbsentTerms(t *testing.T) {
