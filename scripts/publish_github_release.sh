@@ -88,7 +88,9 @@ ASSETS=()
 while IFS= read -r -d '' asset; do
   ASSETS+=("$asset")
 done < <(
-  find "$RELEASES_DIR" -mindepth 2 -maxdepth 2 -type f ! -name ".gitkeep" -print0 |
+  # Dotfiles are never assets. .DS_Store reached a published release once,
+  # uploaded as "default.DS_Store" because GitHub will not take a leading dot.
+  find "$RELEASES_DIR" -mindepth 2 -maxdepth 2 -type f ! -name ".*" -print0 |
     sort -z
 )
 
