@@ -40,7 +40,8 @@ export default function About() {
         <p className="info-text" style={{ marginBottom: 12 }}>
           Fast recursive folder scanner for very large collections. Generate a full CSV inventory
           with optional XLSX export, copy email files to a destination while preserving folder
-          structure, or compare two drives to verify a clone.
+          structure, compare two drives to verify a clone, or check the Tags column of a CONTENTdm
+          export against the Getty Art &amp; Architecture Thesaurus before uploading it.
         </p>
         <p className="info-text">
           CSV output streams directly to disk — no in-memory table — so scans of millions of files

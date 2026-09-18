@@ -67,6 +67,31 @@ the Getty screen, and a remembered sheet path that survived from a test run.
 - [y] G17 A second Apply keeps the first round of edits — corrections do not reappear after the second save
 - [y] G18 Re-check picks up changes made to the sheet in Excel while the screen was open
 
+### Needs a re-walk after the vocabulary changes
+
+Walked on 2026-09-18 against `wails dev`, driving the dev server. Four things were found and
+fixed during the pass: the results panel read "…(January 2026) (176,629 terms)", the reachability
+line ran two sentences together, "Command Prompt" ran into `dir /b` with no space, and the live
+source suggested unrelated terms for a misspelling — Getty's search matches whole words, so it
+never returns the term meant. The bundled list now stands behind it for suggestions only.
+
+These change what G3, G4, and G11 look like, so the earlier ticks no longer describe the screen.
+
+- [y] G19 A variant term (e.g. `photos`, `place setting`) is reported as **Must Fix** — "is a variant — the preferred term is …" — and the chip beside it replaces only that term
+- [y] G20 The preferred term of the same concept (`photographs`, `place settings`) passes with nothing said about it
+- [y] G21 A misspelled term (`portait photography`) offers the term meant as the first suggestion
+- [y] G22 The reachability line probes **once**: revisiting the screen and switching the source dropdown back and forth produce no further requests, and the line says when it was checked
+- [y] G23 **Check again** re-probes on demand and the timestamp moves
+- [ ] G24 With the network off, G22 still holds — one failed probe, not a stream of them
+- G24 note: not walked. The probe was reachable throughout the pass, so the unreachable path was
+  not exercised in the app; the once-per-session rule itself is covered by a Go test.
+- [ ] G25 **Build list from a Getty archive** converts a local `aat_rel_<mmyy>.zip`, writes the list beside it, selects it, and reports the term count and publication date
+- [ ] G26 Pointing that button at a file that is not an archive explains itself rather than writing an empty list
+- G25/G26 note: not walked. Both start at a native file dialog, which the browser-driven pass could
+  not open. The import itself is covered by Go tests, including the not-an-archive case; what is
+  untested is the dialog and the path from it.
+- [y] G27 The built-in list accepts `place settings` — the American English term that the old extract dropped
+
 ## About
 
 - [y] AB1 Version shown

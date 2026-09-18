@@ -10,9 +10,14 @@ import (
 // The application ships a copy of the Getty AAT so that offline checking works
 // out of the box, with no download and no network at all.
 //
-// It is stored gzipped and inflated on first use: 2.5 MB of terms compress to
-// 827 KB, and a check that never consults a vocabulary should not pay to build
-// an index of 169,307 terms it will not read.
+// It is stored gzipped and inflated on first use: 4.3 MB of terms compress to
+// 1.1 MB, and a check that never consults a vocabulary should not pay to build
+// an index of 176,629 terms it will not read.
+//
+// It is the whole English thesaurus, preferred terms and variants alike, and
+// each variant carries the preferred term that replaces it — which is what
+// lets an offline check tell a tag to correct from a tag that is already
+// right.
 //
 // This copy is Getty's January 2026 archive, which Getty has frozen. It can
 // therefore accept a term Getty has since renamed, so it reports itself as a

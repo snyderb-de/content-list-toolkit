@@ -45,7 +45,7 @@ type GettyReachability struct {
 // block page is not a working vocabulary service, however healthy it looks.
 func probeGettyReachability(ctx context.Context, client *http.Client, url string) GettyReachability {
 	if client == nil {
-		client = &http.Client{Timeout: gettyProbeTimeout}
+		client = secureHTTPClient(gettyProbeTimeout)
 	}
 	if url == "" {
 		url = gettyProbeURL
@@ -109,6 +109,11 @@ type gettyTermMatch struct {
 	// PreferredLabel is Getty's own spelling. When it differs from Term only
 	// by case or punctuation, the sheet is worth correcting toward Getty.
 	PreferredLabel string `json:"preferredLabel,omitempty"`
+	// Variant marks a term matched through a non-preferred label: a real AAT
+	// term, but not the one this catalogue accepts. The sheet takes Getty's
+	// preferred term only, so a variant is a correction to make rather than a
+	// spelling curiosity, and PreferredLabel carries what to put in its place.
+	Variant bool `json:"variant,omitempty"`
 	// QualifierIgnored marks a match made only after dropping a parenthetical
 	// qualifier, because the source could not check it. Getty writes
 	// "counters (furniture)"; the relational archive stores the term as bare
@@ -118,8 +123,8 @@ type gettyTermMatch struct {
 }
 
 // ExactLabel reports whether the sheet spelling matches Getty's preferred
-// label exactly. A term can be found through a variant spelling and still be
-// worth normalizing.
+// label exactly. A term found through a variant spelling is not exact, and the
+// catalogue requires the preferred label, so it has to be replaced.
 func (m gettyTermMatch) ExactLabel() bool {
 	return m.Found && m.PreferredLabel != "" && m.Term == m.PreferredLabel
 }
@@ -169,6 +174,22 @@ type gettySuggester interface {
 	Suggest(ctx context.Context, term string) ([]string, error)
 }
 
+// gettyListNamed is an optional capability for sources with a short name worth
+// using where the full SourceName would repeat: one unknown-term line per term
+// carrying "(176,629 terms, no variant information)" is noise by the third row.
+type gettyListNamed interface {
+	ListName() string
+}
+
+// listNameFor returns the short name when a source has one, and the full
+// source name otherwise.
+func listNameFor(vocabulary gettyVocabulary) string {
+	if named, ok := vocabulary.(gettyListNamed); ok {
+		return named.ListName()
+	}
+	return vocabulary.SourceName()
+}
+
 // gettySnapshotSource is an optional capability for vocabularies that answer
 // from a fixed copy rather than from Getty itself.
 //
@@ -192,6 +213,73 @@ func snapshotNoteFor(vocabulary gettyVocabulary) string {
 		return note.SnapshotNote()
 	}
 	return ""
+}
+
+// backedSuggester answers "did you mean" from a second source when the first
+// cannot.
+//
+// Getty's endpoint searches full words: ask it about "portait photography" and
+// it matches on "photography" and returns a scattering of terms containing that
+// word, never "portrait photography" — the term actually meant is not in what
+// it sends back, so no amount of ranking finds it. The bundled list can match
+// across a typo, because it compares letter by letter.
+//
+// So the live source stays the authority on whether a term exists, and the
+// bundled list is consulted only for the suggestion — and only when the live
+// answer holds nothing close. A suggestion is a proposal a person accepts or
+// ignores, not a verdict, which is what makes borrowing one from a fixed copy
+// reasonable where borrowing a verdict would not be.
+type backedSuggester struct {
+	gettyVocabulary
+	backup gettySuggester
+}
+
+func (s backedSuggester) Suggest(ctx context.Context, term string) ([]string, error) {
+	var live []string
+	if suggester, ok := s.gettyVocabulary.(gettySuggester); ok {
+		suggestions, err := suggester.Suggest(ctx, term)
+		if err == nil {
+			live = suggestions
+		}
+	}
+
+	// The endpoint is enough when something it returned holds every word of
+	// what was typed. Holding one word of two is how "portait photography"
+	// came back as a list of unrelated photography terms.
+	ranked, best := rankSuggestions(live, term)
+	if best >= perfectScore(term) || s.backup == nil {
+		return ranked, nil
+	}
+
+	backup, err := s.backup.Suggest(ctx, term)
+	if err != nil || len(backup) == 0 {
+		return ranked, nil
+	}
+	fromBackup, backupBest := rankSuggestions(backup, term)
+	if backupBest <= best {
+		return ranked, nil
+	}
+	// The closer set leads; whatever the endpoint offered follows, so nothing
+	// it found is thrown away.
+	return trimSuggestions(append(fromBackup, ranked...)), nil
+}
+
+// trimSuggestions drops repeats and keeps the list readable.
+func trimSuggestions(all []string) []string {
+	seen := map[string]bool{}
+	var kept []string
+	for _, suggestion := range all {
+		key := strings.ToLower(suggestion)
+		if seen[key] {
+			continue
+		}
+		seen[key] = true
+		kept = append(kept, suggestion)
+		if len(kept) == maxSuggestions {
+			break
+		}
+	}
+	return kept
 }
 
 // maxSuggestions keeps the list to something a person will actually read.
@@ -265,6 +353,11 @@ func (c *cachedVocabulary) Suggest(ctx context.Context, term string) ([]string, 
 }
 
 func (c *cachedVocabulary) SourceName() string { return c.inner.SourceName() }
+
+// ListName passes the wrapped source's short name through for the same reason
+// SnapshotNote does: wrapping a list in a cache must not change what a report
+// says about it.
+func (c *cachedVocabulary) ListName() string { return listNameFor(c.inner) }
 
 // SnapshotNote passes the wrapped source's caution through, so wrapping a
 // dated list in a cache does not quietly hide that it is dated.

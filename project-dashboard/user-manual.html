@@ -587,7 +587,7 @@
             <thead><tr><th>Option</th><th>Needs</th><th>Use when</th></tr></thead>
             <tbody>
               <tr><td><strong>Getty, live</strong></td><td><code>vocab.getty.edu</code> on port 443</td><td>Always, when it is reachable. It is the only current source.</td></tr>
-              <tr><td><strong>Built-in list</strong></td><td>Nothing</td><td>Offline, or the live check is blocked. 169,307 English terms ship inside the app.</td></tr>
+              <tr><td><strong>Built-in list</strong></td><td>Nothing</td><td>Offline, or the live check is blocked. 176,629 English terms ship inside the app.</td></tr>
               <tr><td><strong>A term list on this machine</strong></td><td>A file you supply</td><td>You keep your own curated list, or you downloaded a newer one.</td></tr>
               <tr><td><strong>Do not verify terms</strong></td><td>Nothing</td><td>You only want the invisible characters cleaned.</td></tr>
             </tbody>
@@ -602,12 +602,15 @@
         <div class="card">
           <h3>Getting a fresher list</h3>
           <p>
-            <strong>Download list from Getty</strong> fetches Getty's current archive and extracts an English term list, saving it where you choose and
-            selecting it. It downloads from <code>aatdownloads.getty.edu</code>, which is a different machine from the one the live check uses — so on
-            some networks this works when the live check does not. The download is about 73&nbsp;MB and the publication date is written into the filename.
+            <strong>Build list from a Getty archive</strong> turns a Getty relational archive (<code>aat_rel_&lt;mmyy&gt;.zip</code>, about 73&nbsp;MB) that you
+            already have into an English term list, written beside the archive and selected for you. The publication date is written into the filename.
           </p>
           <p style="margin-top:10px">
-            If either host is blocked here, <a href="getty-call-paths.html">Getty network access</a> lists every request the check makes,
+            The app does not download that archive itself: Getty serves it over an unencrypted connection, and this app makes none. Fetch it separately if
+            you need one, then point the app at the file.
+          </p>
+          <p style="margin-top:10px">
+            If Getty is blocked here, <a href="getty-call-paths.html">Getty network access</a> lists every request the check makes,
             with hosts and ports, written for whoever approves the firewall exception.
           </p>
         </div>

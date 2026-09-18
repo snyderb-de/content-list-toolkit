@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react'
 import {
+  BuildAccessFileList,
   CheckGettyReachability,
+  RecheckGettyReachability,
   CheckGettyTags,
   GetGettyDefaults,
   OpenPath,
-  DownloadGettyVocabulary,
+  ImportGettyVocabulary,
   PickFolder,
+  PickGettyArchive,
   PickSheet,
   RevealPath,
   SaveGettyTagEdits,
@@ -45,8 +48,12 @@ export default function GettyTag() {
   const [saving, setSaving] = useState(false)
   const [savedPath, setSavedPath] = useState('')
   const [pass, setPass] = useState(0)
-  const [downloading, setDownloading] = useState(false)
-  const [downloadNote, setDownloadNote] = useState('')
+  const [importing, setImporting] = useState(false)
+  const [importNote, setImportNote] = useState('')
+
+  const [fileList, setFileList] = useState<main.AccessFileListResult | null>(null)
+  const [buildingList, setBuildingList] = useState(false)
+  const [listErr, setListErr] = useState('')
 
   useEffect(() => {
     GetGettyDefaults()
@@ -58,16 +65,28 @@ export default function GettyTag() {
       .catch(() => {})
   }, [])
 
-  // Probe on open and whenever the live source is selected, so the indicator
-  // reflects this machine rather than an assumption about the network.
+  // Probe once, the first time the live source is actually selected. The
+  // answer is remembered in Go for the session, so returning to this screen or
+  // flipping the dropdown costs no request — a red indicator must not turn
+  // into a stream of calls at a host that is already refusing them.
   useEffect(() => {
-    if (source !== 'live') return
+    if (source !== 'live' || reach !== null) return
     setProbing(true)
     CheckGettyReachability()
       .then(setReach)
       .catch(() => setReach(null))
       .finally(() => setProbing(false))
-  }, [source])
+  }, [source, reach])
+
+  // Asking again is deliberate: the network changed, and the person at the
+  // screen is the one who knows it.
+  const recheckReachability = () => {
+    setProbing(true)
+    RecheckGettyReachability()
+      .then(setReach)
+      .catch(() => setReach(null))
+      .finally(() => setProbing(false))
+  }
 
   const chooseSheet = async () => {
     const p = await PickSheet('Choose the exported Access sheet')
@@ -82,26 +101,45 @@ export default function GettyTag() {
     }
   }
 
-  // Getty serves its archives from a different host than the SPARQL endpoint,
-  // so this can work on a network where the live check does not.
-  const downloadList = async () => {
-    const dir = await PickFolder('Where should the term list be saved?')
+  // Comes before the tag check in the workflow: the file names have to be in
+  // Access before there is anything to export and check.
+  const buildFileList = async () => {
+    const dir = await PickFolder('Choose the folder holding the images')
     if (!dir) return
-    setDownloading(true)
-    setDownloadNote('')
+    setBuildingList(true)
+    setListErr('')
+    setFileList(null)
+    try {
+      setFileList(await BuildAccessFileList(dir))
+    } catch (e: any) {
+      setListErr(String(e))
+    } finally {
+      setBuildingList(false)
+    }
+  }
+
+  // The app does not fetch the archive: Getty serves it over plain HTTP only,
+  // and this app makes no unencrypted connections. So the archive is obtained
+  // separately and converted here, which is also why the term list is written
+  // beside it rather than into a folder chosen in a second dialog.
+  const importList = async () => {
+    const archive = await PickGettyArchive('Choose the Getty vocabulary archive (.zip)')
+    if (!archive) return
+    setImporting(true)
+    setImportNote('')
     setErr('')
     try {
-      const r = await DownloadGettyVocabulary(dir)
+      const r = await ImportGettyVocabulary(archive)
       setVocabPath(r.path)
       setSource('file')
       SaveGettyVocabulary('file', r.path).catch(() => {})
-      setDownloadNote(
+      setImportNote(
         `${r.terms.toLocaleString()} English terms from ${r.archive}, published ${r.published}.`,
       )
     } catch (e: any) {
       setErr(String(e))
     } finally {
-      setDownloading(false)
+      setImporting(false)
     }
   }
 
@@ -225,7 +263,52 @@ export default function GettyTag() {
         </div>
 
         <div className="card">
-          <p className="card-title">Exported sheet</p>
+          <p className="card-title">Step 1 · Access file list</p>
+          <p className="info-text" style={{ marginBottom: 12 }}>
+            Builds the <code>Item Number</code> and <code>File Name (Cdm)</code> columns from a
+            folder of images, ready to paste into Access. Replaces the Command Prompt{' '}
+            <code>dir /b</code> step, and fills both columns rather than one.
+          </p>
+          <button className="btn btn-outline" onClick={buildFileList} disabled={buildingList}>
+            {buildingList ? 'Reading folder…' : 'Build File List'}
+          </button>
+          {listErr && <p className="danger-text" style={{ marginTop: 10 }}>{listErr}</p>}
+          {fileList && (
+            <>
+              <div className="stat-row" style={{ marginTop: 12 }}>
+                <span className="stat-row-label">Files listed</span>
+                <span className="stat-row-value success-text">{fileList.files.toLocaleString()}</span>
+              </div>
+              {fileList.skipped > 0 && (
+                <div className="stat-row">
+                  <span className="stat-row-label">Skipped</span>
+                  <span className="stat-row-value">
+                    {fileList.skipped} (folders, hidden and system files)
+                  </span>
+                </div>
+              )}
+              <div className="stat-row">
+                <span className="stat-row-label">First</span>
+                <span className="stat-row-value">{fileList.first}</span>
+              </div>
+              <div className="stat-row">
+                <span className="stat-row-label">Last</span>
+                <span className="stat-row-value">{fileList.last}</span>
+              </div>
+              <div className="result-actions">
+                <button className="btn btn-primary btn-sm" onClick={() => OpenPath(fileList.path)}>
+                  Open File List
+                </button>
+                <button className="btn btn-outline btn-sm" onClick={() => RevealPath(fileList.path)}>
+                  Show in Folder
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+
+        <div className="card">
+          <p className="card-title">Step 2 · Exported sheet</p>
           <div className="field">
             {/* The card title already says what this is; a visible label here
                 repeated it. The accessible name stays on the input. */}
@@ -267,16 +350,23 @@ export default function GettyTag() {
             <div className="info-text">
               {probing && 'Checking whether Getty is reachable from this machine…'}
               {!probing && reach !== null && (
-                <span className={reach.reachable ? 'success-text' : 'danger-text'}>
-                  {reach.reachable ? `● Getty is reachable — responded in ${reach.latencyMs} ms` : '● Getty is not reachable'}
-                </span>
+                <>
+                  <span className={reach.reachable ? 'success-text' : 'danger-text'}>
+                    {reach.reachable ? `● Getty is reachable — responded in ${reach.latencyMs} ms` : '● Getty is not reachable'}
+                  </span>
+                  {' · '}
+                  Checked once at {new Date(reach.checkedAt).toLocaleTimeString()}.{' '}
+                  <button className="btn btn-outline btn-sm" onClick={recheckReachability}>
+                    Check again
+                  </button>
+                </>
               )}
             </div>
           )}
 
           {source === 'builtin' && (
             <div className="info-text">
-              169,307 English terms from Getty\u2019s January 2026 archive, shipped inside the
+              176,629 English terms from Getty’s January 2026 archive, shipped inside the
               application. Getty has frozen that archive and revises the thesaurus separately, so
               a term this list accepts may since have been renamed — the live check is the current
               authority.
@@ -295,12 +385,12 @@ export default function GettyTag() {
                 />
                 <button className="btn btn-outline btn-sm" onClick={chooseVocabulary}>Browse</button>
               </div>
-              <button className="btn btn-outline btn-sm" onClick={downloadList} disabled={downloading}>
-                {downloading ? 'Downloading from Getty…' : 'Download list from Getty'}
+              <button className="btn btn-outline btn-sm" onClick={importList} disabled={importing}>
+                {importing ? 'Reading the archive…' : 'Build list from a Getty archive'}
               </button>
               <div className="info-text" style={{ marginTop: 8 }}>
-                {downloadNote ||
-                  'Downloads from aatdownloads.getty.edu, a different host than the live check uses — it may work where the live check is blocked. Getty froze these archives in January 2026 and revises the thesaurus separately, so a term this list accepts may since have been renamed. Treat it as a fallback, not as the authority.'}
+                {importNote ||
+                  'Converts a Getty relational archive (aat_rel_NNNN.zip) you already have into a term list, written beside the archive. The app does not download it: Getty serves those archives over an unencrypted connection, which this app will not make. Getty also froze the archives in January 2026 and revises the thesaurus separately, so a term this list accepts may since have been renamed. Treat it as a fallback, not as the authority.'}
               </div>
             </div>
           )}
@@ -494,7 +584,10 @@ export default function GettyTag() {
                   // Term-level findings are grouped with their own replacements
                   // below, so they are not repeated in the row-level list.
                   const rowIssues = issues.filter(
-                    (i) => i.kind !== 'unknown-term' && i.kind !== 'term-case',
+                    (i) =>
+                      i.kind !== 'unknown-term' &&
+                      i.kind !== 'term-case' &&
+                      i.kind !== 'variant-term',
                   )
                   const termFindings = (row.result.terms ?? []).filter(
                     (t) => t.checked && (!t.found || (t.preferredLabel && t.preferredLabel !== t.term)),
@@ -536,17 +629,24 @@ export default function GettyTag() {
                             : term.preferredLabel
                               ? [term.preferredLabel]
                               : []
+                          // A variant has to be replaced, the same as an
+                          // unknown term. The difference is that its
+                          // replacement is known, so the chip below is the
+                          // answer rather than a guess.
+                          const mustFix = unknown || term.variant
                           return (
                             <div key={term.term} className="term-finding">
-                              <div className={`finding ${unknown ? 'finding-error' : 'finding-review'}`}>
+                              <div className={`finding ${mustFix ? 'finding-error' : 'finding-review'}`}>
                                 <span className="finding-prefix">
-                                  {unknown ? 'Must Fix:' : 'Review:'}
+                                  {mustFix ? 'Must Fix:' : 'Review:'}
                                 </span>
                                 <span className="finding-detail">
                                   <strong>{term.term}</strong>{' '}
                                   {unknown
                                     ? 'is not a term in the vocabulary'
-                                    : `is spelled “${term.preferredLabel}” in the vocabulary`}
+                                    : term.variant
+                                      ? `is a variant — the preferred term is “${term.preferredLabel}”`
+                                      : `is spelled “${term.preferredLabel}” in the vocabulary`}
                                 </span>
                               </div>
                               {options.length > 0 ? (

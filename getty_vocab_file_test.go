@@ -282,3 +282,315 @@ func TestBuiltinListMatchesQualifiedTermsFromRealData(t *testing.T) {
 		t.Fatal("the bundled list holds the bare term, so the qualifier went unchecked")
 	}
 }
+
+// A variant in the list is found, but answered with the term that replaces it.
+func TestFileVocabularyMarksVariants(t *testing.T) {
+	vocabulary, err := readVocabulary(strings.NewReader(
+		"photographs\nphotos,photographs\ncity plans\n"), "test list")
+	if err != nil {
+		t.Fatalf("readVocabulary: %v", err)
+	}
+
+	match, err := vocabulary.Lookup(context.Background(), "Photos")
+	if err != nil {
+		t.Fatalf("Lookup: %v", err)
+	}
+	if !match.Found || !match.Variant {
+		t.Fatalf("expected a found variant, got %+v", match)
+	}
+	if match.PreferredLabel != "photographs" {
+		t.Fatalf("PreferredLabel = %q, want the replacement term", match.PreferredLabel)
+	}
+	if match.ExactLabel() {
+		t.Fatal("a variant is never the preferred label")
+	}
+}
+
+// A term repeating its own spelling in the second column is preferred, not a
+// variant of itself.
+func TestFileVocabularyTreatsASelfReferenceAsPreferred(t *testing.T) {
+	vocabulary, err := readVocabulary(strings.NewReader(
+		"photographs,photographs\n"), "test list")
+	if err != nil {
+		t.Fatalf("readVocabulary: %v", err)
+	}
+
+	match, err := vocabulary.Lookup(context.Background(), "photographs")
+	if err != nil {
+		t.Fatalf("Lookup: %v", err)
+	}
+	if !match.Found || match.Variant {
+		t.Fatalf("expected a preferred term, got %+v", match)
+	}
+}
+
+// Suggesting a variant would replace one unusable term with another, so the
+// preferred term is offered in its place — once, however many variants of it
+// the list holds.
+func TestFileVocabularySuggestsPreferredTermsRatherThanVariants(t *testing.T) {
+	vocabulary, err := readVocabulary(strings.NewReader(
+		"photographs\nlarge photographs,photographs\naerial photographs,photographs\n"), "test list")
+	if err != nil {
+		t.Fatalf("readVocabulary: %v", err)
+	}
+
+	suggestions, err := vocabulary.Suggest(context.Background(), "small photographs")
+	if err != nil {
+		t.Fatalf("Suggest: %v", err)
+	}
+	if len(suggestions) != 1 || suggestions[0] != "photographs" {
+		t.Fatalf("expected only the preferred term, got %v", suggestions)
+	}
+}
+
+// A tag that is the right term with a letter missing shares no whole word with
+// it, so a suggester that only matches whole words offers everything except
+// the term meant. This is the case reported from a real sheet: "portait
+// photography" for "portrait photography".
+func TestFileVocabularySuggestsTheTermMeantAcrossATypo(t *testing.T) {
+	vocabulary, err := readVocabulary(strings.NewReader(
+		"portrait photography\nphotography\nJPEG photography\ndigital photography\n"), "test list")
+	if err != nil {
+		t.Fatalf("readVocabulary: %v", err)
+	}
+
+	suggestions, err := vocabulary.Suggest(context.Background(), "portait photography")
+	if err != nil {
+		t.Fatalf("Suggest: %v", err)
+	}
+	if len(suggestions) == 0 || suggestions[0] != "portrait photography" {
+		t.Fatalf("expected the misspelled term first, got %v", suggestions)
+	}
+}
+
+// Scoring has to beat length: the shortest term sharing a word is not the
+// closest one, which is how "JPEG" came to be offered for a portrait tag.
+func TestFileVocabularyRanksClosenessOverBrevity(t *testing.T) {
+	vocabulary, err := readVocabulary(strings.NewReader(
+		"JPEG\nphoto zines\nportrait photography\n"), "test list")
+	if err != nil {
+		t.Fatalf("readVocabulary: %v", err)
+	}
+
+	suggestions, err := vocabulary.Suggest(context.Background(), "portrait photografy")
+	if err != nil {
+		t.Fatalf("Suggest: %v", err)
+	}
+	if len(suggestions) == 0 || suggestions[0] != "portrait photography" {
+		t.Fatalf("expected the closest term first, got %v", suggestions)
+	}
+}
+
+// The commonest typing slip of all is a swapped pair, so it counts as one.
+func TestFileVocabularySuggestsAcrossASwappedPair(t *testing.T) {
+	vocabulary, err := readVocabulary(strings.NewReader(
+		"portraits\ncity plans\n"), "test list")
+	if err != nil {
+		t.Fatalf("readVocabulary: %v", err)
+	}
+
+	suggestions, err := vocabulary.Suggest(context.Background(), "portriats")
+	if err != nil {
+		t.Fatalf("Suggest: %v", err)
+	}
+	if len(suggestions) == 0 || suggestions[0] != "portraits" {
+		t.Fatalf("expected the term meant, got %v", suggestions)
+	}
+}
+
+// A suggestion that is not the term meant is worse than none: it invites a
+// wrong tag to be accepted with one click. Two letters apart is a different
+// word.
+func TestFileVocabularyDoesNotSuggestADistantWord(t *testing.T) {
+	vocabulary, err := readVocabulary(strings.NewReader(
+		"landmarks\ncity plans\n"), "test list")
+	if err != nil {
+		t.Fatalf("readVocabulary: %v", err)
+	}
+
+	suggestions, err := vocabulary.Suggest(context.Background(), "landscapes")
+	if err != nil {
+		t.Fatalf("Suggest: %v", err)
+	}
+	if len(suggestions) != 0 {
+		t.Fatalf("expected nothing close enough to offer, got %v", suggestions)
+	}
+}
+
+func TestEditDistanceWithin(t *testing.T) {
+	for _, c := range []struct {
+		a, b string
+		max  int
+		want int
+	}{
+		{"portrait", "portrait", 2, 0}, // the same word is no slips
+		{"portrait", "portait", 1, 1},  // a letter dropped
+		{"portrait", "portrsit", 1, 1}, // a letter mistyped
+		{"portrait", "portraits", 1, 1},
+		{"portraits", "portriats", 1, 1}, // neighbours swapped, counted once
+		{"portraits", "protraits", 1, 1}, // swapped nearer the front
+		{"portraits", "ortriats", 2, 2},  // a dropped letter and a swap
+		{"portraits", "ortriats", 1, 0},  // …which is out of reach at one
+		{"portrait", "porait", 1, 0},     // two letters dropped
+		{"portrait", "traitpor", 2, 0},   // same letters, different word
+		{"landscapes", "landmarks", 2, 0},
+	} {
+		if got := editDistanceWithin(c.a, c.b, c.max); got != c.want {
+			t.Errorf("editDistanceWithin(%q, %q, %d) = %d, want %d", c.a, c.b, c.max, got, c.want)
+		}
+	}
+}
+
+// The allowance scales, or a nine-letter word gets the same latitude as a
+// five-letter one.
+func TestAllowedSlipsScalesWithLength(t *testing.T) {
+	for _, c := range []struct {
+		word, candidate string
+		want            int
+	}{
+		{"bows", "bowl", 0},
+		{"plans", "plants", 1},
+		{"portraits", "portriats", 2},
+		{"portraits", "bows", 0}, // the shorter length decides
+	} {
+		if got := allowedSlips(len(c.word), len(c.candidate)); got != c.want {
+			t.Errorf("allowedSlips(%d, %d) = %d, want %d", len(c.word), len(c.candidate), got, c.want)
+		}
+	}
+}
+
+// Two quite different files land on this code, and they enforce different
+// things. A list that cannot record variants has to say so where it is named,
+// or "nothing was flagged" reads as "nothing is wrong".
+func TestFileVocabularyNamesAListWithNoVariantInformation(t *testing.T) {
+	plain, err := readVocabulary(strings.NewReader("photographs\nlandscapes\n"), "AAT Tags export.csv")
+	if err != nil {
+		t.Fatalf("readVocabulary: %v", err)
+	}
+	if !strings.Contains(plain.SourceName(), "no variant information") {
+		t.Fatalf("SourceName should say the list carries none, got %q", plain.SourceName())
+	}
+	if !strings.Contains(plain.SnapshotNote(), "no variants") {
+		t.Fatalf("the caution should explain the consequence, got %q", plain.SnapshotNote())
+	}
+
+	// A list built from a Getty archive knows, so it says nothing extra.
+	fromArchive, err := readVocabulary(strings.NewReader("photographs\nphotos,photographs\n"), "AAT terms.csv")
+	if err != nil {
+		t.Fatalf("readVocabulary: %v", err)
+	}
+	if strings.Contains(fromArchive.SourceName(), "no variant information") {
+		t.Fatalf("a list with variants should not be labelled as lacking them, got %q", fromArchive.SourceName())
+	}
+	if strings.Contains(fromArchive.SnapshotNote(), "no variants") {
+		t.Fatalf("unexpected caution: %q", fromArchive.SnapshotNote())
+	}
+}
+
+// The full description belongs at the top of a report, not repeated on every
+// unknown term.
+func TestListNameIsTheShortNameThroughACache(t *testing.T) {
+	list, err := readVocabulary(strings.NewReader("photographs\n"), "AAT Tags export.csv")
+	if err != nil {
+		t.Fatalf("readVocabulary: %v", err)
+	}
+	if got := listNameFor(newCachedVocabulary(list)); got != "AAT Tags export.csv" {
+		t.Fatalf("listNameFor = %q, want the bare file name", got)
+	}
+}
+
+func TestGroupDigits(t *testing.T) {
+	for _, c := range []struct {
+		n    int
+		want string
+	}{
+		{0, "0"},
+		{7, "7"},
+		{999, "999"},
+		{1000, "1,000"},
+		{176629, "176,629"},
+		{1000000, "1,000,000"},
+	} {
+		if got := groupDigits(c.n); got != c.want {
+			t.Errorf("groupDigits(%d) = %q, want %q", c.n, got, c.want)
+		}
+	}
+}
+
+// The index is what makes suggesting affordable, and it must not change the
+// answers: same list, same query, same order, however many times it is asked.
+func TestFileVocabularySuggestionsAreStable(t *testing.T) {
+	vocabulary, err := readVocabulary(strings.NewReader(
+		"portraits\nself-portraits\nportrait photography\ncity plans\nphotos,photographs\n"), "test list")
+	if err != nil {
+		t.Fatalf("readVocabulary: %v", err)
+	}
+
+	first, err := vocabulary.Suggest(context.Background(), "portriats")
+	if err != nil {
+		t.Fatalf("Suggest: %v", err)
+	}
+	if len(first) == 0 {
+		t.Fatal("expected suggestions")
+	}
+	for i := 0; i < 5; i++ {
+		again, err := vocabulary.Suggest(context.Background(), "portriats")
+		if err != nil {
+			t.Fatalf("Suggest: %v", err)
+		}
+		if strings.Join(again, "|") != strings.Join(first, "|") {
+			t.Fatalf("suggestions changed between calls: %v then %v", first, again)
+		}
+	}
+}
+
+// Building it costs real work, so it happens on the first suggestion and not
+// at all for a run with nothing to suggest about.
+func TestFileVocabularyBuildsTheIndexOnceAndOnlyWhenNeeded(t *testing.T) {
+	vocabulary, err := readVocabulary(strings.NewReader("portraits\ncity plans\n"), "test list")
+	if err != nil {
+		t.Fatalf("readVocabulary: %v", err)
+	}
+
+	if _, err := vocabulary.Lookup(context.Background(), "portraits"); err != nil {
+		t.Fatal(err)
+	}
+	if vocabulary.index != nil {
+		t.Fatal("a lookup should not build the suggestion index")
+	}
+
+	if _, err := vocabulary.Suggest(context.Background(), "portriats"); err != nil {
+		t.Fatal(err)
+	}
+	built := vocabulary.index
+	if built == nil {
+		t.Fatal("the first suggestion should build the index")
+	}
+	if _, err := vocabulary.Suggest(context.Background(), "city plns"); err != nil {
+		t.Fatal(err)
+	}
+	if vocabulary.index != built {
+		t.Fatal("the index should be built once and reused")
+	}
+}
+
+// The bundled list's name ends in its date, so bracketing the count as well
+// put two bracketed clauses side by side on screen.
+func TestSourceNameDoesNotDoubleUpBrackets(t *testing.T) {
+	dated, err := readVocabulary(strings.NewReader("photographs\nphotos,photographs\n"),
+		"built-in Getty AAT list (January 2026)")
+	if err != nil {
+		t.Fatalf("readVocabulary: %v", err)
+	}
+	if got := dated.SourceName(); got != "built-in Getty AAT list (January 2026) · 2 terms" {
+		t.Fatalf("SourceName = %q", got)
+	}
+
+	plain, err := readVocabulary(strings.NewReader("photographs\n"), "AAT Tags export.csv")
+	if err != nil {
+		t.Fatalf("readVocabulary: %v", err)
+	}
+	if got := plain.SourceName(); got != "AAT Tags export.csv (1 term, no variant information)" {
+		t.Fatalf("SourceName = %q", got)
+	}
+}

@@ -1,5 +1,27 @@
 export namespace main {
 	
+	export class AccessFileListResult {
+	    path: string;
+	    files: number;
+	    skipped: number;
+	    first?: string;
+	    last?: string;
+	    elapsed: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new AccessFileListResult(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.path = source["path"];
+	        this.files = source["files"];
+	        this.skipped = source["skipped"];
+	        this.first = source["first"];
+	        this.last = source["last"];
+	        this.elapsed = source["elapsed"];
+	    }
+	}
 	export class AgencyTemplateFields {
 	    rg: string;
 	    sg: string;
@@ -103,6 +125,7 @@ export namespace main {
 	    error?: string;
 	    suggestions?: string[];
 	    qualifierIgnored?: boolean;
+	    variant?: boolean;
 	
 	    static createFrom(source: any = {}) {
 	        return new TagTermVerdict(source);
@@ -118,6 +141,7 @@ export namespace main {
 	        this.error = source["error"];
 	        this.suggestions = source["suggestions"];
 	        this.qualifierIgnored = source["qualifierIgnored"];
+	        this.variant = source["variant"];
 	    }
 	}
 	export class TagIssue {
@@ -316,7 +340,7 @@ export namespace main {
 		    return a;
 		}
 	}
-	export class GettyDownloadResult {
+	export class GettyImportResult {
 	    path: string;
 	    terms: number;
 	    archive: string;
@@ -324,7 +348,7 @@ export namespace main {
 	    elapsed: string;
 	
 	    static createFrom(source: any = {}) {
-	        return new GettyDownloadResult(source);
+	        return new GettyImportResult(source);
 	    }
 	
 	    constructor(source: any = {}) {

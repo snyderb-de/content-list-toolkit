@@ -222,6 +222,51 @@
         <div class="todo-list">
 
           <div class="todo">
+            <span class="tid">P0 · E-01</span>
+            <div>
+              <div class="t-title">Start the Google API audit</div>
+              <div class="t-note"><strong>Blocking, and outside our control.</strong> Google forces every video uploaded from an unverified project created after 28 July 2020 to private, whatever the request asks for. Until the audit passes, each video must be made public by hand in YouTube Studio. First in the order because it is the only item whose duration nobody here controls — everything else can be built while it runs.</div>
+            </div>
+            <div class="imp"><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span></div>
+          </div>
+
+          <div class="todo">
+            <span class="tid">P0 · E-02</span>
+            <div>
+              <div class="t-title">Provide the client's spreadsheet</div>
+              <div class="t-note">Save to <code>testing/manual-samples/youtube/</code>, which is gitignored. It decides the description layout — record title, description, Resource ID, and the ArchivERA URL. Reading the real columns beats guessing; the Access export's headers already turned out to differ from the database's.</div>
+            </div>
+            <div class="imp"><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span></span></div>
+          </div>
+
+          <div class="todo">
+            <span class="tid">P0 · E-03</span>
+            <div>
+              <div class="t-title">Build the YouTube Upload screen</div>
+              <div class="t-note">Waits on E-02. Sidebar entry, the form, loading a row from a spreadsheet, the blank template the operator can save from the app, a confirmation of exactly what will be sent, upload progress, and the resulting link.</div>
+            </div>
+            <div class="imp"><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span></span></div>
+          </div>
+
+          <div class="todo">
+            <span class="tid">P0 · E-04</span>
+            <div>
+              <div class="t-title">Supply a client_secret.json</div>
+              <div class="t-note">Google Cloud project with the YouTube Data API enabled and an OAuth client of type <strong>Desktop app</strong>. The channel, the daily allowance and the audit belong to the organisation, which is why the app reads a credentials file rather than shipping one. Fourth in the order: nothing before it needs credentials, since the upload path is tested against a local fake.</div>
+            </div>
+            <div class="imp"><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span></span></div>
+          </div>
+
+          <div class="todo">
+            <span class="tid">P0 · E-05</span>
+            <div>
+              <div class="t-title">Decide the privacy status to request</div>
+              <div class="t-note">Private, unlisted or public. Last in the order and easy to skip, which is the risk. While E-01 is outstanding every upload is private regardless, so the choice only takes effect once the audit passes — which is exactly when a wrong default would publish something before anyone intended.</div>
+            </div>
+            <div class="imp"><span class="on"></span><span class="on"></span><span class="on"></span><span></span><span></span></div>
+          </div>
+
+          <div class="todo">
             <span class="tid">P0-01</span>
             <div>
               <div class="t-title">Verify v0.2.5 builds on target machines</div>
@@ -469,6 +514,14 @@
       <div class="pb">
         <div class="decisions">
           <div class="decision">
+            <div class="dq">Check <code>Location(TGN)</code> and <code>Type</code> as well as Tags?</div>
+            <div class="dd">Both are controlled fields the app ignores today. TGN is the same Getty endpoint with a different scheme; <code>Type</code> is the 12-value DCMI Type Vocabulary and needs no network. Cheap to add — the open question is whether either is actually going wrong, since the tag check exists because tags were breaking uploads by hand.</div>
+          </div>
+          <div class="decision">
+            <div class="dq">Clean every free-text field, or only Tags?</div>
+            <div class="dd">The same pasted invisible characters reach <code>Title</code> and <code>Description of Item(s)</code>, and break a tab-delimited upload the same way. Widening the cleaning is small; a whole-row findings view is a different screen. Worth doing if an upload has ever failed on a field other than Tags.</div>
+          </div>
+          <div class="decision">
             <div class="dq">Project license?</div>
             <div class="dd">Default: <strong>undecided</strong>. Candidates: MIT, Apache-2.0, GPL-3.0. Pick before public release.</div>
           </div>
@@ -502,6 +555,11 @@
           <div class="rc-label">End User</div>
           <div class="rc-title">📘 User Manual</div>
           <div class="rc-desc">Step-by-step guide — scan modes, hash algorithms, email copy, clone compare</div>
+        </a>
+        <a href="getty-call-paths.html" class="res-card">
+          <div class="rc-label">Network &amp; Security</div>
+          <div class="rc-title">🔒 Getty Call Paths</div>
+          <div class="rc-desc">Every outbound request, host, and port — for whoever approves the firewall exception</div>
         </a>
         <a href="https://github.com/snyderb-de/content-list-toolkit/releases/latest" class="res-card" target="_blank" rel="noopener">
           <div class="rc-label">Downloads</div>

@@ -82,15 +82,65 @@ func (a *App) PickSheet(title string) string {
 	return path
 }
 
+// PickGettyArchive opens a file dialog for a Getty relational archive.
+//
+// The app does not fetch the archive itself — the download host has no
+// encrypted route — so it is obtained separately and chosen here.
+func (a *App) PickGettyArchive(title string) string {
+	path, err := wailsRuntime.OpenFileDialog(a.ctx, wailsRuntime.OpenDialogOptions{
+		Title:            title,
+		DefaultDirectory: a.startDir,
+		Filters: []wailsRuntime.FileFilter{
+			{DisplayName: "Getty vocabulary archive (*.zip)", Pattern: "*.zip"},
+			{DisplayName: "All files", Pattern: "*.*"},
+		},
+	})
+	if err != nil {
+		return ""
+	}
+	return path
+}
+
 // CheckGettyReachability tells the screen whether the live source is usable
 // from this machine, so the choice is visible before a run rather than
 // discovered through a sheet full of unchecked terms.
+//
+// The answer is probed once and kept for the session. A screen that reprobes
+// on every visit — or on every switch of the source dropdown — turns an
+// indicator into a stream of requests at a host that may be refusing them,
+// which is both pointless and the kind of traffic a network team notices.
+// RecheckGettyReachability is how a new answer is asked for, and it is wired
+// to a button.
 func (a *App) CheckGettyReachability() GettyReachability {
+	a.reachMu.Lock()
+	if a.reach != nil {
+		cached := *a.reach
+		a.reachMu.Unlock()
+		return cached
+	}
+	a.reachMu.Unlock()
+
+	return a.probeAndRemember()
+}
+
+// RecheckGettyReachability probes again and replaces the remembered answer.
+// The network changes — a VPN comes up, a proxy rule lands — and the person at
+// the screen is the one who knows something changed.
+func (a *App) RecheckGettyReachability() GettyReachability {
+	return a.probeAndRemember()
+}
+
+func (a *App) probeAndRemember() GettyReachability {
 	ctx := a.ctx
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	return probeGettyReachability(ctx, nil, "")
+	result := probeGettyReachability(ctx, a.probeClient, a.probeURL)
+
+	a.reachMu.Lock()
+	a.reach = &result
+	a.reachMu.Unlock()
+	return result
 }
 
 // SaveGettyVocabulary remembers the chosen source for next time.
@@ -218,7 +268,15 @@ func (a *App) buildVocabulary(options GettyCheckOptions) (gettyVocabulary, error
 	case gettySourceNone, "":
 		return nil, nil
 	case gettySourceLive:
-		return newCachedVocabulary(newSPARQLVocabulary(nil, "")), nil
+		// Getty answers whether a term exists; the bundled list stands behind
+		// it for "did you mean", which Getty's word-based search cannot do
+		// across a misspelling. A missing bundled list costs suggestions, not
+		// the check, so the error is dropped.
+		live := gettyVocabulary(newSPARQLVocabulary(nil, ""))
+		if list, err := builtinVocabulary(); err == nil {
+			live = backedSuggester{gettyVocabulary: live, backup: list}
+		}
+		return newCachedVocabulary(live), nil
 	case gettySourceBuiltin:
 		list, err := builtinVocabulary()
 		if err != nil {

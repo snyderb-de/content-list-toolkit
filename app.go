@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -16,7 +17,7 @@ import (
 	wailsRuntime "github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
-const appVersion = "0.3.0"
+const appVersion = "0.4.0"
 
 type App struct {
 	ctx            context.Context
@@ -26,6 +27,16 @@ type App struct {
 	cloneDriveBCh  chan string // non-nil only while awaiting drive B in single-drive mode
 	updateMu       sync.Mutex
 	preparedUpdate *preparedUpdate
+
+	// reachMu guards the one reachability answer this session keeps. Probing
+	// is a network call, so it happens once and is remembered; asking again is
+	// something the user does deliberately.
+	reachMu sync.Mutex
+	reach   *GettyReachability
+	// probeClient and probeURL are empty in the application and set by tests,
+	// so the once-per-session rule can be tested without reaching Getty.
+	probeClient *http.Client
+	probeURL    string
 }
 
 func newApp(startDir string) *App {
@@ -34,6 +45,15 @@ func newApp(startDir string) *App {
 
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
+}
+
+// EmailExtensions lists the file types Email Copy recognises.
+//
+// The screen used to carry this list as a sentence of its own, and it drifted:
+// .emlxpart was added to the code and the sentence kept saying otherwise. A
+// list of file types is a fact about the program, so the program answers it.
+func (a *App) EmailExtensions() []string {
+	return sortedEmailExtensions()
 }
 
 func (a *App) GetAppVersion() string {

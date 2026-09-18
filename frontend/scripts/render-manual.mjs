@@ -57,6 +57,19 @@ const block = (b) => {
       return `<ul class="chips" aria-label="${escape(b.label)}">${b.items
         .map((i) => `<li><code>${escape(i)}</code></li>`)
         .join('')}</ul>`
+    case 'funnel': {
+      const widest = Math.max(...b.items.map((i) => i.value))
+      return `<div class="funnel" role="img" aria-label="${escape(b.label)}">${b.items
+        .map(
+          (i) => `<div class="funnel-row">
+<div class="funnel-label">${inline(i.label)}</div>
+<div class="funnel-track"><div class="funnel-bar" style="width:${Math.max((i.value / widest) * 100, 1.5).toFixed(2)}%"></div></div>
+<div class="funnel-value">${i.value.toLocaleString('en-US')}</div>
+${i.note ? `<div class="funnel-note">${inline(i.note)}</div>` : ''}
+</div>`,
+        )
+        .join('')}</div>`
+    }
     case 'support':
       return `<div class="support">${b.items
         .map((i) => `<div><h4>${escape(i.title)}</h4><p>${inline(i.text)}</p></div>`)
@@ -133,6 +146,20 @@ dt { font-weight: 600; color: var(--ink); }
 dd { margin: 0; color: var(--ink-soft); }
 .chips { list-style: none; display: flex; flex-wrap: wrap; gap: .4rem; padding: 0; margin: 0 0 1rem; }
 .chips li { background: var(--surface); border: 1px solid var(--rule); border-radius: 999px; padding: .15rem .6rem; }
+.funnel { margin: 0 0 1.4rem; display: flex; flex-direction: column; gap: .75rem; }
+.funnel-row {
+  display: grid; grid-template-columns: minmax(9rem, 15rem) 1fr auto;
+  align-items: center; gap: .5rem .9rem;
+}
+.funnel-label { color: var(--ink); font-size: .9rem; }
+.funnel-track { background: var(--surface); border: 1px solid var(--rule); border-radius: 3px; height: 1.15rem; overflow: hidden; }
+.funnel-bar { background: var(--accent); height: 100%; }
+.funnel-value { font-variant-numeric: tabular-nums; font-size: .88rem; color: var(--ink); }
+.funnel-note { grid-column: 1 / -1; margin: -.2rem 0 0; font-size: .84rem; color: var(--ink-faint); }
+@media (max-width: 34rem) {
+  .funnel-row { grid-template-columns: 1fr auto; }
+  .funnel-track { grid-column: 1 / -1; }
+}
 .support { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 1.25rem; }
 .support p { margin: 0; }
 code {

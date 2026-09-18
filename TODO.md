@@ -1,5 +1,123 @@
 # TODO
 
+## YouTube Upload (in progress)
+
+New left-hand screen. The operator fills a form or loads a row from a
+spreadsheet, supplies a video file and an ArchivERA URL, and the app uploads to
+YouTube with the record's title, description, Resource ID, and AE link in the
+description.
+
+Decided 2026-09-16: credentials are supplied by the operator, not shipped;
+first version handles one video at a time from either the form or the sheet;
+the description layout follows the client's spreadsheet and the existing
+Wilmington City Council video rather than a format we invent.
+
+Landed: OAuth against an operator-supplied client_secret.json, token storage,
+and the resumable upload protocol with progress. 182 tests.
+
+Execution order below is set by lead time rather than by size. The audit is
+first because it is the only item whose duration nobody here controls.
+
+### P0 · E-01 — Start the Google API audit
+
+**Blocking, and outside our control.** Google restricts every video uploaded
+through `videos.insert` from an unverified project created after 28 July 2020
+to private, whatever privacy status the request asks for. Removing that needs
+an audit of the Cloud project against Google's Terms of Service.
+
+Until it passes, each uploaded video has to be made public by hand in YouTube
+Studio, which removes much of the point. First in the order because it is a
+review with a turnaround nobody here sets — everything else can be built while
+it runs.
+
+Owner: whoever owns the Google account.
+
+### P0 · E-02 — Provide the client's spreadsheet
+
+Save it to `testing/manual-samples/youtube/`, which is gitignored.
+
+It decides the description layout: the client's sheet carries record title,
+description, and item number labelled "Resource ID", and asked for the
+ArchivERA URL to appear in the YouTube description. Reading the real columns
+beats guessing at them — the Access template already proved that, where the
+export's headers turned out to differ from the database's.
+
+Second because it blocks E-03 and takes minutes.
+
+### P0 · E-03 — Build the screen
+
+The bulk of the work, and it waits on E-02 for the description layout. Covers
+the sidebar entry, the form, loading a row from a spreadsheet, the blank
+template the operator can save from the app, a confirmation of exactly what
+will be sent, upload progress, and the resulting video link.
+
+### P0 · E-04 — Supply a client_secret.json
+
+A Google Cloud project with the YouTube Data API enabled and an OAuth client of
+type **Desktop app**. Web application clients will not work for a desktop
+upload and the app says so if one is chosen.
+
+Fourth because nothing before it needs credentials: the screen and the whole
+upload path are tested against a local fake. It is needed before a real video
+moves.
+
+The project's channel, its daily allowance, and its audit all belong to the
+organisation. That is why the app reads a credentials file rather than shipping
+one — and why nothing secret is committed to this public repository.
+
+### P0 · E-05 — Decide the privacy status to request
+
+Private, unlisted, or public. Last in the order and easy to skip, which is the
+risk: while E-01 is outstanding every upload is private regardless, so the
+choice is inert — and it stops being inert the moment the audit passes, which
+is exactly when a wrong default would publish something before anyone intended.
+
+## Known limits, for reference
+
+- `videos.insert` has its own daily allowance, documented as 100 uploads a day
+  for a new project, separate from the 10,000-unit pool the other endpoints
+  share. Confirm the real figure in the Cloud console before a large batch.
+- Only the `youtube.upload` scope is requested. It can insert a video and
+  nothing else: not read the channel, not edit or delete what is already there.
+
+## Open questions from the Getty module
+
+Raised 2026-09-16 while building the tag check. Both are cheap because the
+machinery already exists — the vocabulary seam, the cache, the reachability
+probe, the findings UI, and the report all take another field without changing
+shape.
+
+### Check the other two controlled fields?
+
+The CONTENTdm template has two more fields drawn from fixed vocabularies, and
+neither is checked today.
+
+- `Location(TGN)` draws on the Getty Thesaurus of Geographic Names, a different
+  Getty vocabulary on the same SPARQL endpoint. The template ships 64 Delaware
+  places in TGN's hierarchical form, `United States -- Delaware -- Kent County
+  -- Dover`. Checking it is the AAT query with a different scheme.
+- `Type` draws on the DCMI Type Vocabulary — 12 fixed values, from Collection
+  to Text. A closed list of twelve needs no network and cannot go stale.
+
+Open question: is either field actually going wrong in practice? The tag check
+was built because tags were breaking uploads by hand. Nobody has said these two
+are a problem, and a check nobody needs is a check that gets ignored.
+
+### Clean every free-text field, not just Tags?
+
+The invisible characters the tag check removes arrive by copy and paste, and
+`Title`, `Description of Item(s)`, and every other free-text column are pasted
+into the same way. A tab or a newline in any of them breaks a tab-delimited
+upload exactly as it does in Tags.
+
+Widening the cleaning pass is small. The work is in the reporting: findings are
+currently organised per tag within one column, and a whole-row view of eight
+columns is a different screen, not a wider table.
+
+Open question: has an upload ever failed on a field other than Tags? If it has,
+this is the more valuable of the two. If it has not, the tag check may already
+cover the only column people paste Getty terms into.
+
 ## Retiring the Python runtime
 
 Decided 2026-09-16. The Python app existed to give Windows a GUI before Wails

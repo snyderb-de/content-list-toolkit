@@ -246,3 +246,70 @@ func TestCachedVocabularyIsSafeUnderConcurrency(t *testing.T) {
 		t.Fatalf("Lookups() = %d, want at least 1", got)
 	}
 }
+
+// Getty's search matches whole words, so a misspelled term never appears in
+// what it returns. The bundled list can reach it, and a suggestion is a
+// proposal rather than a verdict, so borrowing one is fair.
+func TestBackedSuggesterFallsBackWhenTheEndpointHasNothingClose(t *testing.T) {
+	list, err := readVocabulary(strings.NewReader(
+		"portrait photography\nphotographs\ncity plans\n"), "test list")
+	if err != nil {
+		t.Fatalf("readVocabulary: %v", err)
+	}
+
+	// What the endpoint really answers for "portait photography": terms that
+	// share the word "photography", not the term meant.
+	live := &fakeSuggester{suggestions: []string{
+		"television photography", "advertising photography", "commercial photography",
+	}}
+	suggester := backedSuggester{gettyVocabulary: live, backup: list}
+
+	got, err := suggester.Suggest(context.Background(), "portait photography")
+	if err != nil {
+		t.Fatalf("Suggest: %v", err)
+	}
+	if len(got) == 0 || got[0] != "portrait photography" {
+		t.Fatalf("expected the term meant first, got %v", got)
+	}
+	// Nothing the endpoint offered is thrown away.
+	if !containsString(got, "television photography") {
+		t.Fatalf("the endpoint's own suggestions should still be offered, got %v", got)
+	}
+}
+
+// When the endpoint does hold the term, its answer stands: it is current and
+// the bundled copy is not.
+func TestBackedSuggesterKeepsTheEndpointsAnswerWhenItIsClose(t *testing.T) {
+	list, err := readVocabulary(strings.NewReader("photographs\ncity plans\n"), "test list")
+	if err != nil {
+		t.Fatalf("readVocabulary: %v", err)
+	}
+	live := &fakeSuggester{suggestions: []string{"aerial photographs", "photographs"}}
+	suggester := backedSuggester{gettyVocabulary: live, backup: list}
+
+	got, err := suggester.Suggest(context.Background(), "photographs of aerials")
+	if err != nil {
+		t.Fatalf("Suggest: %v", err)
+	}
+	if len(got) == 0 || got[0] != "aerial photographs" {
+		t.Fatalf("expected the endpoint's closest answer first, got %v", got)
+	}
+	if live.calls != 1 {
+		t.Fatalf("the endpoint should be asked once, got %d", live.calls)
+	}
+}
+
+// fakeSuggester is a vocabulary that only answers suggestions.
+type fakeSuggester struct {
+	suggestions []string
+	calls       int
+}
+
+func (f *fakeSuggester) Lookup(context.Context, string) (gettyTermMatch, error) {
+	return gettyTermMatch{}, nil
+}
+func (f *fakeSuggester) SourceName() string { return "fake" }
+func (f *fakeSuggester) Suggest(context.Context, string) ([]string, error) {
+	f.calls++
+	return f.suggestions, nil
+}

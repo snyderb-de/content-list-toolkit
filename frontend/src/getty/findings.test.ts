@@ -25,6 +25,12 @@ describe('findingTone', () => {
     expect(findingTone(issue('unknown-term'))).toBe('error')
   })
 
+  it('treats a variant as a correction to make, not a judgement call', () => {
+    // The term is real AAT, but the catalogue takes the preferred term and the
+    // replacement is known — there is nothing to weigh up.
+    expect(findingTone(issue('variant-term'))).toBe('error')
+  })
+
   it('treats damaged text as an error', () => {
     expect(findingTone(issue('damaged-text'))).toBe('error')
   })
@@ -45,6 +51,7 @@ describe('findingLabel', () => {
     expect(findingLabel(issue('ghost-characters'))).toBe('invisible characters')
     expect(findingLabel(issue('unknown-term'))).toBe('not in AAT')
     expect(findingLabel(issue('unbalanced-brackets'))).toBe('unclosed bracket')
+    expect(findingLabel(issue('variant-term'))).toBe('not the preferred term')
   })
 
   it('falls back to the raw kind rather than showing nothing', () => {

@@ -20,6 +20,7 @@ type Block =
   | { type: 'definitions'; items: { term: string; detail: string }[] }
   | { type: 'chips'; label: string; items: string[] }
   | { type: 'support'; items: { title: string; text: string }[] }
+  | { type: 'funnel'; label: string; items: { label: string; value: number; note?: string }[] }
 
 interface Section {
   id: string
@@ -96,6 +97,30 @@ function renderBlock(block: Block, key: number) {
           {block.items.map(item => <li key={item}><code>{item}</code></li>)}
         </ul>
       )
+
+    // A narrowing count, drawn as bars in proportion to each other. The point
+    // it has to make is visual — most of the thesaurus falls away before the
+    // list is reached — and a column of numbers does not make it.
+    case 'funnel': {
+      const widest = Math.max(...block.items.map(i => i.value))
+      return (
+        <div key={key} className="manual-funnel" role="img" aria-label={block.label}>
+          {block.items.map(item => (
+            <div key={item.label} className="manual-funnel-row">
+              <div className="manual-funnel-label">{inline(item.label)}</div>
+              <div className="manual-funnel-track">
+                <div
+                  className="manual-funnel-bar"
+                  style={{ width: `${Math.max((item.value / widest) * 100, 1.5)}%` }}
+                />
+              </div>
+              <div className="manual-funnel-value">{item.value.toLocaleString()}</div>
+              {item.note && <div className="manual-funnel-note">{inline(item.note)}</div>}
+            </div>
+          ))}
+        </div>
+      )
+    }
 
     case 'support':
       return (

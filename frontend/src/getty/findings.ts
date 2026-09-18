@@ -21,6 +21,10 @@ export const TONE_PREFIX: Record<FindingTone, string> = {
 export function findingTone(issue: main.TagIssue): FindingTone {
   if (issue.repaired) return 'fixed'
   if (issue.kind === 'unknown-term') return 'error'
+  // A variant is a real AAT term but not the one the catalogue accepts, and
+  // the preferred term to put in its place is known — so it is a correction
+  // to make, not a judgement call.
+  if (issue.kind === 'variant-term') return 'error'
   if (issue.kind === 'damaged-text') return 'error'
   if (issue.severity === 'blocks-upload') return 'error'
   return 'review'
@@ -38,6 +42,7 @@ const FINDING_LABELS: Record<string, string> = {
   'field-limit': 'too long',
   'unknown-term': 'not in AAT',
   'term-case': 'spelling case',
+  'variant-term': 'not the preferred term',
   'not-checked': 'not checked',
   'unbalanced-brackets': 'unclosed bracket',
   'qualifier-unchecked': 'bracketed part unchecked',

@@ -259,6 +259,8 @@
   .note-caution { border-color: var(--archive); background: var(--archive-wash); }
   .note-caution h3 { color: var(--archive); }
   .note p { color: var(--ink-soft); }
+  .note ul { margin-top: 0.1rem; }
+  .note + .note { margin-top: 0.9rem; }
 
   ul { margin: 0; padding-left: 1.15rem; color: var(--ink-soft); max-width: 68ch; display: flex; flex-direction: column; gap: 0.4rem; }
   li::marker { color: var(--ink-faint); }
@@ -289,11 +291,12 @@
     <div class="eyebrow">Content List Toolkit · Network reference</div>
     <h1>Getty Call Paths</h1>
     <p class="standfirst">Every outbound request the Getty Tag check makes, which host serves it, and what happens when a firewall blocks it. Written for whoever approves the exception.</p>
+    <p class="standfirst"><strong>One host, one port, TLS only.</strong> The application makes no unencrypted connections, and the rule is enforced in the HTTP transport rather than at each call site, so a redirect cannot downgrade one either.</p>
   </header>
 
   <section>
     <h2>What to allow</h2>
-    <p>Two hosts, and they are independent. Verifying terms live needs the first; downloading a term list for offline use needs the second. <strong>Allowing either one makes the feature work</strong> — they are alternative routes to the same answer, which is why both exist.</p>
+    <p>One host. Verifying terms live needs it; everything else the Getty Tag check does — cleaning, structural checks, and the bundled offline term list — runs with no network at all.</p>
 
     <div class="table-wrap">
       <table>
@@ -314,9 +317,9 @@
           </tr>
           <tr>
             <td class="host">aatdownloads.getty.edu</td>
-            <td class="port">80 · plaintext</td>
-            <td>Bulk vocabulary archive download</td>
-            <td><span class="tag tag-archive">Offline list</span></td>
+            <td class="port">—</td>
+            <td>No longer contacted. Earlier versions downloaded the bulk archive from here over plaintext HTTP; that call was removed because the host serves no TLS. Any existing allow rule for it can be withdrawn.</td>
+            <td><span class="tag tag-blocked">Not required</span></td>
           </tr>
           <tr>
             <td class="host">fonts.googleapis.com</td>
@@ -334,7 +337,7 @@
 
     <figure>
       <div class="figure-frame">
-        <svg viewBox="0 0 900 430" role="img" aria-label="Content List Toolkit makes three kinds of outbound request: a reachability probe and per-term lookups to vocab.getty.edu over HTTPS port 443, both passing through an in-memory term cache, and an archive download from aatdownloads.getty.edu over plaintext HTTP port 80.">
+        <svg viewBox="0 0 900 430" role="img" aria-label="Content List Toolkit makes two kinds of outbound request, both to vocab.getty.edu over HTTPS port 443: a reachability probe and per-term lookups, which pass through an in-memory term cache first. Building a term list from a Getty archive reads a file already on disk and makes no network request at all.">
           <defs>
             <marker id="tip" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
               <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/>
@@ -364,15 +367,15 @@
           <text x="598" y="114" font-family="IBM Plex Mono, monospace" font-size="11.5" fill="#1f5f8b" opacity="0.85">port 443 · TLS</text>
           <text x="598" y="136" font-family="IBM Plex Sans, sans-serif" font-size="12" fill="currentColor" opacity="0.7">SPARQL endpoint · authoritative</text>
 
-          <!-- aatdownloads.getty.edu -->
-          <rect x="574" y="290" width="302" height="104" rx="3" fill="none" stroke="#8a5a17" stroke-width="2"/>
-          <text x="598" y="324" font-family="IBM Plex Mono, monospace" font-size="14" font-weight="500" fill="#8a5a17">aatdownloads.getty.edu</text>
-          <text x="598" y="348" font-family="IBM Plex Mono, monospace" font-size="11.5" fill="#8a5a17" opacity="0.9">port 80 · plaintext</text>
+          <!-- Local archive file: no network leg at all -->
+          <rect x="574" y="290" width="302" height="104" rx="3" fill="none" stroke="#8a5a17" stroke-width="2" stroke-dasharray="6 4"/>
+          <text x="598" y="324" font-family="IBM Plex Mono, monospace" font-size="14" font-weight="500" fill="#8a5a17">aat_rel_&lt;mmyy&gt;.zip</text>
+          <text x="598" y="348" font-family="IBM Plex Mono, monospace" font-size="11.5" fill="#8a5a17" opacity="0.9">on disk · no network</text>
           <text x="598" y="370" font-family="IBM Plex Sans, sans-serif" font-size="12" fill="currentColor" opacity="0.7">archive files · frozen Jan 2026</text>
 
           <!-- Probe: app -> vocab, arcs above the cache -->
           <path d="M 210 172 C 330 120, 420 92, 574 92" fill="none" stroke="#1f5f8b" stroke-width="1.6" marker-end="url(#tip-live)"/>
-          <text x="392" y="106" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="11" fill="#1f5f8b">reachability probe · once per visit</text>
+          <text x="392" y="106" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="11" fill="#1f5f8b">reachability probe · once per session</text>
 
           <!-- Lookup: app -> cache -->
           <line x1="210" y1="215" x2="300" y2="215" stroke="currentColor" stroke-width="1.6" marker-end="url(#tip)"/>
@@ -386,12 +389,12 @@
           <path d="M 330 252 C 322 286, 410 286, 402 252" fill="none" stroke="currentColor" stroke-width="1.4" stroke-dasharray="3 3" marker-end="url(#tip)"/>
           <text x="366" y="300" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="11" fill="currentColor" opacity="0.72">repeats answered locally</text>
 
-          <!-- Download: app -> downloads -->
-          <path d="M 210 258 C 330 330, 430 342, 574 342" fill="none" stroke="#8a5a17" stroke-width="1.6" marker-end="url(#tip-archive)"/>
-          <text x="392" y="332" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="11" fill="#8a5a17">archive download · on request</text>
+          <!-- Import: local file -> app. Drawn toward the app, since nothing leaves. -->
+          <path d="M 574 342 C 430 342, 330 330, 210 258" fill="none" stroke="#8a5a17" stroke-width="1.6" stroke-dasharray="6 4" marker-end="url(#tip-archive)"/>
+          <text x="392" y="332" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="11" fill="#8a5a17">read from disk · on request</text>
         </svg>
       </div>
-      <figcaption>The two hosts are reached independently. Term lookups pass through an in-memory cache first, so a sheet of ten thousand rows built from thirty distinct tags produces roughly thirty requests, not ten thousand.</figcaption>
+      <figcaption>Only the solid lines cross the network, and both end at the same host on 443. The dashed leg is a file the user already has: building a term list from a Getty archive opens it locally and sends nothing. Term lookups pass through an in-memory cache first, so a sheet of ten thousand rows built from thirty distinct tags produces roughly thirty requests, not ten thousand.</figcaption>
     </figure>
   </section>
 
@@ -406,9 +409,10 @@
           <span class="tag tag-live">vocab.getty.edu</span>
         </div>
         <p>Fetches one fixed, well-known concept to decide whether the service is usable from this machine, so the answer is shown before a check runs rather than discovered afterwards. Deliberately not a search — a probe should not depend on query syntax staying still.</p>
+        <p>It runs <strong>once a session</strong>, the first time the live source is selected, and the answer is kept. Revisiting the screen or switching the source costs nothing further; a further probe happens only when somebody presses <em>Check again</em>. An unreachable host therefore produces one failed request, not a stream of them.</p>
         <div class="endpoint">GET https://vocab.getty.edu/aat/300046300.json</div>
         <div class="facts">
-          <div class="fact"><span class="fact-label">Frequency</span><span class="fact-value">Once per screen visit</span></div>
+          <div class="fact"><span class="fact-label">Frequency</span><span class="fact-value">Once per session · manual recheck</span></div>
           <div class="fact"><span class="fact-label">Timeout</span><span class="fact-value">6 seconds</span></div>
           <div class="fact"><span class="fact-label">Response</span><span class="fact-value">~2 KB JSON</span></div>
         </div>
@@ -430,15 +434,16 @@
 
       <article class="call call-archive">
         <div class="call-head">
-          <h3>Archive download</h3>
-          <span class="tag tag-archive">aatdownloads.getty.edu</span>
+          <h3>Archive import</h3>
+          <span class="tag tag-blocked">No network</span>
         </div>
-        <p>Runs only when somebody presses <em>Download list from Getty</em>. Reads the index page to find the current archive, then fetches it and extracts an English term list to a file chosen by the user. Nothing is sent but the requests themselves.</p>
-        <div class="endpoint">GET http://aatdownloads.getty.edu/<br>GET http://aatdownloads.getty.edu/VocabData/aat_rel_&lt;mmyy&gt;.zip</div>
+        <p>Runs only when somebody presses <em>Build list from a Getty archive</em>. Opens a Getty relational archive already on the machine, extracts the English terms, and writes a term list beside it. No socket is opened and nothing leaves the workstation.</p>
+        <p>Earlier versions fetched that archive from <code>aatdownloads.getty.edu</code> over plaintext HTTP. The host serves no TLS, so the call was removed rather than left unprotected; whoever wants a fresher list obtains the archive separately and points the application at it.</p>
+        <div class="endpoint">open &lt;chosen path&gt;/aat_rel_&lt;mmyy&gt;.zip</div>
         <div class="facts">
           <div class="fact"><span class="fact-label">Frequency</span><span class="fact-value">Manual only</span></div>
-          <div class="fact"><span class="fact-label">Timeout</span><span class="fact-value">10 minutes</span></div>
-          <div class="fact"><span class="fact-label">Download</span><span class="fact-value">~73 MB</span></div>
+          <div class="fact"><span class="fact-label">Requests</span><span class="fact-value">None</span></div>
+          <div class="fact"><span class="fact-label">Reads</span><span class="fact-value">~73 MB from disk</span></div>
         </div>
       </article>
 
@@ -451,7 +456,7 @@
     <ul>
       <li><strong>Not sent:</strong> the spreadsheet, any column other than Tags, file paths, machine or user names.</li>
       <li><strong>Not stored by us:</strong> responses live in memory for the duration of one check and are discarded when it ends.</li>
-      <li><strong>Written to disk only on request:</strong> the downloaded term list, to a folder the user picks.</li>
+      <li><strong>Written to disk only on request:</strong> the term list built from an archive, beside the archive it was built from.</li>
     </ul>
   </section>
 
@@ -460,19 +465,29 @@
     <p>Blocking is handled as a known state, not an error. A failed lookup is recorded as <strong>“could not be checked”</strong> and never as “this term is wrong” — a false accusation would send a cataloguer to re-verify metadata that was already correct.</p>
     <ul>
       <li><strong>Live check blocked:</strong> the indicator turns red before the run and names the cause — blocked host, DNS failure, or TLS interception. Cleaning, structural checks, and the offline list all continue to work.</li>
-      <li><strong>Download blocked:</strong> the live check is unaffected. The two routes fail independently.</li>
+      <li><strong>Everything blocked:</strong> the bundled term list still answers. It ships inside the application — 176,629 English AAT terms, frozen January 2026 — so term checking degrades to a dated source rather than stopping.</li>
       <li><strong>Both blocked:</strong> everything except term verification still runs, which is the half that catches the characters that break a CONTENTdm upload.</li>
     </ul>
 
     <div class="note note-caution">
       <h3>Two things worth raising in review</h3>
-      <p><strong>The download host refuses HTTPS.</strong> <code>aatdownloads.getty.edu</code> answers on port 80 and does not serve TLS, so that transfer is unprotected in transit. For a public vocabulary the exposure is modest, but it is real and cannot be fixed from this end.</p>
-      <p><strong>The archives are frozen.</strong> Getty stopped refreshing these datasets after January 2026, so a downloaded list is a dated snapshot and grows staler over time. The publication date is written into the filename for that reason. The live endpoint is the only current source.</p>
+      <p><strong><code>http://</code> appears inside the request body, and is not a connection.</strong> Inspecting one of these queries — at a proxy, in a TLS-terminating gateway, or in any egress log that records query strings — shows the string <code>http://vocab.getty.edu/aat/</code> inside the SPARQL text. It is not an address and nothing dials it. In RDF a URI is an identifier compared by exact string equality, and Getty minted the AAT identifiers with the <code>http</code> scheme, so the thesaurus literally holds <code>&lt;http://vocab.getty.edu/aat/300128222&gt;</code> as that concept's name. Rewriting it to <code>https</code> would change the name, match nothing, and make every tag report as absent from the vocabulary — a silent, total false negative with no error raised. The same identifiers come back in the responses for the same reason. The connection carrying all of it is HTTPS on 443.</p>
+      <p><strong>The archives are frozen.</strong> Getty stopped refreshing these datasets after January 2026, so a list built from one is a dated snapshot and grows staler over time. The publication date is written into the filename for that reason. The live endpoint is the only current source.</p>
+    </div>
+
+    <div class="note">
+      <h3>For a rule that inspects rather than allows</h3>
+      <ul>
+        <li><strong>Expect:</strong> TLS to <code>vocab.getty.edu</code> on 443 only. One probe per session, then a short burst of small GETs during a check — one per distinct tag, roughly thirty for a typical sheet — then nothing. No polling, and no retry loop against a host that is refusing.</li>
+        <li><strong>Do not expect:</strong> any connection on port 80, to any host, ever. The transport refuses a non-HTTPS request before the socket opens, redirects included, and reports it as <code>refusing an unencrypted connection</code>.</li>
+        <li><strong>Ignore:</strong> <code>http://</code> strings inside those query bodies and responses. See above — they are vocabulary identifiers, not egress.</li>
+        <li><strong>TLS interception:</strong> works, but the probe names it as the cause when a certificate is rejected, so a red indicator on this screen is a useful first place to look.</li>
+      </ul>
     </div>
   </section>
 
   <footer>
-    Endpoints, ports, and timeouts describe Content List Toolkit v0.3.0 and were confirmed against the live services. Vocabulary data is published by the J. Paul Getty Trust under the Open Data Commons Attribution License (ODC-By) 1.0.
+    Endpoints, ports, and timeouts describe Content List Toolkit v0.3.0 and were confirmed against the live services. The download call described in earlier revisions of this page was removed in that version. Vocabulary data is published by the J. Paul Getty Trust under the Open Data Commons Attribution License (ODC-By) 1.0.
   </footer>
 
 </div>
