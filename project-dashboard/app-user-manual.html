@@ -31,35 +31,35 @@ h1 { font-size: 2rem; margin: 0 0 .4rem; letter-spacing: -.015em; }
 nav { display: flex; flex-wrap: wrap; gap: .5rem 1rem; margin-bottom: 2.5rem; }
 nav a { color: var(--accent); text-decoration: none; font-size: .9rem; }
 nav a:hover, nav a:focus-visible { text-decoration: underline; }
-section { margin-bottom: 3rem; scroll-margin-top: 1rem; }
+section { margin-bottom: 4rem; scroll-margin-top: 1rem; }
 .kicker {
   font-size: .7rem; letter-spacing: .1em; text-transform: uppercase;
   color: var(--ink-faint); margin: 0 0 .3rem;
 }
-h2 { font-size: 1.4rem; margin: 0 0 .9rem; letter-spacing: -.01em; }
+h2 { font-size: 1.4rem; margin: 0 0 1.3rem; letter-spacing: -.01em; }
 h4 { font-size: .95rem; margin: 0 0 .25rem; }
-p { color: var(--ink-soft); margin: 0 0 1rem; }
-.steps, .list { color: var(--ink-soft); margin: 0 0 1rem; padding-left: 1.3rem; }
-.steps li, .list li { margin-bottom: .35rem; }
+p { color: var(--ink-soft); margin: 0 0 1.35rem; line-height: 1.72; }
+.steps, .list { color: var(--ink-soft); margin: 1.1rem 0 1.4rem; padding-left: 1.4rem; }
+.steps li, .list li { margin-bottom: .6rem; }
 .callout {
   border-left: 3px solid var(--accent); background: var(--surface);
-  padding: .85rem 1.1rem; margin: 0 0 1rem; color: var(--ink-soft); border-radius: 0 3px 3px 0;
+  padding: 1.1rem 1.3rem; margin: 1.4rem 0; color: var(--ink-soft); border-radius: 0 3px 3px 0;
 }
 .callout.warning { border-left-color: var(--warn); background: var(--warn-wash); }
-.table-wrap { overflow-x: auto; margin: 0 0 1rem; }
+.table-wrap { overflow-x: auto; margin: 1.4rem 0; }
 table { border-collapse: collapse; width: 100%; font-size: .92rem; min-width: 30rem; }
 th {
   text-align: left; font-size: .72rem; letter-spacing: .07em; text-transform: uppercase;
-  color: var(--ink-faint); padding: .6rem .8rem; border-bottom: 1px solid var(--rule);
+  color: var(--ink-faint); padding: .75rem .9rem; border-bottom: 1px solid var(--rule);
 }
-td { padding: .65rem .8rem; border-bottom: 1px solid var(--rule); color: var(--ink-soft); vertical-align: top; }
-.definitions { margin: 0 0 1rem; }
-.definitions > div { display: grid; grid-template-columns: minmax(8rem, 12rem) 1fr; gap: 1rem; padding: .5rem 0; border-bottom: 1px solid var(--rule); }
+td { padding: .85rem .9rem; border-bottom: 1px solid var(--rule); color: var(--ink-soft); vertical-align: top; line-height: 1.6; }
+.definitions { margin: 1.4rem 0; }
+.definitions > div { display: grid; grid-template-columns: minmax(8rem, 12rem) 1fr; gap: 1rem; padding: .7rem 0; border-bottom: 1px solid var(--rule); }
 dt { font-weight: 600; color: var(--ink); }
 dd { margin: 0; color: var(--ink-soft); }
-.chips { list-style: none; display: flex; flex-wrap: wrap; gap: .4rem; padding: 0; margin: 0 0 1rem; }
+.chips { list-style: none; display: flex; flex-wrap: wrap; gap: .45rem; padding: 0; margin: 1.2rem 0; }
 .chips li { background: var(--surface); border: 1px solid var(--rule); border-radius: 999px; padding: .15rem .6rem; }
-.funnel { margin: 0 0 1.4rem; display: flex; flex-direction: column; gap: .75rem; }
+.funnel { margin: 1.4rem 0 1.8rem; display: flex; flex-direction: column; gap: .75rem; }
 .funnel-row {
   display: grid; grid-template-columns: minmax(9rem, 15rem) 1fr auto;
   align-items: center; gap: .5rem .9rem;
@@ -112,7 +112,7 @@ footer { border-top: 1px solid var(--rule); padding-top: 1.25rem; font-size: .82
 <section id="manual-content-list">
 <p class="kicker">Workflow</p>
 <h2>Content List</h2>
-<p>Use Content List when you need a spreadsheet of files or folders. The app scans the source folder and writes one row for each item it includes. Turn on verification only when you need a file fingerprint for later checking.</p>
+<p>Use Content List when you need a spreadsheet of files or folders. The app goes through the source folder and writes one row for each item it includes. Turn on a verification hash only when you need a fingerprint to check copies against later.</p>
 <div class="callout">The source folder and the output folder have to be different, and Start Scan stays switched off until they are. If a file of the same name is already there, the app asks before overwriting it.</div>
 <div class="table-wrap"><table>
 <thead><tr><th>Setting</th><th>Use</th></tr></thead>
@@ -148,33 +148,34 @@ footer { border-top: 1px solid var(--rule); padding-top: 1.25rem; font-size: .82
 <p><strong>Reading the results.</strong> The verdict above is decided by the counts below it.</p>
 <div class="table-wrap"><table>
 <thead><tr><th>Count</th><th>What it means</th></tr></thead>
-<tbody><tr><td>Exact Matches</td><td>Same file, same place, same contents.</td></tr><tr><td>Moved / Renamed</td><td>The file is on both sides with the same contents, under a different name or in a different folder.</td></tr><tr><td>Metadata-only (PDF IDs)</td><td>PDFs that differ only in their internal ID. Counted here only with Soft compare on.</td></tr><tr><td>Hash Mismatches</td><td>Same path on both sides, different contents. Worth looking at first.</td></tr><tr><td>Missing (no match)</td><td>On the first drive, not on the clone.</td></tr><tr><td>Extra (no match)</td><td>On the clone, not on the first drive.</td></tr><tr><td>Duplicates on Clone</td><td>The same contents more than once on the clone.</td></tr><tr><td>System Excluded</td><td>Files left out on purpose, such as Thumbs.db or .DS_Store.</td></tr></tbody>
+<tbody><tr><td>Exact Matches</td><td>Same file, same place, same contents.</td></tr><tr><td>Moved / Renamed</td><td>The same file is on both drives, but with a different name or in a different folder.</td></tr><tr><td>Metadata-only (PDF IDs)</td><td>PDFs that differ only in their internal ID. Counted here only with Soft compare on.</td></tr><tr><td>Hash Mismatches</td><td>Same path on both sides, different contents. Worth looking at first.</td></tr><tr><td>Missing (no match)</td><td>On the first drive, not on the clone.</td></tr><tr><td>Extra (no match)</td><td>On the clone, not on the first drive.</td></tr><tr><td>Duplicates on Clone</td><td>The same contents more than once on the clone.</td></tr><tr><td>System Excluded</td><td>Files left out on purpose, such as Thumbs.db or .DS_Store.</td></tr></tbody>
 </table></div>
-<p>While it runs, the differences appear as they are found. The table on screen stops at 5,000 rows so it stays usable; the Diff CSV holds all of them.</p>
+<p>Differences appear on screen as they are found. The table stops at 5,000 rows so it stays quick to use — the Diff CSV holds every one of them.</p>
 </section>
 
 <section id="manual-getty-tags">
 <p class="kicker">Workflow</p>
 <h2>Getty Tags</h2>
-<p>Use Getty Tags to check the Tags column of a CONTENTdm export before you upload it. It removes the hidden characters that stop a tab-delimited file from loading, and checks every term against the Getty Art &amp; Architecture Thesaurus. Your export is never changed — the app writes a corrected copy beside it.</p>
+<p>Use Getty Tags to check the Tags column of a CONTENTdm export before you upload it. It takes out the hidden characters that stop the upload, and checks every term against the Getty Art &amp; Architecture Thesaurus. Your export is never changed — the app writes a corrected copy beside it.</p>
 <ol class="steps"><li>Export the Access Main table to Excel as you normally would.</li><li>Browse to the exported sheet. Excel, CSV, and tab-delimited text files all work.</li><li>Choose where terms should be checked, using the table below.</li><li>Click Check Tags. Rows with nothing wrong are not listed.</li><li>Fix what it found. Edit a tag, or click one of the suggested replacements.</li><li>Click Apply Fixes &amp; Re-check. Repeat until nothing is left.</li><li>Upload the cleaned copy, not the original.</li></ol>
 <div class="table-wrap"><table>
 <thead><tr><th>Check terms against</th><th>Needs</th><th>Use when</th></tr></thead>
 <tbody><tr><td>Getty, live</td><td>Internet access to Getty</td><td>Always, when it is reachable. It is the only up-to-date source.</td></tr><tr><td>Built-in list</td><td>Nothing. The list is inside the app.</td><td>When Getty cannot be reached. Works with no internet at all.</td></tr><tr><td>A term list on this machine</td><td>A file you choose</td><td>When you keep your own list, or built one from a Getty archive.</td></tr><tr><td>Do not verify terms</td><td>Nothing</td><td>When you only want the hidden characters cleaned up.</td></tr></tbody>
 </table></div>
 <p>Choosing <strong>Getty, live</strong> shows whether Getty can be reached from this computer, in green or red. It checks once, when you pick it. If your network changes — a VPN comes on, or support opens something up — click <strong>Check again</strong>.</p>
-<p>The app never downloads the Getty archive itself, because Getty serves those archives over a connection that is not encrypted and this app only makes encrypted ones. If you need a fresher list, the Getty Tags screen links to Getty's download centre — take only <code>aat_rel_&lt;mmyy&gt;.zip</code>, the relational archive, since nothing else on that page can be read here. Then use <strong>Build list from a Getty archive</strong>, and the app reads the file and writes the term list beside it. Some networks block that download site; the live check is unaffected.</p>
-<div class="callout warning">The built-in list, and any list you build from a Getty archive, answer for the day that archive was published — not for today. Each carries its own date: the built-in one is shown on this screen, and a list you build takes the date of the archive you built it from, written into its filename. Getty keeps changing the thesaurus, so a copy can accept a term Getty has since renamed. The app says when an answer came from a dated copy. Use the live check whenever you can reach it.</div>
+<p>Need a fresher list? The Getty Tags screen links to Getty's download centre. Take only the file named <code>aat_rel_&lt;mmyy&gt;.zip</code> — nothing else on that page can be read here — then use <strong>Build list from a Getty archive</strong>, and the app turns it into a term list beside it.</p>
+<p>The app will not do that download for you: Getty's download site is not a secure one, and this app only makes secure connections. Some workplaces block that site too. Neither affects the live check.</p>
+<div class="callout warning">Any list held on this computer — the built-in one, or one you build — answers for the day it was made, and each shows its own date. Getty keeps changing the thesaurus, so a list can still accept a term Getty has since renamed. The app tells you when an answer came from a dated list. Use the live check whenever you can reach it.</div>
 <p><strong>Reading the results.</strong> The numbers across the top summarise the sheet; the table below them lists only the rows with something to say.</p>
 <div class="table-wrap"><table>
 <thead><tr><th>Number at the top</th><th>What it counts</th></tr></thead>
-<tbody><tr><td>Would have failed upload</td><td>Rows whose Tags cell held something that stops the file loading into CONTENTdm. The app repairs these.</td></tr><tr><td>Repaired</td><td>Rows the app corrected for you in the cleaned copy.</td></tr><tr><td>Need review</td><td>Rows with something left for you to decide or correct.</td></tr><tr><td>Empty Tags cells</td><td>Rows with no tags at all. Not an error, but worth knowing about.</td></tr><tr><td>Vocabulary</td><td>Where the terms were checked, and how many terms that source holds.</td></tr></tbody>
+<tbody><tr><td>Would have failed upload</td><td>Rows with something in the Tags cell that would stop CONTENTdm loading the file. The app repairs these.</td></tr><tr><td>Repaired</td><td>Rows the app corrected for you in the cleaned copy.</td></tr><tr><td>Need review</td><td>Rows with something left for you to decide or correct.</td></tr><tr><td>Empty Tags cells</td><td>Rows with no tags at all. Not an error, but worth knowing about.</td></tr><tr><td>Vocabulary</td><td>Where the terms were checked, and how many terms that source holds.</td></tr></tbody>
 </table></div>
 <p>Each finding starts with what it wants from you. <strong>Fixed</strong> means the app already corrected it and there is nothing to do. <strong>Must Fix</strong> means correct it before uploading. <strong>Review</strong> means it is your judgement call and will upload either way.</p>
 <p>You can edit any tag in the table. <strong>Apply Fixes &amp; Re-check</strong> saves your edits to the cleaned copy and checks it again. <strong>Re-check</strong> reads the sheet fresh without saving anything — use it if you changed the sheet in Excel while this screen was open.</p>
 <div class="table-wrap"><table>
 <thead><tr><th>Finding</th><th>What it means</th></tr></thead>
-<tbody><tr><td>Invisible characters</td><td>Hidden characters pasted in with the term. These are what stop an upload. The app fixes these for you.</td></tr><tr><td>Separator</td><td>A semicolon missing its space, or a space in front of one. Fixed for you.</td></tr><tr><td>Spacing</td><td>Extra spaces at the start, end, or middle. Fixed for you.</td></tr><tr><td>Empty tag</td><td>Two semicolons together, or one at the end. The empty entry is removed.</td></tr><tr><td>Damaged text</td><td>Letters that arrived scrambled, usually from a file that was saved or converted badly — such as <code>Ã©</code> where an <code>é</code> belongs. Retype the tag.</td></tr><tr><td>Not in AAT</td><td>Getty has no such term. Suggested replacements appear beside it when there are any.</td></tr><tr><td>Not the preferred term</td><td>A real AAT term, but a variant term. Getty has a preferred term for the same concept, and that is the one to use — click it to swap the tag over.</td></tr><tr><td>Spelling case</td><td>The term exists but Getty spells it with different capital letters, which can mean a different thing.</td></tr><tr><td>Unclosed bracket</td><td>A term that lost its closing bracket, such as <code>counters (furniture</code>. Nothing will ever match it.</td></tr><tr><td>Duplicate</td><td>The same term twice in one cell.</td></tr><tr><td>Tag count</td><td>Fewer than 3 or more than 5 terms.</td></tr><tr><td>Too long</td><td>The cell fills the 255 characters Access allows, so Access probably cut the last term off mid-word.</td></tr><tr><td>Not checked</td><td>Getty could not be reached for that term. This does not mean the term is wrong.</td></tr><tr><td>Bracketed part unchecked</td><td>The term was confirmed, but the offline list stores terms without their bracketed part, so only the first half could be checked. The live check confirms the whole term.</td></tr></tbody>
+<tbody><tr><td>Invisible characters</td><td>Hidden characters pasted in with the term. These are what stop an upload. The app fixes these for you.</td></tr><tr><td>Separator</td><td>A semicolon missing its space, or a space in front of one. Fixed for you.</td></tr><tr><td>Spacing</td><td>Extra spaces at the start, end, or middle. Fixed for you.</td></tr><tr><td>Empty tag</td><td>Two semicolons together, or one at the end. The empty entry is removed.</td></tr><tr><td>Damaged text</td><td>Letters that arrived scrambled, usually from a file that was saved or converted badly — such as <code>Ã©</code> where an <code>é</code> belongs. Retype the tag.</td></tr><tr><td>Not in AAT</td><td>Getty has no such term. Suggested replacements appear beside it when there are any.</td></tr><tr><td>Not the preferred term</td><td>A real AAT term, but a variant term. Getty has a preferred term for the same concept, and that is the one to use — click it to swap the tag over.</td></tr><tr><td>Spelling case</td><td>The term exists but Getty spells it with different capital letters, which can mean a different thing.</td></tr><tr><td>Unclosed bracket</td><td>A term that lost its closing bracket, such as <code>counters (furniture</code>. Nothing will ever match it.</td></tr><tr><td>Duplicate</td><td>The same term twice in one cell.</td></tr><tr><td>Tag count</td><td>Fewer than 3 or more than 5 terms.</td></tr><tr><td>Too long</td><td>The cell fills the 255 characters Access allows, so Access probably cut the last term off mid-word.</td></tr><tr><td>Not checked</td><td>Getty could not be reached for that term. This does not mean the term is wrong.</td></tr><tr><td>Bracketed part unchecked</td><td>The term is fine, but a list held on this computer does not store the part in brackets, so only the first half was checked. The live check confirms the whole thing.</td></tr></tbody>
 </table></div>
 <ul class="list"><li>The corrected copy is named with <strong>-tags-cleaned</strong> and sits beside your export.</li><li>The report is named with <strong>-tags-report</strong> and lists what was found and what changed.</li><li>Use Show in Folder to find both files.</li><li>A sheet with nothing to correct does not get a cleaned copy, so there is no doubt about which file to upload.</li></ul>
 <p><strong>Why the built-in list is smaller than the AAT.</strong> Getty counts 503,230 terms across 74,460 concept records. The built-in list holds about 176,000 — the Getty Tags screen shows the exact count for your version. Nothing is missing — the two counts measure different things.</p>
@@ -194,8 +195,8 @@ footer { border-top: 1px solid var(--rule); padding-top: 1.25rem; font-size: .82
 <div class="funnel-value">176,629</div>
 <div class="funnel-note">The same spelling can be a term in several concept records — “landscapes” is both the landform and the genre. The list holds it once, because it answers whether the spelling is an AAT term, not which concept record it belongs to.</div>
 </div></div>
-<p>So the drop is other languages first, then spellings that repeat across concept records. Of the 176,629, about 56,000 are preferred terms and about 120,000 are variant terms, each carrying the preferred term it should be replaced with.</p>
-<p>Getty revises the AAT continually, and the built-in list is whichever Getty archive this version of the app was built with, so the counts here and the ones on Getty’s own pages will drift apart. The live check is not a fixed copy — it queries Getty directly and sees every concept record Getty holds today — but it matches English terms only, on the same assumption.</p>
+<p>So most of the gap is other languages, and the rest is spellings that repeat. Of the terms that remain, about 56,000 are preferred terms and about 120,000 are variant terms — and each variant knows the preferred term that replaces it.</p>
+<p>Getty keeps revising the AAT, and the built-in list comes from whichever Getty archive this version of the app was built with, so these counts and the ones on Getty’s own pages will drift apart over time. The live check is not a copy at all: it asks Getty directly and sees everything Getty holds today. It looks at English terms only, the same as the built-in list.</p>
 </section>
 
 <section id="manual-outputs">

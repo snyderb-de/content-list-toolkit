@@ -862,14 +862,14 @@ textarea.text-input {
 
 .manual-document {
   display: grid;
-  gap: 16px;
+  gap: 24px;
 }
 
 .manual-section {
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  padding: 22px;
+  padding: 28px 30px;
   box-shadow: var(--shadow-sm);
   scroll-margin-top: 20px;
 }
@@ -886,7 +886,7 @@ textarea.text-input {
 .manual-section h3 {
   color: var(--text-primary);
   font-size: 18px;
-  margin-bottom: 10px;
+  margin-bottom: 16px;
 }
 
 .manual-section h4 {
@@ -900,22 +900,31 @@ textarea.text-input {
 .manual-section dd {
   color: var(--text-secondary);
   font-size: 13px;
-  line-height: 1.65;
+  line-height: 1.75;
+}
+
+.manual-section p {
+  margin-bottom: 14px;
+}
+
+.manual-section p:last-child {
+  margin-bottom: 0;
 }
 
 .manual-steps,
 .manual-list {
-  padding-left: 20px;
+  margin: 16px 0;
+  padding-left: 22px;
 }
 
 .manual-steps li + li,
 .manual-list li + li {
-  margin-top: 6px;
+  margin-top: 10px;
 }
 
 .manual-callout {
-  margin-top: 14px;
-  padding: 10px 12px;
+  margin: 18px 0;
+  padding: 14px 16px;
   color: var(--text-primary);
   background: var(--bg-input);
   border: 1px solid var(--border);
@@ -934,7 +943,7 @@ textarea.text-input {
 }
 
 .manual-funnel {
-  margin: 14px 0 18px;
+  margin: 18px 0 22px;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -980,7 +989,7 @@ textarea.text-input {
 .manual-table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 14px;
+  margin: 18px 0;
   font-size: 12.5px;
 }
 
@@ -988,7 +997,7 @@ textarea.text-input {
 .manual-table td {
   text-align: left;
   vertical-align: top;
-  padding: 8px 10px;
+  padding: 11px 12px;
   border-bottom: 1px solid var(--border);
 }
 
@@ -1011,6 +1020,7 @@ textarea.text-input {
 }
 
 .manual-chip-list {
+  margin-bottom: 4px;
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
@@ -1028,13 +1038,13 @@ textarea.text-input {
 .manual-definitions {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-  gap: 10px;
-  margin-top: 14px;
+  gap: 12px;
+  margin: 18px 0;
 }
 
 .manual-definitions div,
 .manual-support-grid div {
-  padding: 12px;
+  padding: 14px 16px;
   background: var(--bg-input);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
@@ -1050,8 +1060,8 @@ textarea.text-input {
 .manual-support-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 10px;
-  margin-top: 14px;
+  gap: 12px;
+  margin: 18px 0;
 }
 
 .manual-section code {
