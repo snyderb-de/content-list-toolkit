@@ -82,14 +82,13 @@ These change what G3, G4, and G11 look like, so the earlier ticks no longer desc
 - [y] G21 A misspelled term (`portait photography`) offers the term meant as the first suggestion
 - [y] G22 The reachability line probes **once**: revisiting the screen and switching the source dropdown back and forth produce no further requests, and the line says when it was checked
 - [y] G23 **Check again** re-probes on demand and the timestamp moves
-- [ ] G24 With the network off, G22 still holds — one failed probe, not a stream of them
-- G24 note: not walked. The probe was reachable throughout the pass, so the unreachable path was
-  not exercised in the app; the once-per-session rule itself is covered by a Go test.
-- [ ] G25 **Build list from a Getty archive** converts a local `aat_rel_<mmyy>.zip`, writes the list beside it, selects it, and reports the term count and publication date
+- [y] G24 With the network off, G22 still holds — one failed probe, not a stream of them
+- [y] G25 **Build list from a Getty archive** converts a local `aat_rel_<mmyy>.zip`, writes the list beside it, selects it, and reports the term count and publication date
 - [ ] G26 Pointing that button at a file that is not an archive explains itself rather than writing an empty list
-- G25/G26 note: not walked. Both start at a native file dialog, which the browser-driven pass could
-  not open. The import itself is covered by Go tests, including the not-an-archive case; what is
-  untested is the dialog and the path from it.
+- G25/G26 note: walked against v0.4.0 and both found faults. G25 worked for the relational archive
+  but failed silently for the XML one; G26 said nothing at all, because import errors were written
+  to a state the screen never rendered. Fixed in #54 — both now name the file to go back for.
+  Re-walk G26 on v0.4.1 to confirm the message appears.
 - [y] G27 The built-in list accepts `place settings` — the American English term that the old extract dropped
 
 ## About
