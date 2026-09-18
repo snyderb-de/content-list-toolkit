@@ -30,7 +30,7 @@
       "blocks": [
         {
           "type": "paragraph",
-          "text": "Use Content List when you need a spreadsheet of files or folders. The app scans the source folder and writes one row for each item it includes. Turn on verification only when you need a file fingerprint for later checking."
+          "text": "Use Content List when you need a spreadsheet of files or folders. The app goes through the source folder and writes one row for each item it includes. Turn on a verification hash only when you need a fingerprint to check copies against later."
         },
         {
           "type": "callout",
@@ -239,7 +239,7 @@
             ],
             [
               "Moved / Renamed",
-              "The file is on both sides with the same contents, under a different name or in a different folder."
+              "The same file is on both drives, but with a different name or in a different folder."
             ],
             [
               "Metadata-only (PDF IDs)",
@@ -269,7 +269,7 @@
         },
         {
           "type": "paragraph",
-          "text": "While it runs, the differences appear as they are found. The table on screen stops at 5,000 rows so it stays usable; the Diff CSV holds all of them."
+          "text": "Differences appear on screen as they are found. The table stops at 5,000 rows so it stays quick to use — the Diff CSV holds every one of them."
         }
       ]
     },
@@ -280,7 +280,7 @@
       "blocks": [
         {
           "type": "paragraph",
-          "text": "Use Getty Tags to check the Tags column of a CONTENTdm export before you upload it. It removes the hidden characters that stop a tab-delimited file from loading, and checks every term against the Getty Art & Architecture Thesaurus. Your export is never changed — the app writes a corrected copy beside it."
+          "text": "Use Getty Tags to check the Tags column of a CONTENTdm export before you upload it. It takes out the hidden characters that stop the upload, and checks every term against the Getty Art & Architecture Thesaurus. Your export is never changed — the app writes a corrected copy beside it."
         },
         {
           "type": "steps",
@@ -330,12 +330,16 @@
         },
         {
           "type": "paragraph",
-          "text": "The app never downloads the Getty archive itself, because Getty serves those archives over a connection that is not encrypted and this app only makes encrypted ones. If you need a fresher list, the Getty Tags screen links to Getty's download centre — take only `aat_rel_<mmyy>.zip`, the relational archive, since nothing else on that page can be read here. Then use **Build list from a Getty archive**, and the app reads the file and writes the term list beside it. Some networks block that download site; the live check is unaffected."
+          "text": "Need a fresher list? The Getty Tags screen links to Getty's download centre. Take only the file named `aat_rel_<mmyy>.zip` — nothing else on that page can be read here — then use **Build list from a Getty archive**, and the app turns it into a term list beside it."
+        },
+        {
+          "type": "paragraph",
+          "text": "The app will not do that download for you: Getty's download site is not a secure one, and this app only makes secure connections. Some workplaces block that site too. Neither affects the live check."
         },
         {
           "type": "callout",
           "variant": "warning",
-          "text": "The built-in list, and any list you build from a Getty archive, answer for the day that archive was published — not for today. Each carries its own date: the built-in one is shown on this screen, and a list you build takes the date of the archive you built it from, written into its filename. Getty keeps changing the thesaurus, so a copy can accept a term Getty has since renamed. The app says when an answer came from a dated copy. Use the live check whenever you can reach it."
+          "text": "Any list held on this computer — the built-in one, or one you build — answers for the day it was made, and each shows its own date. Getty keeps changing the thesaurus, so a list can still accept a term Getty has since renamed. The app tells you when an answer came from a dated list. Use the live check whenever you can reach it."
         },
         {
           "type": "paragraph",
@@ -350,7 +354,7 @@
           "rows": [
             [
               "Would have failed upload",
-              "Rows whose Tags cell held something that stops the file loading into CONTENTdm. The app repairs these."
+              "Rows with something in the Tags cell that would stop CONTENTdm loading the file. The app repairs these."
             ],
             [
               "Repaired",
@@ -439,7 +443,7 @@
             ],
             [
               "Bracketed part unchecked",
-              "The term was confirmed, but the offline list stores terms without their bracketed part, so only the first half could be checked. The live check confirms the whole term."
+              "The term is fine, but a list held on this computer does not store the part in brackets, so only the first half was checked. The live check confirms the whole thing."
             ]
           ]
         },
@@ -479,11 +483,11 @@
         },
         {
           "type": "paragraph",
-          "text": "So the drop is other languages first, then spellings that repeat across concept records. Of the 176,629, about 56,000 are preferred terms and about 120,000 are variant terms, each carrying the preferred term it should be replaced with."
+          "text": "So most of the gap is other languages, and the rest is spellings that repeat. Of the terms that remain, about 56,000 are preferred terms and about 120,000 are variant terms — and each variant knows the preferred term that replaces it."
         },
         {
           "type": "paragraph",
-          "text": "Getty revises the AAT continually, and the built-in list is whichever Getty archive this version of the app was built with, so the counts here and the ones on Getty’s own pages will drift apart. The live check is not a fixed copy — it queries Getty directly and sees every concept record Getty holds today — but it matches English terms only, on the same assumption."
+          "text": "Getty keeps revising the AAT, and the built-in list comes from whichever Getty archive this version of the app was built with, so these counts and the ones on Getty’s own pages will drift apart over time. The live check is not a copy at all: it asks Getty directly and sees everything Getty holds today. It looks at English terms only, the same as the built-in list."
         }
       ]
     },
