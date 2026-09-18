@@ -74,6 +74,20 @@ export namespace main {
 	        this.recordLevel = source["recordLevel"];
 	    }
 	}
+	export class BuiltinVocabularyInfo {
+	    terms: number;
+	    date: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new BuiltinVocabularyInfo(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.terms = source["terms"];
+	        this.date = source["date"];
+	    }
+	}
 	export class CloneCompareOptions {
 	    driveA: string;
 	    driveB: string;

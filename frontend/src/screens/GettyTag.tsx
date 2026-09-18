@@ -2,14 +2,15 @@ import { useEffect, useState } from 'react'
 import {
   BuildAccessFileList,
   CheckGettyReachability,
-  RecheckGettyReachability,
   CheckGettyTags,
+  GetBuiltinVocabularyInfo,
   GetGettyDefaults,
-  OpenPath,
   ImportGettyVocabulary,
+  OpenPath,
   PickFolder,
   PickGettyArchive,
   PickSheet,
+  RecheckGettyReachability,
   RevealPath,
   SaveGettyTagEdits,
   SaveGettyVocabulary,
@@ -29,6 +30,7 @@ type Phase = 'idle' | 'checking' | 'done' | 'error'
 type Source = 'live' | 'builtin' | 'file' | 'none'
 
 export default function GettyTag() {
+  const [builtin, setBuiltin] = useState<main.BuiltinVocabularyInfo | null>(null)
   const [sheetPath, setSheetPath] = useState('')
   const [source, setSource] = useState<Source>('live')
   const [vocabPath, setVocabPath] = useState('')
@@ -63,6 +65,13 @@ export default function GettyTag() {
         if (d.lastSheet) setSheetPath(d.lastSheet)
       })
       .catch(() => {})
+  }, [])
+
+  // The count and the date belong to the build, not to this screen: both
+  // move when the bundled list is rebuilt, and a sentence here claiming
+  // otherwise went stale once already.
+  useEffect(() => {
+    GetBuiltinVocabularyInfo().then(setBuiltin).catch(() => setBuiltin(null))
   }, [])
 
   // Probe once, the first time the live source is actually selected. The
@@ -366,10 +375,12 @@ export default function GettyTag() {
 
           {source === 'builtin' && (
             <div className="info-text">
-              176,629 English terms from Getty’s January 2026 archive, shipped inside the
-              application. Getty has frozen that archive and revises the thesaurus separately, so
-              a term this list accepts may since have been renamed — the live check is the current
-              authority.
+              {builtin
+                ? `${builtin.terms.toLocaleString()} English terms from Getty’s ${builtin.date} archive, `
+                : 'The Getty term list '}
+              shipped inside the application. It answers for the day that archive was made, and
+              Getty keeps revising the thesaurus, so a term this list accepts may since have been
+              renamed — the live check is the current authority.
             </div>
           )}
 
@@ -390,7 +401,7 @@ export default function GettyTag() {
               </button>
               <div className="info-text" style={{ marginTop: 8 }}>
                 {importNote ||
-                  'Converts a Getty relational archive (aat_rel_NNNN.zip) you already have into a term list, written beside the archive. The app does not download it: Getty serves those archives over an unencrypted connection, which this app will not make. Getty also froze the archives in January 2026 and revises the thesaurus separately, so a term this list accepts may since have been renamed. Treat it as a fallback, not as the authority.'}
+                  'Converts a Getty relational archive (aat_rel_NNNN.zip) you already have into a term list, written beside the archive. The app does not download it: Getty serves those archives over an unencrypted connection, which this app will not make. The list takes the date of the archive you build it from, and Getty keeps revising the thesaurus, so a term it accepts may since have been renamed. Treat it as a fallback, not as the authority.'}
               </div>
             </div>
           )}

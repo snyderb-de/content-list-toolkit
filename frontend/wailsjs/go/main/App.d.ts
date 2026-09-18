@@ -22,6 +22,8 @@ export function EmailExtensions():Promise<Array<string>>;
 
 export function GetAppVersion():Promise<string>;
 
+export function GetBuiltinVocabularyInfo():Promise<main.BuiltinVocabularyInfo>;
+
 export function GetGettyDefaults():Promise<main.GettyCheckOptions>;
 
 export function GetScanDefaults():Promise<main.ScanOptions>;

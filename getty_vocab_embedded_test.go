@@ -137,3 +137,18 @@ func TestBuiltinVocabularyHoldsTheEnglishDialects(t *testing.T) {
 		t.Fatalf("%q is an American English AAT term, got %+v", "place settings", match)
 	}
 }
+
+// The screen used to state the count and the date in its own prose, and both
+// went stale the first time the list was rebuilt. They come from the build now.
+func TestBuiltinVocabularyInfoDescribesThisBuild(t *testing.T) {
+	info, err := (&App{}).GetBuiltinVocabularyInfo()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if info.Terms < 150000 {
+		t.Fatalf("Terms = %d, expected the full extracted list", info.Terms)
+	}
+	if info.Date != embeddedVocabularyDate {
+		t.Fatalf("Date = %q, want the archive's own date %q", info.Date, embeddedVocabularyDate)
+	}
+}
