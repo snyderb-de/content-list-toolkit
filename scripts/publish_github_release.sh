@@ -81,12 +81,15 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-mapfile -d '' ASSETS < <(
+# Read with a loop rather than mapfile: macOS ships bash 3.2, which has no
+# mapfile, so this script could not run on the machine that builds the macOS
+# release. NUL separators throughout, because asset names contain spaces.
+ASSETS=()
+while IFS= read -r -d '' asset; do
+  ASSETS+=("$asset")
+done < <(
   find "$RELEASES_DIR" -mindepth 2 -maxdepth 2 -type f ! -name ".gitkeep" -print0 |
-    sort -z |
-    while IFS= read -r -d '' asset; do
-      printf '%s\0' "$asset"
-    done
+    sort -z
 )
 
 if [[ ${#ASSETS[@]} -eq 0 ]]; then
