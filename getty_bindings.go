@@ -39,7 +39,6 @@ const (
 // GettyCheckOptions is what the screen sends when the user presses Check.
 type GettyCheckOptions struct {
 	SheetPath      string                `json:"sheetPath"`
-	LastSheet      string                `json:"lastSheet,omitempty"`
 	Source         gettyVocabularySource `json:"source"`
 	VocabularyPath string                `json:"vocabularyPath"`
 	WriteCleaned   bool                  `json:"writeCleaned"`
@@ -170,13 +169,12 @@ func (a *App) GetGettyDefaults() GettyCheckOptions {
 	}
 	options.VocabularyPath = settings.GettyVocabularyPath
 
-	// Only offer the last sheet if it is still there. A remembered path can
-	// outlive the file — a temporary folder, an unmounted share, a deleted
-	// export — and prefilling a path that no longer resolves is worse than
-	// prefilling nothing, because it looks like a working choice.
-	if settings.GettyLastSheet != "" && fileExists(settings.GettyLastSheet) {
-		options.LastSheet = settings.GettyLastSheet
-	}
+	// The sheet is deliberately not returned. It is remembered so the file
+	// dialog opens in the folder the last one came from — see PickSheet — and
+	// nothing more. Filling the field with it meant the sheet from someone
+	// else's session, or from a test run, sat there looking like a choice
+	// somebody had made, and Check would happily run against it.
+
 	return options
 }
 

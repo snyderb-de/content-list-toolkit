@@ -110,7 +110,6 @@ export namespace main {
 	}
 	export class GettyCheckOptions {
 	    sheetPath: string;
-	    lastSheet?: string;
 	    source: string;
 	    vocabularyPath: string;
 	    writeCleaned: boolean;
@@ -123,7 +122,6 @@ export namespace main {
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.sheetPath = source["sheetPath"];
-	        this.lastSheet = source["lastSheet"];
 	        this.source = source["source"];
 	        this.vocabularyPath = source["vocabularyPath"];
 	        this.writeCleaned = source["writeCleaned"];

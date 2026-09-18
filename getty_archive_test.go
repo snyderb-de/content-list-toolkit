@@ -203,10 +203,12 @@ func TestExtractEnglishTermsRejectsAnArchiveMissingATable(t *testing.T) {
 	w.Close()
 	file.Close()
 
+	// The message names the file to go back for, rather than describing a
+	// table nobody outside this code has heard of.
 	if _, err := extractEnglishTerms(path); err == nil {
 		t.Fatal("expected an error when the expected tables are absent")
-	} else if !strings.Contains(err.Error(), "format may have changed") {
-		t.Fatalf("error should say the format may have changed, got %q", err)
+	} else if !strings.Contains(err.Error(), "aat_rel_") {
+		t.Fatalf("error should name the archive to use, got %q", err)
 	}
 }
 
@@ -316,5 +318,54 @@ func TestImportGettyVocabularyRejectsAFileThatIsNotAnArchive(t *testing.T) {
 	}
 	if _, err := (&App{}).ImportGettyVocabulary(path); err == nil {
 		t.Fatal("expected an error rather than an empty list")
+	}
+}
+
+// Picking the XML archive instead of the relational one is the easiest
+// mistake on that download page, and it used to fail with a message about a
+// missing table.
+func TestImportGettyVocabularyNamesTheXMLArchive(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "aat_xml_0126.zip")
+	file, err := os.Create(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	w := zip.NewWriter(file)
+	entry, _ := w.Create("AATOut_1Subjects.xml")
+	_, _ = entry.Write([]byte("<Vocabulary/>"))
+	_ = w.Close()
+	_ = file.Close()
+
+	_, err = (&App{}).ImportGettyVocabulary(path)
+	if err == nil {
+		t.Fatal("expected the XML archive to be refused")
+	}
+	for _, want := range []string{"XML archive", "aat_rel_", "aat_xml_0126.zip"} {
+		if !strings.Contains(err.Error(), want) {
+			t.Fatalf("error %q should mention %q", err, want)
+		}
+	}
+}
+
+// Any other zip is refused by name too, rather than silently producing
+// nothing.
+func TestImportGettyVocabularyRefusesAnUnrelatedZip(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "photos.zip")
+	file, err := os.Create(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	w := zip.NewWriter(file)
+	entry, _ := w.Create("holiday.jpg")
+	_, _ = entry.Write([]byte("not a vocabulary"))
+	_ = w.Close()
+	_ = file.Close()
+
+	_, err = (&App{}).ImportGettyVocabulary(path)
+	if err == nil {
+		t.Fatal("expected an unrelated zip to be refused")
+	}
+	if !strings.Contains(err.Error(), "photos.zip") || !strings.Contains(err.Error(), "aat_rel_") {
+		t.Fatalf("error %q should name the file and the one to use", err)
 	}
 }
