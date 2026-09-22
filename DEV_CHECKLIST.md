@@ -84,11 +84,11 @@ These change what G3, G4, and G11 look like, so the earlier ticks no longer desc
 - [y] G23 **Check again** re-probes on demand and the timestamp moves
 - [y] G24 With the network off, G22 still holds — one failed probe, not a stream of them
 - [y] G25 **Build list from a Getty archive** converts a local `aat_rel_<mmyy>.zip`, writes the list beside it, selects it, and reports the term count and publication date
-- [ ] G26 Pointing that button at a file that is not an archive explains itself rather than writing an empty list
+- [y] G26 Pointing that button at a file that is not an archive explains itself rather than writing an empty list
 - G25/G26 note: walked against v0.4.0 and both found faults. G25 worked for the relational archive
   but failed silently for the XML one; G26 said nothing at all, because import errors were written
   to a state the screen never rendered. Fixed in #54 — both now name the file to go back for.
-  Re-walk G26 on v0.4.1 to confirm the message appears.
+  Both re-walked on v0.4.2 and passing: the message now appears.
 - [y] G27 The built-in list accepts `place settings` — the American English term that the old extract dropped
 
 ## About
