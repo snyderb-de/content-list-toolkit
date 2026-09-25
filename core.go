@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"context"
+	"crypto/rand"
 	"encoding/csv"
 	"errors"
 	"fmt"
@@ -102,6 +103,7 @@ type scanOptions struct {
 	FolderDepth      int
 	AgencyTemplate   bool
 	AgencyFields     agencyTemplateFields
+	hashFileFn       func(context.Context, string, hashAlgorithm) (string, error) // tests only
 }
 
 type scanWork struct {
@@ -340,7 +342,7 @@ func (w *csvReportWriter) WriteRow(values []string) error {
 		}
 	}
 	w.rowsInCurrentFile++
-	return w.writer.Write(values)
+	return w.writer.Write(spreadsheetSafeRow(values))
 }
 
 func (w *csvReportWriter) Finalize(_ uint64) error {
@@ -576,6 +578,8 @@ func runScanWithContext(parent context.Context, sourceDir, outputPath string, op
 
 	workCh := make(chan scanWork, hashWorkers*4)
 	resultCh := make(chan scanResult, hashWorkers*4)
+	// Slots remain held until results are written in order, bounding pending.
+	workSlots := make(chan struct{}, hashWorkers*4)
 	walkErrCh := make(chan error, 1)
 	typeTotals := make(map[string]summaryEntry)
 	pending := make(map[uint64]scanResult)
@@ -588,6 +592,10 @@ func runScanWithContext(parent context.Context, sourceDir, outputPath string, op
 	lastCSVItem := ""
 	var expected uint64
 
+	hashFn := options.hashFileFn
+	if hashFn == nil {
+		hashFn = hashFile
+	}
 	var workerWG sync.WaitGroup
 	for range hashWorkers {
 		workerWG.Add(1)
@@ -596,7 +604,7 @@ func runScanWithContext(parent context.Context, sourceDir, outputPath string, op
 			for work := range workCh {
 				hashValue := ""
 				var resultErr error
-				hashValue, resultErr = hashFile(ctx, work.path, options.HashAlgorithm)
+				hashValue, resultErr = hashFn(ctx, work.path, options.HashAlgorithm)
 				select {
 				case resultCh <- scanResult{index: work.index, work: work, hash: hashValue, err: resultErr}:
 				case <-ctx.Done():
@@ -714,6 +722,11 @@ func runScanWithContext(parent context.Context, sourceDir, outputPath string, op
 				return nil
 			}
 
+			select {
+			case workSlots <- struct{}{}:
+			case <-ctx.Done():
+				return ctx.Err()
+			}
 			work := scanWork{
 				index:        index,
 				path:         path,
@@ -744,6 +757,7 @@ func runScanWithContext(parent context.Context, sourceDir, outputPath string, op
 			}
 			delete(pending, expected)
 			expected++
+			<-workSlots
 
 			if ready.err != nil {
 				if errors.Is(ready.err, context.Canceled) {
@@ -1081,7 +1095,7 @@ func runFolderOnlyScanWithContext(parent context.Context, sourceDir, outputPath 
 		if options.FolderDepth > 0 && depth > options.FolderDepth {
 			return filepath.SkipDir
 		}
-		if err := csvWriter.Write([]string{relSlash}); err != nil {
+		if err := csvWriter.Write(spreadsheetSafeRow([]string{relSlash})); err != nil {
 			cancel()
 			return err
 		}
@@ -1292,13 +1306,61 @@ func copyEmailFilesWithProgress(ctx context.Context, sourceDir, destDir string, 
 	if err := os.MkdirAll(destDir, 0o755); err != nil {
 		return "", 0, err
 	}
-
-	timestamp := time.Now().Format("2006-01-02T15-04-05")
-	manifestPath := filepath.Join(destDir, fmt.Sprintf("email-copy-manifest-%s.csv", timestamp))
-
-	manifestFile, err := os.Create(manifestPath)
+	// Resolve selected-root aliases before walking. Rooted opens below also
+	// enforce containment if a path component changes during the copy.
+	sourceReal, err := filepath.EvalSymlinks(sourceAbs)
 	if err != nil {
 		return "", 0, err
+	}
+	destReal, err := filepath.EvalSymlinks(destAbs)
+	if err != nil {
+		return "", 0, err
+	}
+	if sourceReal == destReal || isPathWithin(destReal, sourceReal) {
+		return "", 0, fmt.Errorf("destination folder cannot be inside the source folder")
+	}
+	sourceRoot, err := os.OpenRoot(sourceAbs)
+	if err != nil {
+		return "", 0, err
+	}
+	defer sourceRoot.Close()
+	destRoot, err := os.OpenRoot(destAbs)
+	if err != nil {
+		return "", 0, err
+	}
+	defer destRoot.Close()
+	sourceRootInfo, err := sourceRoot.Stat(".")
+	if err != nil {
+		return "", 0, err
+	}
+	destRootInfo, err := destRoot.Stat(".")
+	if err != nil {
+		return "", 0, err
+	}
+	if os.SameFile(sourceRootInfo, destRootInfo) {
+		return "", 0, fmt.Errorf("destination folder must be different from the source folder")
+	}
+
+	timestamp := time.Now().Format("2006-01-02T15-04-05")
+	var manifestPath string
+	var manifestFile *os.File
+	for part := 0; part < 100; part++ {
+		name := fmt.Sprintf("email-copy-manifest-%s.csv", timestamp)
+		if part > 0 {
+			name = fmt.Sprintf("email-copy-manifest-%s-%d.csv", timestamp, part)
+		}
+		manifestFile, err = destRoot.OpenFile(name, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0o644)
+		if errors.Is(err, os.ErrExist) {
+			continue
+		}
+		if err != nil {
+			return "", 0, err
+		}
+		manifestPath = filepath.Join(destDir, name)
+		break
+	}
+	if manifestFile == nil {
+		return "", 0, fmt.Errorf("could not create a unique email-copy manifest")
 	}
 	defer manifestFile.Close()
 
@@ -1374,26 +1436,19 @@ func copyEmailFilesWithProgress(ctx context.Context, sourceDir, destDir string, 
 		}
 		ext := strings.ToLower(filepath.Ext(path))
 		targetPath := filepath.Join(destAbs, relative)
-		if err := os.MkdirAll(filepath.Dir(targetPath), 0o755); err != nil {
-			return "", 0, err
-		}
-		if err := copyFile(path, targetPath); err != nil {
-			return "", 0, err
-		}
-
-		info, err := os.Stat(path)
+		info, err := copyFileWithinRoots(sourceRoot, destRoot, relative)
 		if err != nil {
-			continue
+			return "", 0, err
 		}
 
-		if err := writer.Write([]string{
+		if err := writer.Write(spreadsheetSafeRow([]string{
 			path,
 			targetPath,
 			filepath.ToSlash(relative),
 			filepath.Base(path),
 			ext,
 			fmt.Sprintf("%d", info.Size()),
-		}); err != nil {
+		})); err != nil {
 			return "", 0, err
 		}
 
@@ -1426,31 +1481,57 @@ func isPathWithin(candidate, root string) bool {
 	return rel != "." && rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator))
 }
 
-func copyFile(sourcePath, destPath string) error {
-	sourceFile, err := os.Open(sourcePath)
+func copyFileWithinRoots(sourceRoot, destRoot *os.Root, relative string) (os.FileInfo, error) {
+	sourceFile, err := sourceRoot.Open(relative)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer sourceFile.Close()
-
-	destFile, err := os.Create(destPath)
+	info, err := sourceFile.Stat()
 	if err != nil {
-		return err
+		return nil, err
 	}
-	defer destFile.Close()
-
-	if _, err := io.Copy(destFile, sourceFile); err != nil {
-		return err
-	}
-	if err := destFile.Sync(); err != nil {
-		return err
+	if !info.Mode().IsRegular() {
+		return nil, fmt.Errorf("email source is not a regular file: %s", relative)
 	}
 
-	info, err := os.Stat(sourcePath)
-	if err == nil {
-		_ = os.Chmod(destPath, info.Mode())
+	if err := destRoot.MkdirAll(filepath.Dir(relative), 0o755); err != nil {
+		return nil, err
 	}
-	return nil
+	if destInfo, err := destRoot.Lstat(relative); err == nil {
+		if destInfo.Mode()&os.ModeSymlink != 0 {
+			return nil, fmt.Errorf("email destination is a symlink: %s", relative)
+		}
+		if !destInfo.Mode().IsRegular() {
+			return nil, fmt.Errorf("email destination is not a regular file: %s", relative)
+		}
+	} else if !errors.Is(err, os.ErrNotExist) {
+		return nil, err
+	}
+
+	// Write a new inode, then replace the destination directory entry. This
+	// cannot truncate a source file or an outside file reached by a hard link.
+	temporary := filepath.Join(filepath.Dir(relative), ".content-list-copy-"+rand.Text())
+	tempFile, err := destRoot.OpenFile(temporary, os.O_CREATE|os.O_EXCL|os.O_WRONLY, info.Mode().Perm())
+	if err != nil {
+		return nil, err
+	}
+	defer destRoot.Remove(temporary)
+	defer tempFile.Close()
+	if _, err := io.Copy(tempFile, sourceFile); err != nil {
+		return nil, err
+	}
+	if err := tempFile.Sync(); err != nil {
+		return nil, err
+	}
+	_ = tempFile.Chmod(info.Mode())
+	if err := tempFile.Close(); err != nil {
+		return nil, err
+	}
+	if err := destRoot.Rename(temporary, relative); err != nil {
+		return nil, err
+	}
+	return info, nil
 }
 
 func convertCSVToXLSX(csvPath, xlsxPath string, preserveZeros bool) error {
@@ -1488,6 +1569,9 @@ func convertCSVToXLSX(csvPath, xlsxPath string, preserveZeros bool) error {
 		}
 		if readErr != nil {
 			return readErr
+		}
+		for i := range row {
+			row[i] = spreadsheetOriginalCell(row[i])
 		}
 		rowCount++
 		if len(row) > maxCols {

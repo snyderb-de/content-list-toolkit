@@ -11,6 +11,7 @@ import (
 	"slices"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
@@ -75,8 +76,8 @@ type dirItem struct {
 }
 
 func (d dirItem) FilterValue() string { return d.name }
-func (d dirItem) Title() string       { return d.name }
-func (d dirItem) Description() string { return d.path }
+func (d dirItem) Title() string       { return safeTerminalText(d.name) }
+func (d dirItem) Description() string { return safeTerminalText(d.path) }
 
 type actionItem struct {
 	title       string
@@ -347,7 +348,7 @@ func newDirectoryList(currentDir, titlePrefix string) list.Model {
 	delegate.SetSpacing(0)
 
 	l := list.New(items, delegate, 0, 0)
-	l.Title = fmt.Sprintf("%s: %s", titlePrefix, currentDir)
+	l.Title = fmt.Sprintf("%s: %s", titlePrefix, safeTerminalText(currentDir))
 	l.SetShowStatusBar(false)
 	l.SetFilteringEnabled(false)
 	l.SetShowHelp(true)
@@ -1758,27 +1759,45 @@ func styleDoc(s string) string {
 	return lipgloss.NewStyle().Foreground(lipgloss.Color("252")).Render(s)
 }
 
+// safeTerminalText renders filesystem and error text without allowing control
+// sequences or invisible direction markers to alter the terminal display.
+func safeTerminalText(value string) string {
+	var result strings.Builder
+	for _, r := range value {
+		if unicode.IsControl(r) || unicode.Is(unicode.Cf, r) {
+			if r <= 0xff {
+				fmt.Fprintf(&result, "\\x%02X", r)
+			} else {
+				fmt.Fprintf(&result, "\\u%04X", r)
+			}
+			continue
+		}
+		result.WriteRune(r)
+	}
+	return result.String()
+}
+
 func styleTitle(s string) string {
 	return lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("39")).Render(s)
 }
 
 func styleLabel(s string) string {
-	return lipgloss.NewStyle().Foreground(lipgloss.Color("252")).Render(s)
+	return lipgloss.NewStyle().Foreground(lipgloss.Color("252")).Render(safeTerminalText(s))
 }
 
 func styleHint(s string) string {
-	return lipgloss.NewStyle().Foreground(lipgloss.Color("244")).Render(s)
+	return lipgloss.NewStyle().Foreground(lipgloss.Color("244")).Render(safeTerminalText(s))
 }
 
 func styleError(s string) string {
-	return lipgloss.NewStyle().Foreground(lipgloss.Color("196")).Bold(true).Render(s)
+	return lipgloss.NewStyle().Foreground(lipgloss.Color("196")).Bold(true).Render(safeTerminalText(s))
 }
 
 func styleStat(label, value string) string {
 	return lipgloss.JoinHorizontal(
 		lipgloss.Top,
-		lipgloss.NewStyle().Foreground(lipgloss.Color("244")).Width(22).Render(label+":"),
-		lipgloss.NewStyle().Foreground(lipgloss.Color("252")).Render(value),
+		lipgloss.NewStyle().Foreground(lipgloss.Color("244")).Width(22).Render(safeTerminalText(label)+":"),
+		lipgloss.NewStyle().Foreground(lipgloss.Color("252")).Render(safeTerminalText(value)),
 	)
 }
 
