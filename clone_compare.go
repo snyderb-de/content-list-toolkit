@@ -213,10 +213,10 @@ func (it *scanCSVIterator) Next() (*scanCSVRow, error) {
 				return nil, fmt.Errorf("scan csv row in %s has invalid size %q: %w", it.currentPath, row[2], parseErr)
 			}
 			return &scanCSVRow{
-				fileName:      row[0],
+				fileName:      spreadsheetOriginalCell(row[0]),
 				extension:     row[1],
 				size:          size,
-				relativePath:  row[4],
+				relativePath:  spreadsheetOriginalCell(row[4]),
 				hashAlgorithm: row[5],
 				hashValue:     row[6],
 			}, nil
@@ -288,6 +288,9 @@ func compareScanOutputs(
 		return result, err
 	}
 	writer := csv.NewWriter(diffFile)
+	writeRow := func(values []string) error {
+		return writer.Write(spreadsheetSafeRow(values))
+	}
 	writeErr := func(err error) (cloneVerificationDone, error) {
 		writer.Flush()
 		_ = diffFile.Close()
@@ -295,7 +298,7 @@ func compareScanOutputs(
 		return result, err
 	}
 
-	if err := writer.Write([]string{
+	if err := writeRow([]string{
 		"Difference Type",
 		"1st Drive Path From Root Folder",
 		"1st Drive File Name",
@@ -385,7 +388,7 @@ func compareScanOutputs(
 			}
 			if diffType != "" {
 				result.differences++
-				if err := writer.Write([]string{
+				if err := writeRow([]string{
 					diffType,
 					nextA.relativePath,
 					nextA.fileName,
@@ -444,7 +447,7 @@ func compareScanOutputs(
 
 	// ── Pass 2: in-memory hash cross-reference ────────────────────────────────
 	writeDiffRow := func(cols [11]string) error {
-		return writer.Write(cols[:])
+		return writeRow(cols[:])
 	}
 	emitDiff := func(payload DiffRowPayload) {
 		result.differences++

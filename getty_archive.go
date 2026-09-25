@@ -3,6 +3,7 @@ package main
 import (
 	"archive/zip"
 	"bufio"
+	"encoding/binary"
 	"encoding/csv"
 	"fmt"
 	"io"
@@ -108,6 +109,61 @@ func (a *App) ImportGettyVocabulary(archivePath string) (GettyImportResult, erro
 	}, nil
 }
 
+const (
+	maxGettyArchiveFiles   = 512
+	maxGettyDirectoryBytes = 1 << 20
+)
+
+// archive/zip builds its member list before returning from OpenReader. Check
+// the end-of-directory record first so a ZIP with millions of tiny members
+// cannot exhaust memory while that list is built. Getty's relational archive
+// is well below these limits and does not need ZIP64.
+func checkGettyArchiveDirectory(path string) error {
+	file, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	info, err := file.Stat()
+	if err != nil {
+		return err
+	}
+	const endLen = 22
+	const maxComment = 65535
+	if info.Size() < endLen {
+		return fmt.Errorf("Getty archive has no ZIP directory")
+	}
+	tailLen := min(info.Size(), int64(endLen+maxComment))
+	tail := make([]byte, tailLen)
+	if _, err := file.ReadAt(tail, info.Size()-tailLen); err != nil {
+		return err
+	}
+	for i := len(tail) - endLen; i >= 0; i-- {
+		if string(tail[i:i+4]) != "PK\x05\x06" {
+			continue
+		}
+		commentLen := int(binary.LittleEndian.Uint16(tail[i+20 : i+22]))
+		if i+endLen+commentLen > len(tail) {
+			continue
+		}
+		entries := binary.LittleEndian.Uint16(tail[i+10 : i+12])
+		directoryBytes := binary.LittleEndian.Uint32(tail[i+12 : i+16])
+		directoryOffset := binary.LittleEndian.Uint32(tail[i+16 : i+20])
+		if entries == 0xffff || directoryBytes == 0xffffffff || directoryOffset == 0xffffffff {
+			return fmt.Errorf("Getty archive ZIP64 directory is not supported")
+		}
+		if entries > maxGettyArchiveFiles || directoryBytes > maxGettyDirectoryBytes {
+			return fmt.Errorf("Getty archive has too many ZIP members or directory bytes")
+		}
+		endOffset := uint64(info.Size()-tailLen) + uint64(i)
+		if uint64(directoryOffset)+uint64(directoryBytes) != endOffset {
+			return fmt.Errorf("Getty archive has invalid ZIP directory bounds")
+		}
+		return nil
+	}
+	return fmt.Errorf("Getty archive has no ZIP directory")
+}
+
 // archivePublished dates the archive from the newest file inside it, which is
 // when Getty built it.
 //
@@ -115,11 +171,18 @@ func (a *App) ImportGettyVocabulary(archivePath string) (GettyImportResult, erro
 // machines or unpacking and repacking it rewrites that, and a list labelled
 // with the day it was copied claims to be newer than its data.
 func archivePublished(archivePath string) (time.Time, error) {
+	if err := checkGettyArchiveDirectory(archivePath); err != nil {
+		return time.Time{}, err
+	}
+
 	reader, err := zip.OpenReader(archivePath)
 	if err != nil {
 		return time.Time{}, fmt.Errorf("%s could not be opened as an archive: %w", filepath.Base(archivePath), err)
 	}
 	defer reader.Close()
+	if len(reader.File) > maxGettyArchiveFiles {
+		return time.Time{}, fmt.Errorf("Getty archive has too many ZIP members")
+	}
 
 	var newest time.Time
 	for _, file := range reader.File {
@@ -147,25 +210,64 @@ type vocabularyTerm struct {
 // English. TERM holds the text, whether it is preferred, and which concept it
 // belongs to; LANGUAGE_RELS says what language each term is in. Without the
 // second, a list built from the first would carry every language Getty holds.
+type gettyArchiveLimits struct {
+	maxTableBytes    int64
+	maxEntries       int
+	maxRetainedBytes int64
+}
+
+type gettyRetainedBudget struct {
+	remaining int64
+}
+
+func (b *gettyRetainedBudget) reserve(bytes int64) error {
+	if bytes > b.remaining {
+		return fmt.Errorf("Getty archive exceeds the retained data limit")
+	}
+	b.remaining -= bytes
+	return nil
+}
+
+var defaultGettyArchiveLimits = gettyArchiveLimits{
+	maxTableBytes:    1 << 30, // AAT's relational tables can be large.
+	maxEntries:       1_000_000,
+	maxRetainedBytes: 256 << 20,
+}
+
 func extractEnglishTerms(archivePath string) ([]vocabularyTerm, error) {
+	return extractEnglishTermsWithLimits(archivePath, defaultGettyArchiveLimits)
+}
+
+func extractEnglishTermsWithLimits(archivePath string, limits gettyArchiveLimits) ([]vocabularyTerm, error) {
+	if limits.maxRetainedBytes <= 0 {
+		limits.maxRetainedBytes = defaultGettyArchiveLimits.maxRetainedBytes
+	}
+	budget := &gettyRetainedBudget{remaining: limits.maxRetainedBytes}
+	if err := checkGettyArchiveDirectory(archivePath); err != nil {
+		return nil, err
+	}
+
 	reader, err := zip.OpenReader(archivePath)
 	if err != nil {
 		return nil, fmt.Errorf("the downloaded archive could not be opened: %w", err)
 	}
 	defer reader.Close()
+	if len(reader.File) > maxGettyArchiveFiles {
+		return nil, fmt.Errorf("Getty archive has too many ZIP members")
+	}
 
 	if err := checkRelationalArchive(reader, archivePath); err != nil {
 		return nil, err
 	}
 
-	english, err := readEnglishTermIDs(reader)
+	english, err := readEnglishTermIDs(reader, limits, budget)
 	if err != nil {
 		return nil, err
 	}
 	if len(english) == 0 {
 		return nil, fmt.Errorf("the archive contained no English terms; its format may have changed")
 	}
-	return readTerms(reader, english)
+	return readTerms(reader, english, limits, budget)
 }
 
 // readEnglishTermIDs maps each English term to which English it is, because
@@ -196,15 +298,15 @@ func checkRelationalArchive(reader *zip.ReadCloser, archivePath string) error {
 	return fmt.Errorf("%s is not a Getty vocabulary archive: it holds no TERM.out table. The file to use is named aat_rel_<mmyy>.zip", name)
 }
 
-func readEnglishTermIDs(reader *zip.ReadCloser) (map[string]string, error) {
-	file, err := openArchiveFile(reader, "LANGUAGE_RELS.out")
+func readEnglishTermIDs(reader *zip.ReadCloser, limits gettyArchiveLimits, budget *gettyRetainedBudget) (map[string]string, error) {
+	file, err := openArchiveFile(reader, "LANGUAGE_RELS.out", limits.maxTableBytes)
 	if err != nil {
 		return nil, err
 	}
 	defer file.Close()
 
 	english := map[string]string{}
-	scanner := newTableScanner(file)
+	scanner, tableReader := newTableScanner(file, limits.maxTableBytes)
 	for scanner.Scan() {
 		fields := strings.Split(scanner.Text(), "\t")
 		if len(fields) < 4 {
@@ -212,23 +314,32 @@ func readEnglishTermIDs(reader *zip.ReadCloser) (map[string]string, error) {
 		}
 		switch fields[0] {
 		case aatEnglishLanguageID, aatAmericanEnglishLanguageID, aatBritishEnglishLanguageID:
-			english[fields[3]] = fields[0]
+			if _, exists := english[fields[3]]; !exists {
+				if len(english) >= limits.maxEntries {
+					return nil, fmt.Errorf("Getty archive has too many English term IDs")
+				}
+				if err := budget.reserve(int64(len(fields[3]) + len(fields[0]) + 128)); err != nil {
+					return nil, err
+				}
+			}
+			// Clone substrings so a short ID does not retain its whole table line.
+			english[strings.Clone(fields[3])] = strings.Clone(fields[0])
 		}
 	}
-	return english, scanner.Err()
+	return english, tableScanErr(scanner, tableReader, "LANGUAGE_RELS.out", limits.maxTableBytes)
 }
 
 // readTerms walks TERM twice: once to learn each concept's English preferred
 // label, once to write the list. Two passes rather than one because the table
 // is not ordered by concept, so a variant can be read long before the
 // preferred term it should point at.
-func readTerms(reader *zip.ReadCloser, english map[string]string) ([]vocabularyTerm, error) {
-	preferred, err := readPreferredLabels(reader, english)
+func readTerms(reader *zip.ReadCloser, english map[string]string, limits gettyArchiveLimits, budget *gettyRetainedBudget) ([]vocabularyTerm, error) {
+	preferred, err := readPreferredLabels(reader, english, limits, budget)
 	if err != nil {
 		return nil, err
 	}
 
-	file, err := openArchiveFile(reader, "TERM.out")
+	file, err := openArchiveFile(reader, "TERM.out", limits.maxTableBytes)
 	if err != nil {
 		return nil, err
 	}
@@ -241,7 +352,7 @@ func readTerms(reader *zip.ReadCloser, english map[string]string) ([]vocabularyT
 	// kept, and the index is what makes that reachable.
 	at := map[string]int{}
 	var terms []vocabularyTerm
-	scanner := newTableScanner(file)
+	scanner, tableReader := newTableScanner(file, limits.maxTableBytes)
 	for scanner.Scan() {
 		row, ok := parseTermRow(scanner.Text(), english)
 		if !ok {
@@ -266,10 +377,16 @@ func readTerms(reader *zip.ReadCloser, english map[string]string) ([]vocabularyT
 			}
 			continue
 		}
+		if len(terms) >= limits.maxEntries {
+			return nil, fmt.Errorf("Getty archive has too many distinct terms")
+		}
+		if err := budget.reserve(int64(len(key) + len(entry.Term) + len(entry.Preferred) + 128)); err != nil {
+			return nil, err
+		}
 		at[key] = len(terms)
 		terms = append(terms, entry)
 	}
-	return terms, scanner.Err()
+	return terms, tableScanErr(scanner, tableReader, "TERM.out", limits.maxTableBytes)
 }
 
 // readPreferredLabels maps each concept to its English preferred term.
@@ -277,8 +394,8 @@ func readTerms(reader *zip.ReadCloser, english map[string]string) ([]vocabularyT
 // A concept can have one per dialect — "moulds" in British English beside
 // "molds" in plain English — and the list can only name one as the term to
 // use. Plain English wins, since that is the label the live endpoint returns.
-func readPreferredLabels(reader *zip.ReadCloser, english map[string]string) (map[string]string, error) {
-	file, err := openArchiveFile(reader, "TERM.out")
+func readPreferredLabels(reader *zip.ReadCloser, english map[string]string, limits gettyArchiveLimits, budget *gettyRetainedBudget) (map[string]string, error) {
+	file, err := openArchiveFile(reader, "TERM.out", limits.maxTableBytes)
 	if err != nil {
 		return nil, err
 	}
@@ -286,7 +403,7 @@ func readPreferredLabels(reader *zip.ReadCloser, english map[string]string) (map
 
 	labels := map[string]string{}
 	plain := map[string]bool{}
-	scanner := newTableScanner(file)
+	scanner, tableReader := newTableScanner(file, limits.maxTableBytes)
 	for scanner.Scan() {
 		row, ok := parseTermRow(scanner.Text(), english)
 		if !ok || !row.preferred {
@@ -301,10 +418,20 @@ func readPreferredLabels(reader *zip.ReadCloser, english map[string]string) (map
 			// A dialect label only fills a gap, and the gap is filled.
 			continue
 		}
+		if _, exists := labels[row.subject]; !exists {
+			if len(labels) >= limits.maxEntries {
+				return nil, fmt.Errorf("Getty archive has too many preferred labels")
+			}
+			if err := budget.reserve(int64(len(row.subject) + len(row.term) + 128)); err != nil {
+				return nil, err
+			}
+		} else if err := budget.reserve(int64(len(row.term))); err != nil {
+			return nil, err
+		}
 		labels[row.subject] = row.term
 		plain[row.subject] = isPlain
 	}
-	return labels, scanner.Err()
+	return labels, tableScanErr(scanner, tableReader, "TERM.out", limits.maxTableBytes)
 }
 
 // termRow is the part of a TERM line this export uses.
@@ -326,33 +453,47 @@ func parseTermRow(line string, english map[string]string) (termRow, bool) {
 	if !isEnglish {
 		return termRow{}, false
 	}
-	term := normalizeTagText(fields[10]).Cleaned
+	term := strings.Clone(normalizeTagText(fields[10]).Cleaned)
 	if term == "" {
 		return termRow{}, false
 	}
 	return termRow{
 		term:      term,
-		subject:   fields[9],
+		subject:   strings.Clone(fields[9]),
 		language:  language,
 		preferred: fields[7] == termPreferred,
 	}, true
 }
 
-func openArchiveFile(reader *zip.ReadCloser, name string) (io.ReadCloser, error) {
+func openArchiveFile(reader *zip.ReadCloser, name string, maxBytes int64) (io.ReadCloser, error) {
 	for _, file := range reader.File {
 		if strings.EqualFold(filepath.Base(file.Name), name) {
+			if file.UncompressedSize64 > uint64(maxBytes) {
+				return nil, fmt.Errorf("%s exceeds the Getty archive table size limit", name)
+			}
 			return file.Open()
 		}
 	}
 	return nil, fmt.Errorf("the archive did not contain %s; its format may have changed", name)
 }
 
-// newTableScanner reads these tables line by line with a buffer large enough
-// for their longest rows, which exceed bufio's default.
-func newTableScanner(r io.Reader) *bufio.Scanner {
-	scanner := bufio.NewScanner(r)
+// newTableScanner also bounds actual decompressed bytes, independent of ZIP
+// metadata. The extra byte lets tableScanErr distinguish an exact-limit table.
+func newTableScanner(r io.Reader, maxBytes int64) (*bufio.Scanner, *io.LimitedReader) {
+	limited := &io.LimitedReader{R: r, N: maxBytes + 1}
+	scanner := bufio.NewScanner(limited)
 	scanner.Buffer(make([]byte, 0, 64*1024), 4*1024*1024)
-	return scanner
+	return scanner, limited
+}
+
+func tableScanErr(scanner *bufio.Scanner, limited *io.LimitedReader, name string, maxBytes int64) error {
+	if err := scanner.Err(); err != nil {
+		return err
+	}
+	if limited.N == 0 {
+		return fmt.Errorf("%s exceeds the Getty archive table size limit of %d bytes", name, maxBytes)
+	}
+	return nil
 }
 
 // writeTermList writes the list the offline check reads: the term, then the
@@ -363,6 +504,11 @@ func newTableScanner(r io.Reader) *bufio.Scanner {
 // same file for every term that needs no correction, and an older list still
 // loads.
 func writeTermList(path string, terms []vocabularyTerm) error {
+	for _, term := range terms {
+		if spreadsheetFormulaRisk(term.Term) || spreadsheetFormulaRisk(term.Preferred) {
+			return fmt.Errorf("archive contains a term that could run as a spreadsheet formula")
+		}
+	}
 	file, err := os.Create(path)
 	if err != nil {
 		return fmt.Errorf("could not write the term list: %w", err)

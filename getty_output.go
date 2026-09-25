@@ -113,6 +113,14 @@ func writeCleanedDelimited(report TagSheetReport, corrections map[int]string, de
 		rows[index][report.ColumnIndex] = cleaned
 	}
 
+	for rowIndex, row := range rows {
+		for columnIndex, value := range row {
+			if spreadsheetFormulaRisk(value) {
+				return fmt.Errorf("row %d column %d contains text that could run as a spreadsheet formula; cannot safely write a delimited copy", rowIndex+1, columnIndex+1)
+			}
+		}
+	}
+
 	file, err := os.Create(destination)
 	if err != nil {
 		return fmt.Errorf("create %s: %w", filepath.Base(destination), err)
