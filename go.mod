@@ -11,7 +11,7 @@ require (
 	github.com/xuri/excelize/v2 v2.11.0
 	github.com/zeebo/blake3 v0.2.4
 	golang.org/x/oauth2 v0.37.0
-	golang.org/x/sys v0.48.0
+	golang.org/x/sys v0.49.0
 )
 
 require (
